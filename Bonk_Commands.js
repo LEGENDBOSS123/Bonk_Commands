@@ -1457,7 +1457,6 @@ Gwindow.requestAnimationFrame = function(...args){
                 break;
             }
         }
-        var newzoom = 1;
         if(autocam){
             var autocamx = 365*scale;
             var autocamy = 250*scale;
@@ -2698,12 +2697,11 @@ scope.qppaused = false;
 scope.FollowCam = false;
 scope.autocam = false;
 scope.gravity = 20;
-scope.multiplier = 3.75;
+scope.multiplier = 3.9;
 scope.aimbot = false;
 scope.recievedinitdata = false;
 scope.heavybot = false;
 scope.zoom = 1;
-
 scope.prediction = 1000;
 scope.started = 0;
 scope.holdheavy = 0;
