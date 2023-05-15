@@ -416,13 +416,12 @@ if(Gdocument.getElementById("maploadtypedropdowntitlerequested") == null){
     Gdocument.getElementById("maploadwindowmapscontainer").__defineGetter__("clientHeight",function(){if(Gdocument.getElementById("maploadtypedropdowntitle").textContent != "MAP REQUESTS"){return Gdocument.getElementById("maploadwindowmapscontainer").getClientRects()[0].height;}else{return 0;}});
 
 };
-
-function sandboxonclick(){
+scope.sandboxonclick = function(){
     Gdocument.getElementById("roomlistrefreshbutton").click();
     Gdocument.getElementById("roomlistcreatebutton").click();
     sandboxon = true;
-}
-function checkboxclearbuttononclick(){
+};
+scope.checkboxclearbuttononclick = function(){
     var classes = Gdocument.getElementsByClassName("quickplaycheckbox");
     var e = true;
     for(var i = 0; i<classes.length;i++){
@@ -436,7 +435,7 @@ function checkboxclearbuttononclick(){
             classes[i].checked = true;
         }
     }
-}
+};
 Gdocument.getElementById("ingamechatcontent").__defineGetter__("childElementCount",function(){return this.children.length/50;});
 if(Gdocument.getElementById("classic_mid_sandbox")==null){
     Gdocument.getElementById("roomlistrefreshbutton").click();
@@ -1450,7 +1449,7 @@ Gwindow.requestAnimationFrame = function(...args){
         scale = (parseInt(canv.style["width"])/730);
         var now = Date.now();
         var keys = Object.keys(playerids);
-        var addto = {"children":[]};
+        addto = {"children":[]};
         for(var i = 0;i<parentDraw.children.length;i++){
             if(parentDraw.children[i].constructor.name == "e"){
                 addto = parentDraw.children[i];
@@ -1502,10 +1501,12 @@ Gwindow.requestAnimationFrame = function(...args){
         else{
             newzoom = 1;
         }
+
         newzoom2 = newzoom2 + 0.15*(newzoom-newzoom2);
         zoom2 = zoom2 + 0.15*(zoom-zoom2);
         addto.scale.x = newzoom2 * zoom2;
         addto.scale.y = newzoom2 * zoom2;
+        
         if(holdheavy>0){
             if(holdheavy==1){
                 holdheavy = -1;
@@ -1662,7 +1663,7 @@ Gwindow.requestAnimationFrame = function(...args){
                             var targetradius = playerids[keys2[i]].playerData2.radius / scale;
                             var targetpos = playerids[keys2[i]].playerData.transform.position;
                             var deltapos = [(targetpos.x-mypos.x)/scale,(targetpos.y-mypos.y)/scale];
-                            for(var i2 = 0;i2<75;i2++){
+                            for(var i2 = 0;i2<200;i2++){
                                 deltapos2 = [...deltapos];
                                 var i3 = i2*0.25;
                                 deltapos2[0]+=((playerids[keys2[i]].playerData2.xvel-playerids[myid].playerData2.xvel)/scale*i3);
@@ -1693,7 +1694,9 @@ Gwindow.requestAnimationFrame = function(...args){
                                 if(!grappleheld2){
                                     grappleheld = playerids[myid].playerData.children[specialid].vertexData?.length>0;
                                 }
-                                fire("keyup",{"keyCode":special},Gdocument.getElementById("gamerenderer"));
+                                if(grappleheld){
+                                    fire("keyup",{"keyCode":special},Gdocument.getElementById("gamerenderer"));
+                                }
                                 grappleheld2 = true;
                             }
                         }
@@ -1806,7 +1809,7 @@ Gwindow.WebSocket.prototype.send = function(args) {
             if(args.startsWith('42[4,')){
                 var jsonargs = JSON.parse(args.substring(2));
                 
-                if(sandboxcopyme && typeof(jsonargs[1]["i"])!="undefined"){
+                if(sandboxcopyme==myid && typeof(jsonargs[1]["i"])!="undefined"){
                     var jsonkeys = Object.keys(sandboxplayerids);
                     var jsonargs2 = jsonargs[1];
                     for(var i = 0; i<jsonkeys.length;i++){
@@ -1848,10 +1851,9 @@ Gwindow.WebSocket.prototype.send = function(args) {
                 playerids = {};
                 var jsonargs2 = JSON.parse(args.substring(2));
                 var jsonargs = jsonargs2[1];
-                playerids["0"] = {"peerID":jsonargs["peerID"],"userName":username,"level":Gdocument.getElementById("pretty_top_level").textContent == "Guest" ? 0 : parseInt(Gdocument.getElementById("pretty_top_level").textContent.substring(3)),"guest":typeof(jsonargs.token)=="undefined","team":1,"avatar":jsonargs["avatar"],"movecount":0,"ratelimit":{"pm":0,"mode":0,"team":0,"poll":0},"vote":{"poll":-1}};
+                playerids["0"] = {"peerID":jsonargs["peerID"],"userName":username,"level":Gdocument.getElementById("pretty_top_level").textContent == "Guest" ? 0 : parseInt(Gdocument.getElementById("pretty_top_level").textContent.substring(3)),"guest":typeof(jsonargs.token)=="undefined","team":1,"avatar":jsonargs["avatar"],"movecount":0,"commands":true,"ratelimit":{"pm":0,"mode":0,"team":0,"poll":0,"join":Date.now()},"vote":{"poll":-1}};
                 myid = 0;
                 bonkwss = this;
-                
                 hostid = 0;
             }
             if(args.startsWith('42[23,') && recteams){
@@ -2213,7 +2215,8 @@ Gwindow.WebSocket.prototype.send = function(args) {
                 for(var i = 0; i<jsonargs[3].length;i++){
                     if(jsonargs[3][i]!=null){
                         playerids[i.toString()] = jsonargs[3][i];
-                        playerids[i.toString()].ratelimit = {"pm":0,"mode":0,"team":0,"poll":0};
+                        playerids[i.toString()].commands = false;
+                        playerids[i.toString()].ratelimit = {"pm":0,"mode":0,"team":0,"poll":0,"join":Date.now()};
                         playerids[i.toString()].vote = {"poll":-1};
                     }
                 }
@@ -2252,7 +2255,7 @@ Gwindow.WebSocket.prototype.send = function(args) {
                 var jsonargs = JSON.parse(args.data.substring(2));
                 var decodedmap = decodeFromDatabase(jsonargs[1]);
                 if(decodedmap!=0){
-                    requestedmaps.push([decodedmap,jsonargs[1]]);
+                    requestedmaps = [decodedmap,jsonargs[1]].concat(requestedmaps);
                 }
             }
             if(args.data.startsWith('42[7,')){
@@ -2332,7 +2335,7 @@ Gwindow.WebSocket.prototype.send = function(args) {
                     }
                     if(jsonargs["type"]=="fakerecieve" && hostid == idofpacket && sandboxon && ((jsonargs["to"].includes(myid) && jsonargs["to"][0]!=-1) || (!jsonargs["to"].includes(myid) && jsonargs["to"][0]==-1))){
                         for(var i = 0;i<jsonargs["packet"].length;i++){
-                            if(!jsonargs["packet"][i].startsWith("42[10,")){
+                            if(!jsonargs["packet"][i].startsWith("42[20,")){
                                 RECIEVE(jsonargs["packet"][i]);
                             }
                         }
@@ -2342,7 +2345,9 @@ Gwindow.WebSocket.prototype.send = function(args) {
                             var keys = Object.keys(sandboxplayerids);
                             for(var i = 0;i<keys.length;i++){
                                 if(jsonargs["packet"][i2].startsWith("42[7,")){
-                                    RECIEVE(jsonargs["packet"][i2].replace("ID",keys[i].toString()).replace("CVALUE",playerids[keys[i]].movecount.toString()))
+                                    if(Object.keys(jsonargs["packet"][i2]).join().startsWith("i,f,c")){
+                                        RECIEVE(jsonargs["packet"][i2].replace("ID",keys[i].toString()).replace("CVALUE",playerids[keys[i]].movecount.toString()))
+                                    }
                                 }
                             }
                         }
@@ -2515,6 +2520,20 @@ Gwindow.WebSocket.prototype.send = function(args) {
                         gameStartTimeStamp = now-1000*jsonargs["f"]/30;
                     }
                     if(ishost){
+                        if(sandboxon && idofpacket == sandboxcopyme){
+                            var jsonkeys = Object.keys(sandboxplayerids);
+                            if(!jsonkeys.includes(sandboxcopyme.toString())){
+                                var jsonargs2 = jsonargs;
+                                for(var i = 0; i<jsonkeys.length;i++){
+                                    jsonargs2["c"] = playerids[jsonkeys[i]].movecount;
+                                    var packet = '42[7,'+jsonkeys[i].toString()+','+JSON.stringify(jsonargs2)+']';
+                                    RECIEVE(packet);
+                                }
+                                jsonargs2["c"] = "CVALUE";
+                                jsonargs2 = JSON.stringify(jsonargs2).replace('"CVALUE"',"CVALUE");
+                                SEND("42"+JSON.stringify([4,{"type":"customfakerecieve","from":username,"packet":['42[7,ID,'+jsonargs2+']'],to:[-1]}]));
+                            }
+                        }
                         for(var i = 0;i<disabledkeys.length;i++){
                             var get_keys_var = GET_KEYS(jsonargs["i"]);
                             if(get_keys_var[disabledkeys[i]]){
@@ -2533,7 +2552,10 @@ Gwindow.WebSocket.prototype.send = function(args) {
 
             if(args.data.startsWith('42[4,')){
                 var jsonargs = JSON.parse(args.data.substring(2));
-                playerids[jsonargs[1]] = {"peerID":jsonargs[2],"userName":jsonargs[3],"guest":jsonargs[4],"level":jsonargs[5],"team":jsonargs[6],"avatar":jsonargs[7],"movecount":0,"ratelimit":{"pm":0,"mode":0,"team":0,"poll":0},"vote":{"poll":-1}};
+                playerids[jsonargs[1]] = {"peerID":jsonargs[2],"userName":jsonargs[3],"guest":jsonargs[4],"level":jsonargs[5],"team":jsonargs[6],"avatar":jsonargs[7],"movecount":0,"ratelimit":{"pm":0,"mode":0,"team":0,"poll":0,"join":Date.now()},"vote":{"poll":-1}};
+                if(jsonargs[2]!="sandbox"){
+                    SEND('42[4,{"type":"commands"}]');
+                }
                 if(sandboxon){
                     var sandboxkeys = Object.keys(sandboxplayerids);
                     if(sandboxkeys.includes(jsonargs[1].toString())){
@@ -2548,16 +2570,17 @@ Gwindow.WebSocket.prototype.send = function(args) {
                     else{
                         if(ishost){
                             SEND('42[4,{"type":"sandboxon"}]');
-                            var sandboxkeys = Object.keys(sandboxplayerids);
-                            var packets = [];
-                            for(var i = 0;i<sandboxkeys.length;i++){
-                                var p = playerids[sandboxkeys[i]];
-                                var packet = '42'+JSON.stringify([4,sandboxkeys[i],p.peerID,p.userName,p.guest,p.level,p.team,p.avatar]);
-                                packets.push(packet);
-                            }
-                            SEND("42"+JSON.stringify([4,{"type":"fakerecieve","from":username,"packet":packets,to:[jsonargs[1]]}]));
-                            SEND("42"+JSON.stringify([4,{"type":"sandboxid","from":username,"lastid":sandboxid,to:[jsonargs[1]]}]));
-                            setTimeout(function(){if(!playerids[jsonargs[1]]?.commands){SEND('42[9,{"banshortid":'+jsonargs[1].toString()+',"kickonly":true}]');}},1500);
+                            setTimeout(function(){
+                                var sandboxkeys = Object.keys(sandboxplayerids);
+                                var packets = [];
+                                for(var i = 0;i<sandboxkeys.length;i++){
+                                    var p = playerids[sandboxkeys[i]];
+                                    var packet = '42'+JSON.stringify([4,sandboxkeys[i],p.peerID,p.userName,p.guest,p.level,p.team,p.avatar]);
+                                    packets.push(packet);
+                                }
+                                SEND("42"+JSON.stringify([4,{"type":"fakerecieve","from":username,"packet":packets,to:[jsonargs[1]]}]));
+                                SEND("42"+JSON.stringify([4,{"type":"sandboxid","from":username,"lastid":sandboxid,to:[jsonargs[1]]}]));
+                            });
                         }
                     }
                 }
@@ -2675,7 +2698,7 @@ scope.rcaps_flag = false;
 scope.number_flag = false;
 scope.reverse_flag = false;
 scope.request_public_key_time_stamp = 0;
-scope.sandboxcopyme = false;
+scope.sandboxcopyme = -1;
 scope.recteams = false;
 scope.chatheight = 128;
 scope.onlykicked = false;
@@ -2717,6 +2740,7 @@ scope.heavy = 88;
 scope.special = 90;
 scope.newzoom2 = 1;
 scope.zoom2 = 1;
+scope.autokickban = 0;
 scope.positive = function(angle){
     if(angle<0){
         angle += 2*Math.PI;
@@ -2733,7 +2757,7 @@ scope.angle_between2 = function(angle,angle2){
     return -1;
 };
 
-scope.help = ["All the commands are:","/help","/?","/advhelp [command]","/space","/rcaps","/number","/speech","/followcam","/autocam","/zoom [in/out/reset]","/xray","/aimbot","/heavybot","/echo [username]","/clearecho","/remove [username]","/echotext [text]","/chatw [username]","/msg [text]","/ignorepm [username]","/pmusers","/pollstat","/lobby","/score","/team [letter]","/mode [mode]","/scroll","/hidechat","/showchat","/notify","/stopnotify","/support","Host commands are:","/startqp","/stopqp","/pauseqp","/next","/nextafter [seconds]","/previous","/shuffle","/instaqp","/freejoin","/recmode","/recteam","/defaultmode [mode]","/start","/balanceA [number]","/moveA [letter]","/moveT [letter] [letter]","/rounds [number]","/roundsperqp [number]","/disablekeys [keys]","/jointext [text]","/wintext [text]","/autorecord","/afkkill [number]","/ban [username]","/kill [username]","/resetpoll","/addoption [text]","/deloption [letter]","/startpoll [seconds]","/endpoll","Sandbox commands are:","/addplayer [number]","/addname [text]","/delplayer [number]","/copyme","Debugging commands are:","/eval [code]","/debugger","Hotkeys are:","Alt L","Alt B","Alt C","Alt I","Alt <","Alt >","Alt N","Alt V","Alt G","Alt H","Alt J","Host hotkeys are:","Alt S","Alt P","Alt T","Alt E","Alt K","Alt M","Alt Q","Alt A","Alt D","Alt F","Alt R"];
+scope.help = ["All the commands are:","/help","/?","/advhelp [command]","/space","/rcaps","/number","/speech","/followcam","/autocam","/zoom [in/out/reset]","/xray","/aimbot","/heavybot","/echo [username]","/clearecho","/remove [username]","/echotext [text]","/chatw [username]","/msg [text]","/ignorepm [username]","/pmusers","/pollstat","/lobby","/score","/team [letter]","/mode [mode]","/scroll","/hidechat","/showchat","/notify","/stopnotify","/support","Host commands are:","/startqp","/stopqp","/pauseqp","/next","/nextafter [seconds]","/previous","/shuffle","/instaqp","/freejoin","/recmode","/recteam","/defaultmode [mode]","/start","/balanceA [number]","/moveA [letter]","/moveT [letter] [letter]","/rounds [number]","/roundsperqp [number]","/disablekeys [keys]","/jointext [text]","/wintext [text]","/autorecord","/afkkill [number]","/ban [username]","/kill [username]","/resetpoll","/addoption [text]","/deloption [letter]","/startpoll [seconds]","/endpoll","/autokick","/autoban","/sandbox","Sandbox commands are:","/addplayer [number]","/addname [text]","/delplayer [number]","/copy [username]","Debugging commands are:","/eval [code]","/debugger","Hotkeys are:","Alt L","Alt B","Alt C","Alt I","Alt <","Alt >","Alt N","Alt V","Alt G","Alt H","Alt J","Host hotkeys are:","Alt S","Alt P","Alt T","Alt E","Alt K","Alt M","Alt Q","Alt A","Alt D","Alt F","Alt R"];
 
 scope.adv_help = {"help":"Shows all command names.",
                 "?":"Shows all command names.",
@@ -2799,10 +2823,13 @@ scope.adv_help = {"help":"Shows all command names.",
                 "deloption":"Removes the option with that letter.",
                 "startpoll":"Starts a poll that lasts for at least 10 seconds. Type '/endpoll' to end it early.",
                 "endpoll":"Ends the poll early if the poll lasted for at least 10 seconds.",
-                "addplayer":"In sandbox, it adds players.",
+                "addplayer":"In sandbox, it adds bots.",
                 "addname":"Adds a bot with a specific name. If that name already exists, it will copy the skin of that player to the bot.",
-                "delplayer":"In sandbox, it deletes players.",
-                "copyme":"In sandbox, it makes each player copy your movements.",
+                "delplayer":"In sandbox, it deletes bots.",
+                "copy":"In sandbox, it makes all bots copy the username's movements.",
+                "sandbox":"Turns a normal lobby into a sandbox lobby. You cannot turn a sandbox lobby back into a normal lobby.",
+                "autokick":"Automatically kicks everyone who is not using this mod.",
+                "autoban":"Automatically bans everyone who is not using this mod.",
                 "Alt L":"Makes lobby visible when you are ingame. Press Alt L again to close lobby.",
                 "Alt C":"Hides ingame chat. Press Alt C again to show ingame chat.",
                 "Alt S":"Starts game instantly.",
@@ -4368,7 +4395,59 @@ scope.commandhandle = function(chat_val){
             return "";
 
         }
-        
+        else if (chat_val.substring(1,9)=="autokick"){
+            if(autokickban == 0){
+                displayInChat("Autokick is now on.","#DA0808","#1EBCC1");
+                autokickban = 1;
+            }
+            else if(autokickban == 1){
+                autokickban = 0;
+                displayInChat("Autokick is now off.","#DA0808","#1EBCC1");
+            }
+            else{
+                autokickban = 1;
+                displayInChat("Autokick is now on, and Autoban is now off.","#DA0808","#1EBCC1");
+            }
+
+            return "";
+        }
+        else if (chat_val.substring(1,8)=="autoban"){
+            if(autokickban == 0){
+                displayInChat("Autoban is now on.","#DA0808","#1EBCC1");
+                autokickban = 2;
+            }
+            else if(autokickban == 2){
+                autokickban = 0;
+                displayInChat("Autoban is now off.","#DA0808","#1EBCC1");
+            }
+            else{
+                autokickban = 2;
+                displayInChat("Autoban is now on, and Autokick is now off.","#DA0808","#1EBCC1");
+            }
+
+            return "";
+        }
+        else if (chat_val.substring(1,8)=="sandbox"){
+            if(sandboxon == false){
+                displayInChat("This room is now a sandbox room.","#DA0808","#1EBCC1");
+                sandboxon = true;
+                SEND('42[4,{"type":"sandboxon"}]');
+                var sandboxkeys = Object.keys(sandboxplayerids);
+                var packets = [];
+                for(var i = 0;i<sandboxkeys.length;i++){
+                    var p = playerids[sandboxkeys[i]];
+                    var packet = '42'+JSON.stringify([4,sandboxkeys[i],p.peerID,p.userName,p.guest,p.level,p.team,p.avatar]);
+                    packets.push(packet);
+                }
+                SEND("42"+JSON.stringify([4,{"type":"fakerecieve","from":username,"packet":packets,to:[-1]}]));
+                SEND("42"+JSON.stringify([4,{"type":"sandboxid","from":username,"lastid":sandboxid,to:[-1]}]));
+            }
+            else{
+                displayInChat("You cannot turn a sandbox room back into a normal room.","#DA0808","#1EBCC1");
+            }
+
+            return "";
+        }
         else if(sandboxon){
             if (chat_val.substring(1,11)=="addplayer " && chat_val.replace(/^\s+|\s+$/g, '').length>=12){
                 var text = chat_val.substring(11).replace(/^\s+|\s+$/g, '');
@@ -4453,18 +4532,38 @@ scope.commandhandle = function(chat_val){
                 }
                 return "";
             }
-            else if (chat_val.substring(1,7)=="copyme"){
-                if(sandboxcopyme == true){
-                    displayInChat("Copyme is now off.","#DA0808","#1EBCC1");
-                    sandboxcopyme = false;
+            else if (chat_val.substring(1,6)=="copy " && chat_val.replace(/^\s+|\s+$/g, '').length>=7){
+                var text = chat_val.substring(6).replace(/^\s+|\s+$/g, '');
+                var keys = Object.keys(playerids);
+                var keys2 = Object.keys(sandboxplayerids);
+                
+                var copiedperson = -1;
+                for(var i = 0;i<keys.length;i++){
+                    if(playerids[keys[i]].userName==text){
+                        copiedperson = keys[i];
+                    }
                 }
-                else{
-                    displayInChat("Copyme is now on.","#DA0808","#1EBCC1");
-                    sandboxcopyme = true;
+                if(copiedperson==-1){
+                    displayInChat(playerids[copiedperson].userName + " was not found in this room.","#DA0808","#1EBCC1");
+                    return "";
                 }
+                if(keys2.includes(copiedperson.toString())){
+                    displayInChat("Bots cannot copy a bot.","#DA0808","#1EBCC1");
+                    return "";
+                }
+                displayInChat("All bots will now copy "+playerids[copiedperson].userName+".","#DA0808","#1EBCC1");
+                displayInChat("To reset copy, type '/copy'.","#DA0808","#1EBCC1");
+                sandboxcopyme = copiedperson;
+                
 
                 return "";
             }
+            else if (chat_val.substring(1,5)=="copy"){
+                sandboxcopyme = -1;
+                displayInChat("Copy is now off.","#DA0808","#1EBCC1");
+                return "";
+            }
+            
         }
     }
     return chat_val;
@@ -5204,7 +5303,9 @@ function timeout123() {
     var now = Date.now();
     var keys = Object.keys(playerids);
     for(var i = 0;i<keys.length;i++){
-
+        if(!playerids[keys[i]]?.commands && autokickban>0 && playerids[keys[i]].peerID!="sandbox" && ishost && playerids[keys[i]].ratelimit.join+750<now){
+            SEND('42[9,{"banshortid":'+keys[i].toString()+',"kickonly":'+(autokickban == 1).toString()+'}]');
+        }
         if(playerids[keys[i]].playerData){
             if(playerids[keys[i]].playerData2){
                 if(playerids[keys[i]].playerData.transform){
@@ -5282,8 +5383,8 @@ function timeout123() {
         }
         pollactive = [false,0,0,[]];
     }
-    if(!ishost && sandboxcopyme){
-        sandboxcopyme = false;
+    if(!ishost && sandboxcopyme!=-1){
+        sandboxcopyme = -1;
     }
     
     if(afkkill>0 && ishost){
@@ -5359,12 +5460,13 @@ function timeout123() {
         ishost = false;
         parentDraw = 0;
         sandboxplayerids = {};
-        sandboxcopyme = false;
+        sandboxcopyme = -1;
         wintext = "";
         sandboxon = false;
         sandboxid = 200;
         disabledkeys = [];
         myid = -1;
+        autokickban = 0;
         if(!bonkwss){
             playerids = {};
         }
