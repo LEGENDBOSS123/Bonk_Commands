@@ -2345,9 +2345,8 @@ Gwindow.WebSocket.prototype.send = function(args) {
                             var keys = Object.keys(sandboxplayerids);
                             for(var i = 0;i<keys.length;i++){
                                 if(jsonargs["packet"][i2].startsWith("42[7,")){
-                                    if(Object.keys(jsonargs["packet"][i2]).join().startsWith("i,f,c")){
-                                        RECIEVE(jsonargs["packet"][i2].replace("ID",keys[i].toString()).replace("CVALUE",playerids[keys[i]].movecount.toString()))
-                                    }
+                                    originalRecieve.call(this,{data:jsonargs["packet"][i2].replace("ID",keys[i].toString()).replace("CVALUE",playerids[keys[i]].movecount.toString())});
+                                    playerids[keys[i]].movecount+=1;
                                 }
                             }
                         }
@@ -2570,17 +2569,16 @@ Gwindow.WebSocket.prototype.send = function(args) {
                     else{
                         if(ishost){
                             SEND('42[4,{"type":"sandboxon"}]');
-                            setTimeout(function(){
-                                var sandboxkeys = Object.keys(sandboxplayerids);
-                                var packets = [];
-                                for(var i = 0;i<sandboxkeys.length;i++){
-                                    var p = playerids[sandboxkeys[i]];
-                                    var packet = '42'+JSON.stringify([4,sandboxkeys[i],p.peerID,p.userName,p.guest,p.level,p.team,p.avatar]);
-                                    packets.push(packet);
-                                }
-                                SEND("42"+JSON.stringify([4,{"type":"fakerecieve","from":username,"packet":packets,to:[jsonargs[1]]}]));
-                                SEND("42"+JSON.stringify([4,{"type":"sandboxid","from":username,"lastid":sandboxid,to:[jsonargs[1]]}]));
-                            });
+                            var sandboxkeys = Object.keys(sandboxplayerids);
+                            var packets = [];
+                            for(var i = 0;i<sandboxkeys.length;i++){
+                                var p = playerids[sandboxkeys[i]];
+                                var packet = '42'+JSON.stringify([4,sandboxkeys[i],p.peerID,p.userName,p.guest,p.level,p.team,p.avatar]);
+                                packets.push(packet);
+                            }
+                            SEND("42"+JSON.stringify([4,{"type":"fakerecieve","from":username,"packet":packets,to:[jsonargs[1]]}]));
+                            SEND("42"+JSON.stringify([4,{"type":"sandboxid","from":username,"lastid":sandboxid,to:[jsonargs[1]]}]));
+                        
                         }
                     }
                 }
