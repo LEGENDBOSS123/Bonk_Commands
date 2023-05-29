@@ -370,6 +370,8 @@ if(Gdocument.getElementById("maploadtypedropdowntitlerequested") == null){
     refreshmaprequests.style["line-height"] = "23px";
     refreshmaprequests.style["font-size"] = "14px";
     refreshmaprequests.addEventListener("click",function(){
+        Gdocument.getElementById("maploadtypedropdownoption7").click();
+        Gdocument.getElementById("maploadtypedropdowntitle").click();
         Gdocument.getElementById("maploadtypedropdowntitle").textContent = dropdownrequested.textContent;
         Gdocument.getElementById("maploadwindowsearchinput").value = "";
         dropdownrequested.style["display"] = "none";
@@ -396,6 +398,8 @@ if(Gdocument.getElementById("maploadtypedropdowntitlerequested") == null){
     }
     dropdownrequested.textContent = "MAP REQUESTS";
     dropdownrequested.onclick = function(){
+        Gdocument.getElementById("maploadtypedropdownoption7").click();
+        Gdocument.getElementById("maploadtypedropdowntitle").click();
         Gdocument.getElementById("maploadtypedropdowntitle").textContent = dropdownrequested.textContent;
         Gdocument.getElementById("maploadwindowsearchinput").value = "";
         dropdownrequested.style["display"] = "none";
@@ -2240,6 +2244,7 @@ Gwindow.WebSocket.prototype.send = function(args) {
                 if(playerids[jsonargs[1]].userName.startsWith(Gdocument.getElementById("pretty_top_name").textContent)){
                     myid = jsonargs[1];
                     bonkwss = this;
+                    playerids[myid].commands = true;
                 }
                 else{
                     bonkwssextra.push(this);
@@ -2272,7 +2277,7 @@ Gwindow.WebSocket.prototype.send = function(args) {
                 var jsonargs = JSON.parse(args.data.substring(2));
                 var decodedmap = decodeFromDatabase(jsonargs[1]);
                 if(decodedmap!=0){
-                    requestedmaps = [decodedmap,jsonargs[1]].concat(requestedmaps);
+                    requestedmaps = [[decodedmap,jsonargs[1]]].concat(requestedmaps);
                 }
             }
             if(args.data.startsWith('42[7,')){
@@ -2762,6 +2767,7 @@ scope.special = 90;
 scope.newzoom2 = 1;
 scope.zoom2 = 1;
 scope.autokickban = 0;
+scope.autokickbantimestamp = 0;
 scope.positive = function(angle){
     if(angle<0){
         angle += 2*Math.PI;
@@ -5426,9 +5432,11 @@ function timeout123() {
     var now = Date.now();
     var keys = Object.keys(playerids);
     for(var i = 0;i<keys.length;i++){
-        if(!playerids[keys[i]]?.commands && autokickban>0 && playerids[keys[i]].peerID!="sandbox" && ishost && playerids[keys[i]].ratelimit.join+750<now){
+        if(autokickbantimestamp+500<now && keys[i]!=myid && !playerids[keys[i]]?.commands && autokickban>0 && playerids[keys[i]].peerID!="sandbox" && ishost && playerids[keys[i]].ratelimit.join+750<now){
             SEND('42[9,{"banshortid":'+keys[i].toString()+',"kickonly":'+(autokickban == 1).toString()+'}]');
+            autokickbantimestamp = now;
         }
+        
         if(playerids[keys[i]].playerData){
             if(playerids[keys[i]].playerData2){
                 if(playerids[keys[i]].playerData.transform){
@@ -5591,6 +5599,7 @@ function timeout123() {
         sandboxid = 200;
         disabledkeys = [];
         myid = -1;
+        autokickbantimestamp = 0;
         autokickban = 0;
         if(!bonkwss){
             playerids = {};
