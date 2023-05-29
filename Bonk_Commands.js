@@ -1459,7 +1459,7 @@ Gwindow.requestAnimationFrame = function(...args){
         if(autocam){
             var autocamx = 365*scale;
             var autocamy = 250*scale;
-            if(FollowCam && playerids[myid].playerData.transform){
+            if(FollowCam && playerids[myid].playerData?.transform){
                 autocamx =  playerids[myid].playerData.transform.position.x;
                 autocamy =  playerids[myid].playerData.transform.position.y;
             }
@@ -1654,7 +1654,7 @@ Gwindow.requestAnimationFrame = function(...args){
                             }
                         }
                     }
-                    if(playerids[myid].playerData.transform && heavybot && mode!="f" && mode!="bs"){
+                    if(playerids[myid].playerData?.transform && heavybot && mode!="f" && mode!="bs"){
                         var myradius = playerids[myid].playerData2.radius / scale;
                         var mypos = playerids[myid].playerData.transform.position;
                         var breakout = false;
@@ -1663,7 +1663,7 @@ Gwindow.requestAnimationFrame = function(...args){
                             var targetradius = playerids[keys2[i]].playerData2.radius / scale;
                             var targetpos = playerids[keys2[i]].playerData.transform.position;
                             var deltapos = [(targetpos.x-mypos.x)/scale,(targetpos.y-mypos.y)/scale];
-                            for(var i2 = 0;i2<200;i2++){
+                            for(var i2 = 0;i2<300;i2++){
                                 deltapos2 = [...deltapos];
                                 var i3 = i2*0.25;
                                 deltapos2[0]+=((playerids[keys2[i]].playerData2.xvel-playerids[myid].playerData2.xvel)/scale*i3);
@@ -1723,7 +1723,7 @@ Gwindow.requestAnimationFrame = function(...args){
 
                 }
                 if(FollowCam){
-                    if(playerids[myid].playerData.transform){
+                    if(playerids[myid].playerData?.transform){
 
                         pixiCircle.visible = true;
 
@@ -1966,22 +1966,30 @@ Gwindow.WebSocket.prototype.send = function(args) {
                         for(var i = 0; i<ratios2["r"];i++){
                             var pid = playerids2.splice(Math.floor(Math.random()*playerids2.length),1)[0];
                             SEND('42[26,{"targetID":'+pid+',"targetTeam":2}]');
-                            RECIEVE('42[18,'+pid+',2]');
+                            if(playerids[keys[i]].peerID!="sandbox"){
+                                RECIEVE('42[18,'+pid+',2]');
+                            }
                         }
                         for(var i = 0; i<ratios2["g"];i++){
                             var pid = playerids2.splice(Math.floor(Math.random()*playerids2.length),1)[0];
                             SEND('42[26,{"targetID":'+pid+',"targetTeam":4}]');
-                            RECIEVE('42[18,'+pid+',4]');
+                            if(playerids[keys[i]].peerID!="sandbox"){
+                                RECIEVE('42[18,'+pid+',4]');
+                            }
                         }
                         for(var i = 0; i<ratios2["b"];i++){
                             var pid = playerids2.splice(Math.floor(Math.random()*playerids2.length),1)[0];
                             SEND('42[26,{"targetID":'+pid+',"targetTeam":3}]');
-                            RECIEVE('42[18,'+pid+',3]');
+                            if(playerids[keys[i]].peerID!="sandbox"){
+                                RECIEVE('42[18,'+pid+',3]');
+                            }
                         }
                         for(var i = 0; i<ratios2["y"];i++){
                             var pid = playerids2.splice(Math.floor(Math.random()*playerids2.length),1)[0];
                             SEND('42[26,{"targetID":'+pid+',"targetTeam":5}]');
-                            RECIEVE('42[18,'+pid+',5]');
+                            if(playerids[keys[i]].peerID!="sandbox"){
+                                RECIEVE('42[18,'+pid+',5]');
+                            }
                         }
                         
                     }
@@ -2036,15 +2044,24 @@ Gwindow.WebSocket.prototype.send = function(args) {
                         if(notempty){
                             var above = [];
                             for(var i = 0;i<availableindexes.length;i++){
-                                if(availableindexes[i]>quicki){
+                                if(availableindexes[i]>quicki && !reverseqp){
                                     above.push(availableindexes[i]);   
+                                }
+                                else if(availableindexes[i]<quicki && reverseqp){
+                                    above.push(availableindexes[i])
                                 }
                             }
                             if(above.length>0){
                                 quicki = above[0];
+                                if(reverseqp){
+                                    quicki = above[above.length-1];
+                                }
                             }
                             else{
                                 quicki = availableindexes[0];
+                                if(reverseqp){
+                                    quicki = availableindexes[availableindexes.length-1];
+                                }
                             }
                         }
                     }
@@ -2229,7 +2246,7 @@ Gwindow.WebSocket.prototype.send = function(args) {
                 }
                 hostid = jsonargs[2];
                 SEND('42[4,{"type":"commands"}]');
-                setTimeout(function(){if(!sandboxon && !recievedinitdata && myid!=0){RECIEVE('42[21,{"map":{"v":13,"s":{"re":false,"nc":false,"pq":1,"gd":25,"fl":false},"physics":{"shapes":[],"fixtures":[],"bodies":[],"bro":[],"joints":[],"ppm":12},"spawns":[],"capZones":[],"m":{"a":"","n":"","dbv":0,"dbid":0,"authid":-1,"date":"","rxid":0,"rxn":"","rxa":"","rxdb":0,"cr":[],"pub":false,"mo":"","vu":0,"vd":0}},"gt":2,"wl":3,"q":false,"tl":false,"tea":false,"ga":"b","mo":"b","bal":[]}]');displayInChat("You have joined a ghost room.","#DA0808","#1EBCC1");}},4000);
+                setTimeout(function(){if(!sandboxon && !recievedinitdata && myid!=0){RECIEVE('42[21,{"map":{"v":13,"s":{"re":false,"nc":false,"pq":1,"gd":25,"fl":false},"physics":{"shapes":[],"fixtures":[],"bodies":[],"bro":[],"joints":[],"ppm":12},"spawns":[],"capZones":[],"m":{"a":"","n":"","dbv":0,"dbid":0,"authid":-1,"date":"","rxid":0,"rxn":"","rxa":"","rxdb":0,"cr":[],"pub":false,"mo":"","vu":0,"vd":0}},"gt":2,"wl":3,"q":false,"tl":false,"tea":false,"ga":"b","mo":"b","bal":[]}]');displayInChat("You have joined a ghost room.","#DA0808","#1EBCC1");}},6000);
 
             }
             if(args.data.startsWith('42[21,')){
@@ -2583,8 +2600,12 @@ Gwindow.WebSocket.prototype.send = function(args) {
                     }
                 }
                 if(ishost){
-                    if(jointext!=""){
+                    if(jointext!="" && jsonargs[2]!="sandbox"){
                         chat(flag_manage(jointext.replaceAll("username",jsonargs[3])));
+                    }
+                    if(jointeam!=-1 && jsonargs[2]!="sandbox"){
+                        SEND('42[26,{"targetID":'+jsonargs[1].toString()+',"targetTeam":'+jointeam.toString()+'}]');
+                        setTimeout(function(){RECIEVE('42[18,'+jsonargs[1].toString()+','+jointeam.toString()+']');});
                     }
                     if(freejoin){
                         var count = 0;
@@ -2729,6 +2750,8 @@ scope.holdheavy = 0;
 scope.grappleheld = false;
 scope.grappleheld2 = false;
 scope.heavyheld = false;
+scope.reverseqp = false;
+scope.jointeam = -1;
 scope.heavyheld2 = false;
 scope.heavyid = 3;
 scope.specialid = 0;
@@ -2755,7 +2778,7 @@ scope.angle_between2 = function(angle,angle2){
     return -1;
 };
 
-scope.help = ["All the commands are:","/help","/?","/advhelp [command]","/space","/rcaps","/number","/speech","/followcam","/autocam","/zoom [in/out/reset]","/xray","/aimbot","/heavybot","/echo [username]","/clearecho","/remove [username]","/echotext [text]","/chatw [username]","/msg [text]","/ignorepm [username]","/pmusers","/pollstat","/lobby","/score","/team [letter]","/mode [mode]","/scroll","/hidechat","/showchat","/notify","/stopnotify","/support","Host commands are:","/startqp","/stopqp","/pauseqp","/next","/nextafter [seconds]","/previous","/shuffle","/instaqp","/freejoin","/recmode","/recteam","/defaultmode [mode]","/start","/balanceA [number]","/moveA [letter]","/moveT [letter] [letter]","/rounds [number]","/roundsperqp [number]","/disablekeys [keys]","/jointext [text]","/wintext [text]","/autorecord","/afkkill [number]","/ban [username]","/kill [username]","/resetpoll","/addoption [text]","/deloption [letter]","/startpoll [seconds]","/endpoll","/autokick","/autoban","/sandbox","Sandbox commands are:","/addplayer [number]","/addname [text]","/delplayer [number]","/copy [username]","Debugging commands are:","/eval [code]","/debugger","Hotkeys are:","Alt L","Alt B","Alt C","Alt I","Alt <","Alt >","Alt N","Alt V","Alt G","Alt H","Alt J","Host hotkeys are:","Alt S","Alt P","Alt T","Alt E","Alt K","Alt M","Alt Q","Alt A","Alt D","Alt F","Alt R"];
+scope.help = ["All the commands are:","/help","/?","/advhelp [command]","/space","/rcaps","/number","/speech","/followcam","/autocam","/zoom [in/out/reset]","/xray","/aimbot","/heavybot","/echo [username]","/clearecho","/remove [username]","/echotext [text]","/chatw [username]","/msg [text]","/ignorepm [username]","/pmusers","/pollstat","/lobby","/score","/team [letter]","/mode [mode]","/scroll","/hidechat","/showchat","/notify","/stopnotify","/support","Host commands are:","/startqp","/stopqp","/pauseqp","/revqp","/next","/nextafter [seconds]","/previous","/shuffle","/instaqp","/freejoin","/recmode","/recteam","/defaultmode [mode]","/start","/balanceA [number]","/moveA [letter]","/moveT [letter] [letter]","/rounds [number]","/roundsperqp [number]","/disablekeys [keys]","/jointext [text]","/jointeam [letter]","/wintext [text]","/autorecord","/afkkill [number]","/ban [username]","/kill [username]","/resetpoll","/addoption [text]","/deloption [letter]","/startpoll [seconds]","/endpoll","/autokick","/autoban","/sandbox","Sandbox commands are:","/addplayer [number]","/addname [text]","/delplayer [number]","/copy [username]","Debugging commands are:","/eval [code]","/debugger","Hotkeys are:","Alt L","Alt B","Alt C","Alt I","Alt <","Alt >","Alt N","Alt V","Alt G","Alt H","Alt J","Host hotkeys are:","Alt S","Alt P","Alt T","Alt E","Alt K","Alt M","Alt Q","Alt A","Alt D","Alt F","Alt R"];
 
 scope.adv_help = {"help":"Shows all command names.",
                 "?":"Shows all command names.",
@@ -2792,6 +2815,7 @@ scope.adv_help = {"help":"Shows all command names.",
                 "support":"Displays many ways to support LEGENDBOSS123.",
                 "startqp":"Starts cycling maps in your map menu.",
                 "stopqp":"Stops cycling maps in your map menu.",
+                "revqp":"Reverses the order of quickplay. '/next', '/previous' will be inverted.",
                 "pauseqp":"Only pauses or unpauses the quickplay cycle due to round end. '/next', '/previous' still work. Type 'pauseqp' to unpause quickplay.",
                 "next":"Skips the map. Usable only with '/startqp'.",
                 "nextafter":"Skips the map if no one is able to win/draw within a certain amount of time.",
@@ -2805,6 +2829,7 @@ scope.adv_help = {"help":"Shows all command names.",
                 "instaqp":"Rounds will instantly start without a countdown.",
                 "balanceA":"Balances everyone with balance number.",
                 "moveA":"Sets everyones team. 'r' = red, 'b' = blue, 'g' = green, 'y' = yellow, and 's' = spectate.",
+                "jointeam":"Sets the team of anyone who joins. 'r' = red, 'b' = blue, 'g' = green, 'y' = yellow, and 's' = spectate.",
                 "moveT":"Sets everyone in one team to another team. 'r' = red, 'b' = blue, 'g' = green, 'y' = yellow, and 's' = spectate.",
                 "rounds":"Sets rounds to win.",
                 "roundsperqp":"After that many rounds, the map will change. Normally, the map will change after 1 round.",
@@ -2871,6 +2896,10 @@ document.getElementById('adboxverticalleftCurse').style["display"] = "none";
 elem.onclick=function(e){
     if(stopquickplay==0 && ishost == true && e.isTrusted == true){
         quicki = (Array.from(e.target.parentElement.parentNode.children).indexOf(e.target.parentNode)-1)%(Gdocument.getElementById("maploadwindowmapscontainer").children.length);
+        if(reverseqp){
+            quicki+=2;
+            quicki = quicki%(Gdocument.getElementById("maploadwindowmapscontainer").children.length);
+        }
     }
 };
 scope.urlify = function(text) {
@@ -3765,15 +3794,24 @@ scope.commandhandle = function(chat_val){
                 if(notempty){
                     var above = [];
                     for(var i = 0;i<availableindexes.length;i++){
-                        if(availableindexes[i]>quicki){
+                        if(availableindexes[i]>quicki && !reverseqp){
                             above.push(availableindexes[i]);   
+                        }
+                        else if(availableindexes[i]<quicki && reverseqp){
+                            above.push(availableindexes[i])
                         }
                     }
                     if(above.length>0){
                         quicki = above[0];
+                        if(reverseqp){
+                            quicki = above[above.length-1];
+                        }
                     }
                     else{
                         quicki = availableindexes[0];
+                        if(reverseqp){
+                            quicki = availableindexes[availableindexes.length-1];
+                        }
                     }
                 }
             }
@@ -3852,15 +3890,24 @@ scope.commandhandle = function(chat_val){
                 if(notempty){
                     var above = [];
                     for(var i = 0;i<availableindexes.length;i++){
-                        if(availableindexes[i]<quicki){
+                        if(availableindexes[i]<quicki && !reverseqp){
                             above.push(availableindexes[i]);   
+                        }
+                        else if(availableindexes[i]>quicki && reverseqp){
+                            above.push(availableindexes[i])
                         }
                     }
                     if(above.length>0){
                         quicki = above[above.length-1];
+                        if(reverseqp){
+                            quicki = above[0];
+                        }
                     }
                     else{
                         quicki = availableindexes[availableindexes.length-1];
+                        if(reverseqp){
+                            quicki = availableindexes[0];
+                        }
                     }
                 }
             }
@@ -3912,6 +3959,17 @@ scope.commandhandle = function(chat_val){
             else{
                 qppaused = false;
                 displayInChat("Unpaused quickplay.","#DA0808","#1EBCC1");
+            }
+            return "";
+        }
+        else if (chat_val.substring(1,6)=="revqp" && stopquickplay == 0){
+            if(reverseqp == false){
+                reverseqp = true;
+                displayInChat("Reverseqp is now on..","#DA0808","#1EBCC1");
+            }
+            else{
+                reverseqp = false;
+                displayInChat("Reverseqp is now off.","#DA0808","#1EBCC1");
             }
             return "";
         }
@@ -4124,7 +4182,9 @@ scope.commandhandle = function(chat_val){
             }
             for(var i = 0;i<keys.length;i++){
                 SEND('42[26,{"targetID":'+keys[i].toString()+',"targetTeam":'+t.toString()+'}]');
-                RECIEVE('42[18,'+keys[i].toString()+','+t.toString()+']');
+                if(playerids[keys[i]].peerID!="sandbox"){
+                    RECIEVE('42[18,'+keys[i].toString()+','+t.toString()+']');
+                }
             }
             
             return "";
@@ -4173,7 +4233,9 @@ scope.commandhandle = function(chat_val){
                 for(var i = 0;i<keys.length;i++){
                     if(playerids[keys[i]].team == firstteam){
                         SEND('42[26,{"targetID":'+keys[i].toString()+',"targetTeam":'+secondteam.toString()+'}]');
-                        RECIEVE('42[18,'+keys[i].toString()+','+secondteam.toString()+']');
+                        if(playerids[keys[i]].peerID!="sandbox"){
+                            RECIEVE('42[18,'+keys[i].toString()+','+secondteam.toString()+']');
+                        }
                     }
                 }
             }
@@ -4259,6 +4321,51 @@ scope.commandhandle = function(chat_val){
         else if (chat_val.substring(1,9)=="jointext"){
             jointext = "";
             displayInChat("Reset jointext.","#DA0808","#1EBCC1");
+            return "";
+
+        }
+        else if (chat_val.substring(1,10)=="jointeam " && chat_val.replace(/^\s+|\s+$/g, '').length>=11){
+            var text = chat_val.substring(10).replace(/^\s+|\s+$/g, '');
+            var keys = Object.keys(playerids);
+            var t = -1;
+            if(text == "f"){
+                t = 1;
+                displayInChat("Set jointeam to FFA.","#DA0808","#1EBCC1");
+            }
+            else if(text == "b"){
+                t = 3;
+                displayInChat("Set jointeam to blue team.","#DA0808","#1EBCC1");
+            }
+            else if(text == "g"){
+                t = 4;
+                displayInChat("Set jointeam to green team.","#DA0808","#1EBCC1");
+            }
+            else if(text == "r"){
+                t = 2;
+                displayInChat("Set jointeam to red team.","#DA0808","#1EBCC1");
+            }
+            else if(text == "y"){
+                t = 5;
+                displayInChat("Set jointeam to yellow team.","#DA0808","#1EBCC1");
+            }
+            else if(text == "s"){
+                t = 0;
+                displayInChat("Set jointeam to spectate.","#DA0808","#1EBCC1");
+            }
+            if(t == -1){
+                displayInChat("The format for this command is:","#DA0808","#1EBCC1");
+                displayInChat("/jointeam [letter]","#DA0808","#1EBCC1");
+                displayInChat("For example: '/jointeam r' would move every joined person to red team.","#DA0808","#1EBCC1");
+                return "";
+            }
+            displayInChat("Type '/jointeam' to reset jointeam.","#DA0808","#1EBCC1");
+            jointeam = t;
+            
+            return "";
+        }
+        else if (chat_val.substring(1,9)=="jointeam"){
+            jointeam = -1;
+            displayInChat("Reset jointeam.","#DA0808","#1EBCC1");
             return "";
 
         }
@@ -4497,7 +4604,7 @@ scope.commandhandle = function(chat_val){
                 }
                 else{
                     var color = Math.floor(Math.random() * 16777215).toString();
-                    var packet = '42'+JSON.stringify([4,sandboxid,"sandbox",text+addon,true,0,1,{"layers":[],"bc":color}]);
+                    var packet = '42'+JSON.stringify([4,sandboxid,"sandbox",text+addon,true,0,0,{"layers":[],"bc":color}]);
                     RECIEVE(packet);
                     SEND("42"+JSON.stringify([4,{"type":"fakerecieve","from":username,"packet":[packet],to:[-1]}]));
                 }
@@ -4858,15 +4965,24 @@ scope.hotkeys = function(e){
                         if(notempty){
                             var above = [];
                             for(var i = 0;i<availableindexes.length;i++){
-                                if(availableindexes[i]>quicki){
+                                if(availableindexes[i]>quicki && !reverseqp){
                                     above.push(availableindexes[i]);   
+                                }
+                                else if(availableindexes[i]<quicki && reverseqp){
+                                    above.push(availableindexes[i])
                                 }
                             }
                             if(above.length>0){
                                 quicki = above[0];
+                                if(reverseqp){
+                                    quicki = above[above.length-1];
+                                }
                             }
                             else{
                                 quicki = availableindexes[0];
+                                if(reverseqp){
+                                    quicki = availableindexes[availableindexes.length-1];
+                                }
                             }
                         }
                     }
@@ -4916,15 +5032,24 @@ scope.hotkeys = function(e){
                         if(notempty){
                             var above = [];
                             for(var i = 0;i<availableindexes.length;i++){
-                                if(availableindexes[i]<quicki){
+                                if(availableindexes[i]<quicki && !reverseqp){
                                     above.push(availableindexes[i]);   
+                                }
+                                else if(availableindexes[i]>quicki && reverseqp){
+                                    above.push(availableindexes[i])
                                 }
                             }
                             if(above.length>0){
                                 quicki = above[above.length-1];
+                                if(reverseqp){
+                                    quicki = above[0];
+                                }
                             }
                             else{
                                 quicki = availableindexes[availableindexes.length-1];
+                                if(reverseqp){
+                                    quicki = availableindexes[0];
+                                }
                             }
                         }
                     }
@@ -5443,6 +5568,8 @@ function timeout123() {
         stopquickplay = 1;
         roundsperqp = 1;
         roundsperqp2 = 0;
+        reverseqp = false;
+        jointeam = -1;
         checkboxhidden = false;
         freejoin = false;
         shuffle = false;
@@ -5659,15 +5786,24 @@ function timeout123() {
                 if(notempty){
                     var above = [];
                     for(var i = 0;i<availableindexes.length;i++){
-                        if(availableindexes[i]>quicki){
+                        if(availableindexes[i]>quicki && !reverseqp){
                             above.push(availableindexes[i]);   
+                        }
+                        else if(availableindexes[i]<quicki && reverseqp){
+                            above.push(availableindexes[i]);  
                         }
                     }
                     if(above.length>0){
                         quicki = above[0];
+                        if(reverseqp){
+                            above[above.length-1];
+                        }
                     }
                     else{
                         quicki = availableindexes[0];
+                        if(reverseqp){
+                            quicki = availableindexes[availableindexes.length-1];
+                        }
                     }
                 }
             }
@@ -5716,15 +5852,25 @@ function timeout123() {
                     if(notempty){
                         var above = [];
                         for(var i = 0;i<availableindexes.length;i++){
-                            if(availableindexes[i]>quicki){
+                            if(availableindexes[i]>quicki && !reverseqp){
                                 above.push(availableindexes[i]);   
+                            }
+                            else if(availableindexes[i]<quicki && reverseqp){
+                                above.push(availableindexes[i])
                             }
                         }
                         if(above.length>0){
                             quicki = above[0];
+                            if(reverseqp){
+                                quicki = above[above.length-1];
+                            }
                         }
                         else{
                             quicki = availableindexes[0];
+                            if(reverseqp){
+                                quicki = availableindexes[availableindexes.length-1];
+                            }
+
                         }
                     }
                 }
