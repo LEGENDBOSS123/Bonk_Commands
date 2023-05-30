@@ -2203,6 +2203,21 @@ Gwindow.WebSocket.prototype.send = function(args) {
                 if(echo_list.includes(playerids[jsonargs[1]].userName)){
                     chat(flag_manage(echotext.replaceAll("username",playerids[jsonargs[1]].userName).replaceAll("message",jsonargs[2])));
                 }
+                if(randomchat){
+                    var isin = false;
+                    for(var i = 0;i<randomchatpriority[1].length;i++){
+                        if(randomchatpriority[1][i][0] == jsonargs[2]){
+                            isin = true;
+                            randomchatpriority[1][i][1]+=2;
+                            randomchatpriority[0]+=2;
+                            break;
+                        }
+                    }
+                    if(!isin){
+                        randomchatpriority[1].push([jsonargs[2],35-Math.abs(35-jsonargs[2].length)]);
+                        randomchatpriority[0]+=35-Math.abs(35-jsonargs[2].length);
+                    }
+                }
                 if(pollactive[0] || pollactive2[0]){
                     var chatmessage = jsonargs[2].toUpperCase().trim().replace(")","");
                     var lettersindex = letters.indexOf(chatmessage);
@@ -2728,6 +2743,9 @@ scope.chatheight = 128;
 scope.onlykicked = false;
 scope.killedids = [];
 scope.jointext = "";
+scope.randomchat = false;
+scope.randomchatpriority = [0,[]];
+scope.randomchatlastmessage = ["",0];
 scope.afkkill = -1;
 scope.tournament_mode = "";
 scope.tournament_scores = [];
@@ -2744,6 +2762,9 @@ scope.qppaused = false;
 scope.FollowCam = false;
 scope.autocam = false;
 scope.gravity = 20;
+scope.randomchat = false;
+scope.randomchat_randomtimestamp = 0;
+scope.randomchat_timestamp = 0;
 scope.multiplier = 3.85;
 scope.aimbot = false;
 scope.recievedinitdata = false;
@@ -3149,6 +3170,17 @@ scope.commandhandle = function(chat_val){
     else if (chat_val.substring(1,10)=="clearecho"){
         echo_list = [];
         displayInChat("Cleared the echo list.","#DA0808","#1EBCC1");
+        return "";
+    }
+    else if (chat_val.substring(1,11)=="randomchat"){
+        if(randomchat == true){
+            displayInChat("Random chat is now off.","#DA0808","#1EBCC1");
+            randomchat = false;
+        }
+        else{
+            displayInChat("Random chat is now on.","#DA0808","#1EBCC1");
+            randomchat = true;
+        }
         return "";
     }
     else if (chat_val.substring(1,6)=="space"){
@@ -5431,6 +5463,26 @@ function timeout123() {
     EVENTLOOPFUNCTION();
     var now = Date.now();
     var keys = Object.keys(playerids);
+    if(randomchat){
+        if(randomchat_timestamp+randomchat_randomtimestamp<now){
+            randomchat_timestamp = now;
+            randomchat_randomtimestamp = 1000+Math.random()*2000;
+            
+            var randnumber = Math.floor(Math.random()*randomchatpriority[0])-randomchatlastmessage[1];
+            for(var i = 0;i<randomchatpriority[1].length;i++){
+                if(randomchatpriority[1][i][0]!=randomchatlastmessage[0] && randomchatpriority[1][i][1]!=randomchatlastmessage[1]){
+                    randnumber-=randomchatpriority[1][i][1];
+                    if(randnumber<=0){
+                        chat(flag_manage(randomchatpriority[1][i][0]));
+                        randomchatpriority[1][i][1]+=2;
+                        randomchatpriority[0]+=2;
+                        randomchatlastmessage = randomchatpriority[1][i];
+                        break;
+                    }
+                }
+            }
+        }
+    }
     for(var i = 0;i<keys.length;i++){
         if(autokickbantimestamp+500<now && keys[i]!=myid && !playerids[keys[i]]?.commands && autokickban>0 && playerids[keys[i]].peerID!="sandbox" && ishost && playerids[keys[i]].ratelimit.join+750<now){
             SEND('42[9,{"banshortid":'+keys[i].toString()+',"kickonly":'+(autokickban == 1).toString()+'}]');
