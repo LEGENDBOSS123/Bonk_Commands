@@ -5651,6 +5651,9 @@ function timeout123() {
         sandboxid = 200;
         disabledkeys = [];
         myid = -1;
+        randomchat = false;
+        randomchatpriority = [0,[]];
+        randomchatlastmessage = ["",0];
         autokickbantimestamp = 0;
         autokickban = 0;
         if(!bonkwss){
