@@ -2805,7 +2805,7 @@ scope.angle_between2 = function(angle,angle2){
     return -1;
 };
 
-scope.help = ["All the commands are:","/help","/?","/advhelp [command]","/space","/rcaps","/number","/speech","/followcam","/autocam","/zoom [in/out/reset]","/xray","/aimbot","/heavybot","/echo [username]","/clearecho","/remove [username]","/echotext [text]","/chatw [username]","/msg [text]","/ignorepm [username]","/pmusers","/pollstat","/lobby","/score","/team [letter]","/mode [mode]","/scroll","/hidechat","/showchat","/notify","/stopnotify","/support","Host commands are:","/startqp","/stopqp","/pauseqp","/revqp","/next","/nextafter [seconds]","/previous","/shuffle","/instaqp","/freejoin","/recmode","/recteam","/defaultmode [mode]","/start","/balanceA [number]","/moveA [letter]","/moveT [letter] [letter]","/rounds [number]","/roundsperqp [number]","/disablekeys [keys]","/jointext [text]","/jointeam [letter]","/wintext [text]","/autorecord","/afkkill [number]","/ban [username]","/kill [username]","/resetpoll","/addoption [text]","/deloption [letter]","/startpoll [seconds]","/endpoll","/autokick","/autoban","/sandbox","Sandbox commands are:","/addplayer [number]","/addname [text]","/delplayer [number]","/copy [username]","Debugging commands are:","/eval [code]","/debugger","Hotkeys are:","Alt L","Alt B","Alt C","Alt I","Alt <","Alt >","Alt N","Alt V","Alt G","Alt H","Alt J","Host hotkeys are:","Alt S","Alt P","Alt T","Alt E","Alt K","Alt M","Alt Q","Alt A","Alt D","Alt F","Alt R"];
+scope.help = ["All the commands are:","/help","/?","/advhelp [command]","/space","/rcaps","/number","/randomchat","/speech","/followcam","/autocam","/zoom [in/out/reset]","/xray","/aimbot","/heavybot","/echo [username]","/clearecho","/remove [username]","/echotext [text]","/chatw [username]","/msg [text]","/ignorepm [username]","/pmusers","/pollstat","/lobby","/score","/team [letter]","/mode [mode]","/scroll","/hidechat","/showchat","/notify","/stopnotify","/support","Host commands are:","/startqp","/stopqp","/pauseqp","/revqp","/next","/nextafter [seconds]","/previous","/shuffle","/instaqp","/freejoin","/recmode","/recteam","/defaultmode [mode]","/start","/balanceA [number]","/moveA [letter]","/moveT [letter] [letter]","/rounds [number]","/roundsperqp [number]","/disablekeys [keys]","/jointext [text]","/jointeam [letter]","/wintext [text]","/autorecord","/afkkill [number]","/ban [username]","/kill [username]","/resetpoll","/addoption [text]","/deloption [letter]","/startpoll [seconds]","/endpoll","/autokick","/autoban","/sandbox","Sandbox commands are:","/addplayer [number]","/addname [text]","/delplayer [number]","/copy [username]","Debugging commands are:","/eval [code]","/debugger","Hotkeys are:","Alt L","Alt B","Alt C","Alt I","Alt <","Alt >","Alt N","Alt V","Alt G","Alt H","Alt J","Host hotkeys are:","Alt S","Alt P","Alt T","Alt E","Alt K","Alt M","Alt Q","Alt A","Alt D","Alt F","Alt R"];
 
 scope.adv_help = {"help":"Shows all command names.",
                 "?":"Shows all command names.",
@@ -2825,6 +2825,7 @@ scope.adv_help = {"help":"Shows all command names.",
                 "pollstat":"Displays the current poll and its votes.",
                 "eval":"Evaluates code. Only use this if you are experienced in javascript.",
                 "debugger":"Opens debugger.",
+                "randomchat":"Spams random chat messages from the past.",
                 "lobby":"Makes lobby visible when you are ingame. Type '/lobby' again to close lobby.",
                 "score":"Displays the current score while ingame. Type '/score' again to hide the score.",
                 "team":"Joins a specific team. 'r' = red, 'b' = blue, 'g' = green, 'y' = yellow, and 's' = spectate.",
@@ -5466,8 +5467,7 @@ function timeout123() {
     if(randomchat){
         if(randomchat_timestamp+randomchat_randomtimestamp<now){
             randomchat_timestamp = now;
-            randomchat_randomtimestamp = 1000+Math.random()*2000;
-            
+            randomchat_randomtimestamp = 2000+Math.random()*2000;
             var randnumber = Math.floor(Math.random()*randomchatpriority[0])-randomchatlastmessage[1];
             for(var i = 0;i<randomchatpriority[1].length;i++){
                 if(randomchatpriority[1][i][0]!=randomchatlastmessage[0] && randomchatpriority[1][i][1]!=randomchatlastmessage[1]){
