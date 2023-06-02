@@ -1606,7 +1606,7 @@ Gwindow.requestAnimationFrame = function(...args){
                                 var scale2=1/(parseInt(canv.style["width"])/730);
                                 scale2 /= scale/(1 + playerids[myid].playerData2.balance*0.0088)*(playerids[myid].playerData2.radius/12);
                                 var Dstarted = (Math.min((now-started)/1000,10/3)/(10/3));
-                                var v = multiplier * (Dstarted*100+15);
+                                var v = multiplier * (Dstarted*100+15)*scale2;
                                 var g = gravity;
                                 var mypos = playerids[myid].playerData.transform.position;
                                 var targetpos = playerids[targetid].playerData.transform.position;
@@ -1623,13 +1623,14 @@ Gwindow.requestAnimationFrame = function(...args){
                                 var alpha = deltapos[0];
                                 var beta = deltapos[1];
                                 var v_squared = v**2;
-                                var rootterm = v_squared**2 - g*(g*alpha**2+2*beta*v_squared);
+                                var eff = 2*v_squared/g;
+                                var rootterm = eff*(eff-2*beta)-2*alpha**2;
                                 if(rootterm < 0) {
                                 } else {
-                                    gamma_first = (v_squared + Math.sqrt(rootterm));
-                                    gamma_second = (v_squared - Math.sqrt(rootterm));
-                                    theta_first = positive(-Math.atan2(gamma_first, g*alpha));
-                                    theta_second = positive(-Math.atan2(gamma_second, g*alpha));
+                                    gamma_first = (eff + Math.sqrt(rootterm));
+                                    gamma_second = (eff - Math.sqrt(rootterm));
+                                    theta_first = positive(-Math.atan2(gamma_first, alpha));
+                                    theta_second = positive(-Math.atan2(gamma_second, alpha));
                                     if(angle_between(angle,theta_first)<angle_between(angle,theta_second)){
                                         angle = theta_first;
                                     }
@@ -1667,15 +1668,15 @@ Gwindow.requestAnimationFrame = function(...args){
                             var targetradius = playerids[keys2[i]].playerData2.radius / scale;
                             var targetpos = playerids[keys2[i]].playerData.transform.position;
                             var deltapos = [(targetpos.x-mypos.x)/scale,(targetpos.y-mypos.y)/scale];
-                            for(var i2 = 0;i2<300;i2++){
+                            for(var i2 = 0;i2<160;i2++){
                                 deltapos2 = [...deltapos];
-                                var i3 = i2*0.25;
+                                var i3 = i2*0.5;
                                 deltapos2[0]+=((playerids[keys2[i]].playerData2.xvel-playerids[myid].playerData2.xvel)/scale*i3);
                                 deltapos2[1]+=((playerids[keys2[i]].playerData2.yvel-playerids[myid].playerData2.yvel)/scale*i3);
                                 var dis = Math.sqrt(deltapos2[0]**2+deltapos2[1]**2);
-                                if(dis<myradius+targetradius){
+                                if(dis<myradius*1.05+targetradius){
                                     breakout = true;
-                                    holdheavy = 15;
+                                    holdheavy = 20;
                                     collision_happened = true;
                                     break;
                                 }
@@ -1686,9 +1687,6 @@ Gwindow.requestAnimationFrame = function(...args){
                         }
                         
                         if(holdheavy>0){
-                            if(collision_happened && holdheavy<10){
-                                holdheavy += 1;
-                            }
                             if(!heavyheld2){
                                 heavyheld = playerids[myid].playerData.children[heavyid].alpha>0;
                             }
@@ -2208,8 +2206,10 @@ Gwindow.WebSocket.prototype.send = function(args) {
                     for(var i = 0;i<randomchatpriority[1].length;i++){
                         if(randomchatpriority[1][i][0] == jsonargs[2]){
                             isin = true;
-                            randomchatpriority[1][i][1]+=2;
-                            randomchatpriority[0]+=2;
+                            if(myid!=jsonargs[1]){
+                                randomchatpriority[1][i][1]+=2;
+                                randomchatpriority[0]+=2;
+                            }
                             break;
                         }
                     }
@@ -2765,12 +2765,12 @@ scope.gravity = 20;
 scope.randomchat = false;
 scope.randomchat_randomtimestamp = 0;
 scope.randomchat_timestamp = 0;
-scope.multiplier = 3.85;
+scope.multiplier = 3.65;
 scope.aimbot = false;
 scope.recievedinitdata = false;
 scope.heavybot = false;
 scope.zoom = 1;
-scope.prediction = 1000;
+scope.prediction = 350;
 scope.started = 0;
 scope.holdheavy = 0;
 scope.grappleheld = false;
@@ -5605,6 +5605,10 @@ function timeout123() {
     
     if((Gdocument.getElementById("sm_connectingContainer").style["visibility"] == "hidden" || Gdocument.getElementById("sm_connectingContainer").style["visibility"] == "") && (Gdocument.getElementById("roomlistcreatewindowcontainer").style["visibility"] == "hidden" || Gdocument.getElementById("roomlistcreatewindowcontainer").style["visibility"] == "")){
         var chatbox = Gdocument.getElementById("newbonklobby_chat_content");
+        while (chatbox.firstChild) {
+            chatbox.removeChild(chatbox.firstChild);
+        }
+        chatbox = Gdocument.getElementById("ingamechatcontent");
         while (chatbox.firstChild) {
             chatbox.removeChild(chatbox.firstChild);
         }
