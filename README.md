@@ -7,11 +7,12 @@ Features this mod contains:
 2. a Map Requests menu so you can view all map requests you have seen.
 3. Sandbox lobby - add infinite players.
 4. Private Chat (with the mod users).
-5. Ability to view lobby from ingame.
-6. Ability to join Ghost Rooms - rooms that initial data timeout.
-7. Custom Quickplay
-8. Echoing players
-9. Polling commands
-10. Followcam/Autocam
-11. Zoom in/out
-12. TONS of commands
+5. Ability to save rooms that are full, so in another room, you will be notified if any of the saved rooms open up.
+6. Ability to view lobby from ingame.
+7. Ability to join Ghost Rooms - rooms that initial data timeout.
+8. Custom Quickplay
+9. Echoing players
+10. Polling commands
+11. Followcam/Autocam
+12. Zoom in/out
+13. TONS of commands
