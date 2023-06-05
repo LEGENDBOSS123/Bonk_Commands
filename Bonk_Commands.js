@@ -280,6 +280,10 @@ if(typeof(scope.parentDraw)=='undefined'){scope.parentDraw = 0;}
 if(typeof(scope.pixiCircle)=='undefined'){scope.pixiCircle = new Gwindow.PIXI.Graphics();}
 if(typeof(scope.container)=='undefined'){scope.container = new Gwindow.PIXI.Container();container.addChild(pixiCircle);}
 if(typeof(scope.canvasWidth)=='undefined'){scope.canvasWidth = -1;}
+if(typeof(scope.savedrooms)=='undefined'){scope.savedrooms = [];}
+if(typeof(scope.inroom)=='undefined'){scope.inroom = false;}
+if(typeof(scope.currentroomaddress)=='undefined'){scope.currentroomaddress = -1;}
+if(typeof(scope.savedroomsdata)=='undefined'){scope.savedroomsdata = {};}
 
 
 if(typeof(scope.requestAnimationFrameOriginal)=='undefined'){scope.requestAnimationFrameOriginal = Gwindow.requestAnimationFrame;}
@@ -322,7 +326,34 @@ if(typeof(scope.originalLobbyChat)=='undefined'){scope.originalLobbyChat = Gdocu
 if(typeof(scope.originalIngameChat)=='undefined'){scope.originalIngameChat = Gdocument.getElementById("ingamechatcontent").appendChild;}
 if(typeof(scope.private_chat_keys)=='undefined'){scope.private_chat_keys = GENERATE_KEYS();scope.private_key = private_chat_keys[0];scope.public_key = private_chat_keys[1];}
     
-    
+if(Gdocument.getElementById("savedroombutton") == null){
+    scope.savedroombutton = Gdocument.createElement("div");
+    savedroombutton.id = "savedroombutton";
+    savedroombutton.className = "brownButton brownButton_classic buttonShadow brownButtonDisabled";
+    savedroombutton.textContent = "Save Room";
+    savedroombutton.style["left"] = "120px";
+    savedroombutton.style["position"] = "absolute";
+    savedroombutton.style["width"] = "90px";
+    savedroombutton.style["height"] = "30px";
+    savedroombutton.style["color"] = "#ffffff";
+    savedroombutton.style["text-align"] = "center";
+    savedroombutton.style["vertical-align"] = "middle";
+    savedroombutton.style["line-height"] = "30px";
+    savedroombutton.style["right"] = "0";
+    savedroombutton.style["cursor"] = "pointer";
+    savedroombutton.style["bottom"] = "10px";
+    savedroombutton.style["margin"] = "auto";
+    savedroombutton.style["bottom"] = "10px";
+    savedroombutton.onclick = function(){
+        if(!savedrooms.includes(currentroomaddress) && currentroomaddress!=-1){
+            savedrooms.push(currentroomaddress);
+            savedroomsdata[currentroomaddress] = {"exists":true};
+        }
+        Gdocument.getElementById("sm_connectingWindowCancelButton").click();
+    };
+    Gdocument.getElementById("sm_connectingWindowCancelButton").style["left"] = "-120px";
+    Gdocument.getElementById("sm_connectingWindow").appendChild(savedroombutton)
+}
     
 if(Gdocument.getElementById("maploadtypedropdowntitlerequested") == null){
     scope.clearmaprequests = Gdocument.createElement("div");
@@ -1329,17 +1360,65 @@ Gdocument.getElementById("ingamechatcontent").appendChild = function(args){
     }
     originalIngameChat.call(this,args);
 };  
-    
+
 Gwindow.XMLHttpRequest.prototype.open = function(_, url) {
     if (url.includes("scripts/map_get") || url.includes("scripts/map_b1_get") || url.includes("scripts/hotmaps/")) {
         this.isSearchMap = true;
     }
-    
+    else if(url.includes("getrooms.php")){
+        this.isGetRooms = true;
+    }
+    else if(url.includes("getroomaddress.php")){
+        this.isGetRoomAddress = true;
+    }
     originalXMLOpen.call(this, ...arguments);
 };
     
 Gwindow.XMLHttpRequest.prototype.send = function(data) {
-    if (this.isSearchMap) {
+    if(this.isGetRoomAddress){
+        currentroomaddress = parseInt(data.slice(3));
+    }
+    else if(this.isGetRooms && inroom){
+        this.onreadystatechange = function(){
+            if(this.readyState == 4){
+                lastrooms = JSON.parse(this.response)["rooms"];
+                if(lastrooms){
+                    var keys = Object.keys(savedroomsdata);
+                    for(var i = 0;i<lastrooms.length;i++){
+                        if(savedrooms.includes(lastrooms[i].id)){
+                            exists = true;
+                            savedroomsdata[lastrooms[i].id] = lastrooms[i];
+                            savedroomsdata[lastrooms[i].id].exists = true;
+                            savedroomsdata[lastrooms[i].id].exists2 = true;
+                            if(lastrooms[i].maxplayers>lastrooms[i].players){
+                                displayInChat('The room '+JSON.stringify(lastrooms[i].roomname)+' is now open with '+lastrooms[i].players+"/"+lastrooms[i].maxplayers+" players.","#DA0808","#1EBCC1");
+                                if(inroom){
+                                    savedrooms.splice(savedrooms.indexOf(lastrooms[i].id),1);
+                                    delete savedroomsdata[lastrooms[i].id];
+                                    keys.splice(keys.indexOf((lastrooms[i].id).toString()),1);
+                                }
+                            }
+                        }
+                    }
+                    for(var i = 0;i<keys.length;i++){
+                        if(!savedroomsdata[keys[i]].exists2){
+                            savedroomsdata[keys[i]].exists = false;
+                        }
+                        savedroomsdata[keys[i]].exists2 = false;
+                        
+                    }
+                    for(var i = 0;i<keys.length;i++){
+                        if(!savedroomsdata[keys[i]].exists){
+                            savedrooms.splice(savedrooms.indexOf(parseInt(keys[i])),1);
+                            displayInChat('The room '+JSON.stringify(savedroomsdata[keys[i]].roomname)+" does not exist anymore.","#DA0808","#1EBCC1");
+                            delete savedroomsdata[keys[i]];
+                        }
+                    }
+                }
+            }
+        }
+    }
+    else if (this.isSearchMap) {
         this.onreadystatechange = function () {
             if (this.readyState == 4 && searchrequested && Gdocument.getElementById("maploadtypedropdowntitle").textContent == "MAP REQUESTS") {
                 searchrequested = false;
@@ -1674,7 +1753,7 @@ Gwindow.requestAnimationFrame = function(...args){
                                 deltapos2[0]+=((playerids[keys2[i]].playerData2.xvel-playerids[myid].playerData2.xvel)/scale*i3);
                                 deltapos2[1]+=((playerids[keys2[i]].playerData2.yvel-playerids[myid].playerData2.yvel)/scale*i3);
                                 var dis = Math.sqrt(deltapos2[0]**2+deltapos2[1]**2);
-                                if(dis<myradius*1.05+targetradius){
+                                if(dis<myradius+targetradius){
                                     breakout = true;
                                     holdheavy = 20;
                                     collision_happened = true;
@@ -1857,6 +1936,8 @@ Gwindow.WebSocket.prototype.send = function(args) {
                 myid = 0;
                 bonkwss = this;
                 hostid = 0;
+                inroom = true;
+                Gdocument.getElementById("roomlistrefreshbutton").click();
             }
             if(args.startsWith('42[23,') && recteams){
                 var jsonargs = JSON.parse(args.substring(2));
@@ -2166,7 +2247,11 @@ Gwindow.WebSocket.prototype.send = function(args) {
                         displayInChat("Your poll failed due to chat rate limit.","#DA0808","#1EBCC1");
                         displayInChat("Please try again.","#DA0808","#1EBCC1");
                     }
-                
+                }
+                else if(jsonargs[1]=="room_full"){
+                    if(!savedrooms.includes(currentroomaddress)){
+                        savedroombutton.className = "brownButton brownButton_classic buttonShadow";
+                    }
                 }
             }
             if(args.data.startsWith('42[6,')){
@@ -2214,8 +2299,8 @@ Gwindow.WebSocket.prototype.send = function(args) {
                         }
                     }
                     if(!isin){
-                        randomchatpriority[1].push([jsonargs[2],35-Math.abs(35-jsonargs[2].length)]);
-                        randomchatpriority[0]+=35-Math.abs(35-jsonargs[2].length);
+                        randomchatpriority[1].push([jsonargs[2],Math.min(35-Math.abs(35-jsonargs[2].length),1)]);
+                        randomchatpriority[0]+=Math.min(35-Math.abs(35-jsonargs[2].length),1);
                     }
                 }
                 if(pollactive[0] || pollactive2[0]){
@@ -2264,9 +2349,15 @@ Gwindow.WebSocket.prototype.send = function(args) {
                 else{
                     bonkwssextra.push(this);
                 }
+                inroom = true;
+                if(savedrooms.includes(currentroomaddress)){
+                    savedrooms.splice(savedrooms.indexOf(currentroomaddress),1);
+                }
                 hostid = jsonargs[2];
                 SEND('42[4,{"type":"commands"}]');
-                setTimeout(function(){if(!sandboxon && !recievedinitdata && myid!=0){RECIEVE('42[21,{"map":{"v":13,"s":{"re":false,"nc":false,"pq":1,"gd":25,"fl":false},"physics":{"shapes":[],"fixtures":[],"bodies":[],"bro":[],"joints":[],"ppm":12},"spawns":[],"capZones":[],"m":{"a":"","n":"","dbv":0,"dbid":0,"authid":-1,"date":"","rxid":0,"rxn":"","rxa":"","rxdb":0,"cr":[],"pub":false,"mo":"","vu":0,"vd":0}},"gt":2,"wl":3,"q":false,"tl":false,"tea":false,"ga":"b","mo":"b","bal":[]}]');displayInChat("You have joined a ghost room.","#DA0808","#1EBCC1");}},6000);
+                ghostroomwss = bonkwss;
+                Gdocument.getElementById("roomlistrefreshbutton").click();
+                setTimeout(function(){if(bonkwss == ghostroomwss && !sandboxon && !recievedinitdata && myid!=0){RECIEVE('42[21,{"map":{"v":13,"s":{"re":false,"nc":false,"pq":1,"gd":25,"fl":false},"physics":{"shapes":[],"fixtures":[],"bodies":[],"bro":[],"joints":[],"ppm":12},"spawns":[],"capZones":[],"m":{"a":"","n":"","dbv":0,"dbid":0,"authid":-1,"date":"","rxid":0,"rxn":"","rxa":"","rxdb":0,"cr":[],"pub":false,"mo":"","vu":0,"vd":0}},"gt":2,"wl":3,"q":false,"tl":false,"tea":false,"ga":"b","mo":"b","bal":[]}]');displayInChat("You have joined a ghost room.","#DA0808","#1EBCC1");}},6000);
 
             }
             if(args.data.startsWith('42[21,')){
@@ -2788,7 +2879,9 @@ scope.special = 90;
 scope.newzoom2 = 1;
 scope.zoom2 = 1;
 scope.autokickban = 0;
+scope.ghostroomwss = -1;
 scope.autokickbantimestamp = 0;
+scope.getroomslastcheck = 0;
 scope.positive = function(angle){
     if(angle<0){
         angle += 2*Math.PI;
@@ -2805,7 +2898,7 @@ scope.angle_between2 = function(angle,angle2){
     return -1;
 };
 
-scope.help = ["All the commands are:","/help","/?","/advhelp [command]","/space","/rcaps","/number","/randomchat","/speech","/followcam","/autocam","/zoom [in/out/reset]","/xray","/aimbot","/heavybot","/echo [username]","/clearecho","/remove [username]","/echotext [text]","/chatw [username]","/msg [text]","/ignorepm [username]","/pmusers","/pollstat","/lobby","/score","/team [letter]","/mode [mode]","/scroll","/hidechat","/showchat","/notify","/stopnotify","/support","Host commands are:","/startqp","/stopqp","/pauseqp","/revqp","/next","/nextafter [seconds]","/previous","/shuffle","/instaqp","/freejoin","/recmode","/recteam","/defaultmode [mode]","/start","/balanceA [number]","/moveA [letter]","/moveT [letter] [letter]","/rounds [number]","/roundsperqp [number]","/disablekeys [keys]","/jointext [text]","/jointeam [letter]","/wintext [text]","/autorecord","/afkkill [number]","/ban [username]","/kill [username]","/resetpoll","/addoption [text]","/deloption [letter]","/startpoll [seconds]","/endpoll","/autokick","/autoban","/sandbox","Sandbox commands are:","/addplayer [number]","/addname [text]","/delplayer [number]","/copy [username]","Debugging commands are:","/eval [code]","/debugger","Hotkeys are:","Alt L","Alt B","Alt C","Alt I","Alt <","Alt >","Alt N","Alt V","Alt G","Alt H","Alt J","Host hotkeys are:","Alt S","Alt P","Alt T","Alt E","Alt K","Alt M","Alt Q","Alt A","Alt D","Alt F","Alt R"];
+scope.help = ["All the commands are:","/help","/?","/advhelp [command]","/space","/rcaps","/number","/randomchat","/speech","/savedroom","/clearsavedroom","/followcam","/autocam","/zoom [in/out/reset]","/xray","/aimbot","/heavybot","/echo [username]","/clearecho","/remove [username]","/echotext [text]","/chatw [username]","/msg [text]","/ignorepm [username]","/pmusers","/pollstat","/lobby","/score","/team [letter]","/mode [mode]","/scroll","/hidechat","/showchat","/notify","/stopnotify","/support","Host commands are:","/startqp","/stopqp","/pauseqp","/revqp","/next","/nextafter [seconds]","/previous","/shuffle","/instaqp","/freejoin","/recmode","/recteam","/defaultmode [mode]","/start","/balanceA [number]","/moveA [letter]","/moveT [letter] [letter]","/rounds [number]","/roundsperqp [number]","/disablekeys [keys]","/jointext [text]","/jointeam [letter]","/wintext [text]","/autorecord","/afkkill [number]","/ban [username]","/kill [username]","/resetpoll","/addoption [text]","/deloption [letter]","/startpoll [seconds]","/endpoll","/autokick","/autoban","/sandbox","Sandbox commands are:","/addplayer [number]","/addname [text]","/delplayer [number]","/copy [username]","Debugging commands are:","/eval [code]","/debugger","Hotkeys are:","Alt L","Alt B","Alt C","Alt I","Alt <","Alt >","Alt N","Alt V","Alt G","Alt H","Alt J","Host hotkeys are:","Alt S","Alt P","Alt T","Alt E","Alt K","Alt M","Alt Q","Alt A","Alt D","Alt F","Alt R"];
 
 scope.adv_help = {"help":"Shows all command names.",
                 "?":"Shows all command names.",
@@ -2814,6 +2907,8 @@ scope.adv_help = {"help":"Shows all command names.",
                 "rcaps":"Toggles rcaps. When rcaps is on, each letter will randomly get capitalized.",
                 "number":"Toggles number. When number is on, 'a' becomes 4, 'e' becomes 3, 's' becomes 5, 'o' becomes 0, 'l' and 'i' become 1.",
                 "speech":"Turns on text to speech for the chat.",
+                "savedroom":"Displays all the rooms you have saved, you can remove individual ones from the saved rooms by clicking \"Remove\".",
+                "clearsavedroom":"Clears all the saved rooms.",
                 "echo":"Echoes a username. It copies the username's chat messages.",
                 "echotext":"Sets a message when someone who is echoed chats. \"message\" will get replaced by the person's message. \"username\" will get replaced by the person's username.",
                 "remove":"Removes username from echo list. You will not echo that username anymore.",
@@ -3260,6 +3355,40 @@ scope.commandhandle = function(chat_val){
 
         return "";
 
+    }
+    else if (chat_val.substring(1,10)=="savedroom"){
+        if(savedrooms.length == 0){
+            displayInChat("You do not have any saved rooms.","#DA0808","#1EBCC1");
+            return "";
+        }
+        else{
+            var keys = Object.keys(savedroomsdata);
+            for(var i = 0;i<keys.length;i++){
+                var code = 'this.parentElement.remove();delete Gwindow.savedroomsdata["'+keys[i]+'"];Gwindow.savedrooms.splice(Gwindow.savedrooms.indexOf('+keys[i]+'),1);';
+                displayInChat('<a onclick = \''+code+'\' style = "color:green;" href = "javascript:void(0);">Remove</a>'+' - ',"#DA0808","#1EBCC1",{sanitize:false},JSON.stringify(savedroomsdata[keys[i]].roomname)+" - "+savedroomsdata[keys[i]].players+"/"+savedroomsdata[keys[i]].maxplayers+" players.");
+
+                Gdocument.getElementById("newbonklobby_chat_content").children[Gdocument.getElementById("newbonklobby_chat_content").children.length-1].children[0].parentElement.style["parsed"] = true;
+                Gdocument.getElementById("ingamechatcontent").children[Gdocument.getElementById("ingamechatcontent").children.length-1].children[0].parentElement.style["parsed"] = true;
+                
+                Laster_message = lastmessage();
+            }
+        }
+        return "";
+    }
+    else if (chat_val.substring(1,15)=="clearsavedroom"){
+        if(savedrooms.length == 0){
+            displayInChat("You do not have any saved rooms.","#DA0808","#1EBCC1");
+            return "";
+        }
+        else{
+            var keys = Object.keys(savedroomsdata);
+            for(var i = 0;i<keys.length;i++){
+                savedrooms.splice(savedrooms.indexOf(parseInt(keys[i])),1);
+                delete savedroomsdata[keys[i]];
+                
+            }
+        }
+        return "";
     }
     else if (chat_val.substring(1,10)=="followcam"){
         if(FollowCam == true){
@@ -5464,6 +5593,12 @@ function timeout123() {
     EVENTLOOPFUNCTION();
     var now = Date.now();
     var keys = Object.keys(playerids);
+    if(getroomslastcheck+3000<now){
+        getroomslastcheck = now;
+        if(inroom){
+            Gdocument.getElementById("roomlistrefreshbutton").click();
+        }
+    }
     if(randomchat){
         if(randomchat_timestamp+randomchat_randomtimestamp<now){
             randomchat_timestamp = now;
@@ -5628,12 +5763,14 @@ function timeout123() {
         newzoom2 = 1;
         FFA = true;
         mode = "b";
+        ghostroomwss = -1;
         heavybot = false;
         stopquickplay = 1;
         roundsperqp = 1;
         roundsperqp2 = 0;
         reverseqp = false;
         jointeam = -1;
+        currentroomaddress = -1;
         checkboxhidden = false;
         freejoin = false;
         shuffle = false;
@@ -5656,10 +5793,12 @@ function timeout123() {
         disabledkeys = [];
         myid = -1;
         randomchat = false;
+        savedroombutton.className = "brownButton brownButton_classic buttonShadow brownButtonDisabled";
         randomchatpriority = [0,[]];
         randomchatlastmessage = ["",0];
         autokickbantimestamp = 0;
         autokickban = 0;
+        inroom = false;
         if(!bonkwss){
             playerids = {};
         }
