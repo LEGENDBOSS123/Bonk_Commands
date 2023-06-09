@@ -1391,7 +1391,9 @@ Gwindow.XMLHttpRequest.prototype.send = function(data) {
                             savedroomsdata[lastrooms[i].id].exists = true;
                             savedroomsdata[lastrooms[i].id].exists2 = true;
                             if(lastrooms[i].maxplayers>lastrooms[i].players){
-                                displayInChat('The room '+JSON.stringify(lastrooms[i].roomname)+' is now open with '+lastrooms[i].players+"/"+lastrooms[i].maxplayers+" players.","#DA0808","#1EBCC1");
+                                if(savedrooms!=currentroomaddress){
+                                    displayInChat('The room '+JSON.stringify(lastrooms[i].roomname)+' is now open with '+lastrooms[i].players+"/"+lastrooms[i].maxplayers+" players.","#DA0808","#1EBCC1");
+                                }
                                 if(inroom){
                                     savedrooms.splice(savedrooms.indexOf(lastrooms[i].id),1);
                                     delete savedroomsdata[lastrooms[i].id];
@@ -2350,9 +2352,6 @@ Gwindow.WebSocket.prototype.send = function(args) {
                     bonkwssextra.push(this);
                 }
                 inroom = true;
-                if(savedrooms.includes(currentroomaddress)){
-                    savedrooms.splice(savedrooms.indexOf(currentroomaddress),1);
-                }
                 hostid = jsonargs[2];
                 SEND('42[4,{"type":"commands"}]');
                 ghostroomwss = bonkwss;
