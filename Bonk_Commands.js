@@ -1391,13 +1391,18 @@ Gwindow.XMLHttpRequest.prototype.send = function(data) {
                             savedroomsdata[lastrooms[i].id].exists = true;
                             savedroomsdata[lastrooms[i].id].exists2 = true;
                             if(lastrooms[i].maxplayers>lastrooms[i].players){
-                                if(savedrooms!=currentroomaddress){
-                                    displayInChat('The room '+JSON.stringify(lastrooms[i].roomname)+' is now open with '+lastrooms[i].players+"/"+lastrooms[i].maxplayers+" players.","#DA0808","#1EBCC1");
-                                }
                                 if(inroom){
-                                    savedrooms.splice(savedrooms.indexOf(lastrooms[i].id),1);
-                                    delete savedroomsdata[lastrooms[i].id];
-                                    keys.splice(keys.indexOf((lastrooms[i].id).toString()),1);
+                                    if(lastrooms[i].id!=currentroomaddress){
+                                        displayInChat('The room '+JSON.stringify(lastrooms[i].roomname)+' is now open with '+lastrooms[i].players+"/"+lastrooms[i].maxplayers+" players.","#DA0808","#1EBCC1");
+                                        savedrooms.splice(savedrooms.indexOf(lastrooms[i].id),1);
+                                        delete savedroomsdata[lastrooms[i].id];
+                                        keys.splice(keys.indexOf((lastrooms[i].id).toString()),1);
+                                    }
+                                    else{
+                                        savedrooms.splice(savedrooms.indexOf(lastrooms[i].id),1);
+                                        delete savedroomsdata[lastrooms[i].id];
+                                        keys.splice(keys.indexOf((lastrooms[i].id).toString()),1);
+                                    }
                                 }
                             }
                         }
