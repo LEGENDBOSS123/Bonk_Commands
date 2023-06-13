@@ -1944,7 +1944,9 @@ Gwindow.WebSocket.prototype.send = function(args) {
                 bonkwss = this;
                 hostid = 0;
                 inroom = true;
-                Gdocument.getElementById("roomlistrefreshbutton").click();
+                if(savedrooms.length>0){
+                    Gdocument.getElementById("roomlistrefreshbutton").click();
+                }
             }
             if(args.startsWith('42[23,') && recteams){
                 var jsonargs = JSON.parse(args.substring(2));
@@ -5599,7 +5601,7 @@ function timeout123() {
     var keys = Object.keys(playerids);
     if(getroomslastcheck+3000<now){
         getroomslastcheck = now;
-        if(inroom){
+        if(inroom && savedrooms.length>0){
             Gdocument.getElementById("roomlistrefreshbutton").click();
         }
     }
