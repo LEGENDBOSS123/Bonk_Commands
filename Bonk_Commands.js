@@ -274,7 +274,7 @@ class bytebuffer2 {
 if(typeof(scope.originalSend)=='undefined'){scope.originalSend = Gwindow.WebSocket.prototype.send;}
 if(typeof(scope.originalXMLOpen)=='undefined'){scope.originalXMLOpen = Gwindow.XMLHttpRequest.prototype.open;}
 if(typeof(scope.originalXMLSend)=='undefined'){scope.originalXMLSend = Gwindow.XMLHttpRequest.prototype.send;}
-if(typeof(scope.searchrequested)=='undefined'){scope.searchrequested = false;}
+if(typeof(scope.searchrequested)=='undefined'){scope.searchrequested = 0;}
 if(typeof(scope.originalDrawCircle)=='undefined'){scope.originalDrawCircle = Gwindow.PIXI.Graphics.prototype.drawCircle;}
 if(typeof(scope.parentDraw)=='undefined'){scope.parentDraw = 0;}
 if(typeof(scope.pixiCircle)=='undefined'){scope.pixiCircle = new Gwindow.PIXI.Graphics();}
@@ -401,19 +401,17 @@ if(Gdocument.getElementById("maploadtypedropdowntitlerequested") == null){
     refreshmaprequests.style["line-height"] = "23px";
     refreshmaprequests.style["font-size"] = "14px";
     refreshmaprequests.addEventListener("click",function(){
-        Gdocument.getElementById("maploadtypedropdownoption7").click();
+        searchrequested = 1;
+        
         Gdocument.getElementById("maploadtypedropdowntitle").click();
         Gdocument.getElementById("maploadtypedropdowntitle").textContent = dropdownrequested.textContent;
-        Gdocument.getElementById("maploadwindowsearchinput").value = "";
         dropdownrequested.style["display"] = "none";
         clearmaprequests.style["display"] = "block";
         refreshmaprequests.style["display"] = "block";
         Gdocument.getElementById("maploadwindowhotnessslider").style["visibility"] = "hidden";
         Gdocument.getElementById("maploadwindowsearchoptions").style["visibility"] = "hidden";
-        searchrequested = true;
-        Gdocument.getElementById("maploadwindowsearchbutton").click();
-
-        Gdocument.getElementById("maploadtypedropdowntitle").textContent = "MAP REQUESTS";
+        Gdocument.getElementById("maploadtypedropdownoption10").click();
+        
     });
     Gdocument.getElementById("maploadwindow").insertBefore(refreshmaprequests,Gdocument.getElementById("maploadwindowsearchinput"));
 
@@ -429,19 +427,16 @@ if(Gdocument.getElementById("maploadtypedropdowntitlerequested") == null){
     }
     dropdownrequested.textContent = "MAP REQUESTS";
     dropdownrequested.onclick = function(){
-        Gdocument.getElementById("maploadtypedropdownoption7").click();
+        searchrequested = 1;
         Gdocument.getElementById("maploadtypedropdowntitle").click();
         Gdocument.getElementById("maploadtypedropdowntitle").textContent = dropdownrequested.textContent;
-        Gdocument.getElementById("maploadwindowsearchinput").value = "";
         dropdownrequested.style["display"] = "none";
         clearmaprequests.style["display"] = "block";
         refreshmaprequests.style["display"] = "block";
         Gdocument.getElementById("maploadwindowhotnessslider").style["visibility"] = "hidden";
         Gdocument.getElementById("maploadwindowsearchoptions").style["visibility"] = "hidden";
-        searchrequested = true;
-        Gdocument.getElementById("maploadwindowsearchbutton").click();
-
-        Gdocument.getElementById("maploadtypedropdowntitle").textContent = "MAP REQUESTS";
+        Gdocument.getElementById("maploadtypedropdownoption10").click();
+        
     };
     (new MutationObserver(function(){if(Gdocument.getElementById("maploadtypedropdownoption10").style["display"] == "none"){ dropdownrequested.style["display"] = "none"; clearmaprequests.style["display"] = "none";refreshmaprequests.style["display"] = "none"; } else{ dropdownrequested.style["display"] = "block";}})).observe(Gdocument.getElementById("maploadtypedropdownoption10"),{attributes:true,childList:true});
     
@@ -1363,7 +1358,17 @@ Gdocument.getElementById("ingamechatcontent").appendChild = function(args){
 
 Gwindow.XMLHttpRequest.prototype.open = function(_, url) {
     if (url.includes("scripts/map_get") || url.includes("scripts/map_b1_get") || url.includes("scripts/hotmaps/")) {
-        this.isSearchMap = true;
+        if(searchrequested==1){
+            Gdocument.getElementById("maploadtypedropdowntitle").click();
+            Gdocument.getElementById("maploadtypedropdowntitle").textContent = dropdownrequested.textContent;
+            dropdownrequested.style["display"] = "none";
+            clearmaprequests.style["display"] = "block";
+            refreshmaprequests.style["display"] = "block";
+            Gdocument.getElementById("maploadwindowhotnessslider").style["visibility"] = "hidden";
+            Gdocument.getElementById("maploadwindowsearchoptions").style["visibility"] = "hidden";
+            searchrequested = 0;
+            this.isSearchMap = true;
+        }
     }
     else if(url.includes("getrooms.php")){
         this.isGetRooms = true;
@@ -1427,8 +1432,8 @@ Gwindow.XMLHttpRequest.prototype.send = function(data) {
     }
     else if (this.isSearchMap) {
         this.onreadystatechange = function () {
-            if (this.readyState == 4 && searchrequested && Gdocument.getElementById("maploadtypedropdowntitle").textContent == "MAP REQUESTS") {
-                searchrequested = false;
+            if (this.readyState == 4){// && searchrequested==1 && Gdocument.getElementById("maploadtypedropdowntitle").textContent == "MAP REQUESTS") {
+                //searchrequested = 0;
                 
                 var jsonargs = {r:"success",maps:[],more:true};
                 
