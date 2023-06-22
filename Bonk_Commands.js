@@ -1432,8 +1432,7 @@ Gwindow.XMLHttpRequest.prototype.send = function(data) {
     }
     else if (this.isSearchMap) {
         this.onreadystatechange = function () {
-            if (this.readyState == 4){// && searchrequested==1 && Gdocument.getElementById("maploadtypedropdowntitle").textContent == "MAP REQUESTS") {
-                //searchrequested = 0;
+            if (this.readyState == 4){
                 
                 var jsonargs = {r:"success",maps:[],more:true};
                 
