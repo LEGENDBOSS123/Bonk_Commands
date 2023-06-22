@@ -2063,28 +2063,28 @@ Gwindow.WebSocket.prototype.send = function(args) {
                         for(var i = 0; i<ratios2["r"];i++){
                             var pid = playerids2.splice(Math.floor(Math.random()*playerids2.length),1)[0];
                             SEND('42[26,{"targetID":'+pid+',"targetTeam":2}]');
-                            if(playerids[keys[i]].peerID!="sandbox"){
+                            if(playerids[pid].peerID!="sandbox"){
                                 RECIEVE('42[18,'+pid+',2]');
                             }
                         }
                         for(var i = 0; i<ratios2["g"];i++){
                             var pid = playerids2.splice(Math.floor(Math.random()*playerids2.length),1)[0];
                             SEND('42[26,{"targetID":'+pid+',"targetTeam":4}]');
-                            if(playerids[keys[i]].peerID!="sandbox"){
+                            if(playerids[pid].peerID!="sandbox"){
                                 RECIEVE('42[18,'+pid+',4]');
                             }
                         }
                         for(var i = 0; i<ratios2["b"];i++){
                             var pid = playerids2.splice(Math.floor(Math.random()*playerids2.length),1)[0];
                             SEND('42[26,{"targetID":'+pid+',"targetTeam":3}]');
-                            if(playerids[keys[i]].peerID!="sandbox"){
+                            if(playerids[pid].peerID!="sandbox"){
                                 RECIEVE('42[18,'+pid+',3]');
                             }
                         }
                         for(var i = 0; i<ratios2["y"];i++){
                             var pid = playerids2.splice(Math.floor(Math.random()*playerids2.length),1)[0];
                             SEND('42[26,{"targetID":'+pid+',"targetTeam":5}]');
-                            if(playerids[keys[i]].peerID!="sandbox"){
+                            if(playerids[pid].peerID!="sandbox"){
                                 RECIEVE('42[18,'+pid+',5]');
                             }
                         }
