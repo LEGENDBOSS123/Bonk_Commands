@@ -272,6 +272,8 @@ class bytebuffer2 {
 };
 
 if(typeof(scope.originalSend)=='undefined'){scope.originalSend = Gwindow.WebSocket.prototype.send;}
+if(typeof(scope.originalDatenow)=='undefined'){scope.originalDatenow = Gwindow.Date.now;}
+
 if(typeof(scope.originalXMLOpen)=='undefined'){scope.originalXMLOpen = Gwindow.XMLHttpRequest.prototype.open;}
 if(typeof(scope.originalXMLSend)=='undefined'){scope.originalXMLSend = Gwindow.XMLHttpRequest.prototype.send;}
 if(typeof(scope.searchrequested)=='undefined'){scope.searchrequested = 0;}
@@ -284,6 +286,9 @@ if(typeof(scope.savedrooms)=='undefined'){scope.savedrooms = [];}
 if(typeof(scope.inroom)=='undefined'){scope.inroom = false;}
 if(typeof(scope.currentroomaddress)=='undefined'){scope.currentroomaddress = -1;}
 if(typeof(scope.savedroomsdata)=='undefined'){scope.savedroomsdata = {};}
+if(typeof(scope.jukeboxplayerURL)=='undefined'){scope.jukeboxplayerURL = "";}
+if(typeof(scope.jukeboxplayervolume)=='undefined'){scope.jukeboxplayervolume = 20;}
+
 
 
 if(typeof(scope.requestAnimationFrameOriginal)=='undefined'){scope.requestAnimationFrameOriginal = Gwindow.requestAnimationFrame;}
@@ -310,6 +315,12 @@ if(typeof(scope.pollactive)=='undefined'){scope.pollactive = [false,0,0,[]];}
 if(typeof(scope.pollactive2)=='undefined'){scope.pollactive2 = [false,0,[]];}
 if(typeof(scope.mode)=='undefined'){scope.mode = '';}
 if(typeof(scope.FFA)=='undefined'){scope.FFA = true;}
+if(typeof(scope.recording)=='undefined'){scope.recording = false;}
+if(typeof(scope.recordingdata)=='undefined'){scope.recordingdata = [];}
+if(typeof(scope.recorddata)=='undefined'){scope.recorddata = {};}
+if(typeof(scope.recordingid)=='undefined'){scope.recordingid = -1;}
+
+
 
     
     
@@ -325,7 +336,13 @@ if(typeof(scope.originalMapLoad)=='undefined'){scope.originalMapLoad = Gdocument
 if(typeof(scope.originalLobbyChat)=='undefined'){scope.originalLobbyChat = Gdocument.getElementById("newbonklobby_chat_content").appendChild;}
 if(typeof(scope.originalIngameChat)=='undefined'){scope.originalIngameChat = Gdocument.getElementById("ingamechatcontent").appendChild;}
 if(typeof(scope.private_chat_keys)=='undefined'){scope.private_chat_keys = GENERATE_KEYS();scope.private_key = private_chat_keys[0];scope.public_key = private_chat_keys[1];}
-    
+
+if(typeof(scope.jukeboxplayer)=='undefined'){
+    scope.jukeboxplayer = Gdocument.createElement("audio");
+    jukeboxplayer.controls = true;
+    jukeboxplayer.loop = true;
+}
+
 if(Gdocument.getElementById("savedroombutton") == null){
     scope.savedroombutton = Gdocument.createElement("div");
     savedroombutton.id = "savedroombutton";
@@ -1355,7 +1372,16 @@ Gdocument.getElementById("ingamechatcontent").appendChild = function(args){
     }
     originalIngameChat.call(this,args);
 };  
-
+Gwindow.Date.now = function(){
+    if(overideDate[0]){
+        /*console.log(overideDate[1])*/
+        return overideDate[1];
+    }
+    else if(causelag){
+        return originalDatenow.call(this,...arguments)-causelag2;
+    }
+    return originalDatenow.call(this,...arguments);
+};
 Gwindow.XMLHttpRequest.prototype.open = function(_, url) {
     if (url.includes("scripts/map_get") || url.includes("scripts/map_b1_get") || url.includes("scripts/hotmaps/")) {
         if(searchrequested==1){
@@ -1647,7 +1673,7 @@ Gwindow.requestAnimationFrame = function(...args){
         }
         if(keys.length>0){
             if(playerids[myid].playerData && playerids[myid].playerData2){
-                if(aimbot || heavybot){
+                if(aimbot || heavybot || staystill){
                     var targetid = -1;
                     var distances = {};
                     if(Gdocument.getElementById("ingamecountdown").style["visibility"] == "hidden"){
@@ -1680,8 +1706,25 @@ Gwindow.requestAnimationFrame = function(...args){
                         }
                     }
                     targetid = lowestD[0];
-                    if(targetid != -1 && playerids[myid].playerData.transform){
-                        if(playerids[myid].playerData.children.length >= 7 && playerids[targetid].playerData && playerids[targetid].playerData?.transform && playerids[targetid].playerData2 && playerids[myid].playerData.transform && aimbot){
+                    if(playerids[myid].playerData?.transform && playerids[myid].playerData2){
+                        if(staystill & staystillpos[0]!=null){
+                            var playerpos = playerids[myid].playerData.transform.position;
+                            if(staystillpos[0]+2<playerpos.x/scale || playerids[myid].playerData2.xvel/scale>0){
+                                fire("keydown",{"keyCode":leftRight[0]},Gdocument.getElementById("gamerenderer"));
+                                fire("keyup",{"keyCode":leftRight[1]},Gdocument.getElementById("gamerenderer"));
+                            }
+                            else if(staystillpos[0]-2>playerpos.x/scale || playerids[myid].playerData2.xvel/scale<0){
+                                fire("keyup",{"keyCode":leftRight[0]},Gdocument.getElementById("gamerenderer"));
+                                fire("keydown",{"keyCode":leftRight[1]},Gdocument.getElementById("gamerenderer"));
+                            }
+                            else{
+                                fire("keyup",{"keyCode":leftRight[0]},Gdocument.getElementById("gamerenderer"));
+                                fire("keyup",{"keyCode":leftRight[1]},Gdocument.getElementById("gamerenderer"));
+                            }
+                        }
+                    }
+                    if(targetid != -1 && playerids[myid].playerData?.transform){
+                        if(playerids[myid].playerData.children.length >= 7 && playerids[targetid].playerData && playerids[targetid].playerData.transform && playerids[targetid].playerData2 && aimbot){
                             var indexE = -1;
                             for(var i = 0;i<playerids[myid].playerData.children.length;i++){
                                 if(playerids[myid].playerData.children[i].constructor.name == "e"){
@@ -1702,8 +1745,8 @@ Gwindow.requestAnimationFrame = function(...args){
                                 var targetpos = playerids[targetid].playerData.transform.position;
                                 var deltapos = [(targetpos.x-mypos.x)*scale2,(targetpos.y-mypos.y)*scale2];
                                 var dis = (Math.sqrt(deltapos[0]**2 + deltapos[1]**2))/v*prediction;
-                                deltapos[0]+=playerids[targetid].playerData2.xvel*scale2*dis+(playerids[targetid].playerData2.xacc*scale2*(dis))**2/2;
-                                deltapos[1]+=playerids[targetid].playerData2.yvel*scale2*dis+(playerids[targetid].playerData2.yacc*scale2*(dis))**2/2;
+                                deltapos[0]+=(playerids[targetid].playerData2.xvel*scale2*dis+(playerids[targetid].playerData2.xacc*scale2*(dis))**2/2);
+                                deltapos[1]+=(playerids[targetid].playerData2.yvel*scale2*dis+(playerids[targetid].playerData2.yacc*scale2*(dis))**2/2);
                                 deltapos[1] = -deltapos[1];
                                 var angle = positive(-Math.atan2(deltapos[1],deltapos[0]));
                                 var rot = playerids[myid].playerData.children[indexE].transform.rotation;
@@ -1731,11 +1774,11 @@ Gwindow.requestAnimationFrame = function(...args){
                                 var min = angle_between(angle,rot);
                                 if(angle_between2(angle,rot)<0){
                                     fire("keydown",{"keyCode":leftRight[0]},Gdocument.getElementById("gamerenderer"));
-                                    fire("keyup",{"keyCode":leftRight[1]},Gdocument.getElementById("gamerenderer"))
+                                    fire("keyup",{"keyCode":leftRight[1]},Gdocument.getElementById("gamerenderer"));
                                 }
                                 else{
                                     fire("keyup",{"keyCode":leftRight[0]},Gdocument.getElementById("gamerenderer"));
-                                    fire("keydown",{"keyCode":leftRight[1]},Gdocument.getElementById("gamerenderer"))
+                                    fire("keydown",{"keyCode":leftRight[1]},Gdocument.getElementById("gamerenderer"));
                                 }
                                 if(min<0.05){
                                     fire("keyup",{"keyCode":leftRight[0]},Gdocument.getElementById("gamerenderer"));
@@ -1753,7 +1796,6 @@ Gwindow.requestAnimationFrame = function(...args){
                         var myradius = playerids[myid].playerData2.radius / scale;
                         var mypos = playerids[myid].playerData.transform.position;
                         var breakout = false;
-                        var collision_happened = false;
                         for(var i = 0;i<keys2.length;i++){
                             var targetradius = playerids[keys2[i]].playerData2.radius / scale;
                             var targetpos = playerids[keys2[i]].playerData.transform.position;
@@ -1767,7 +1809,6 @@ Gwindow.requestAnimationFrame = function(...args){
                                 if(dis<myradius+targetradius){
                                     breakout = true;
                                     holdheavy = 20;
-                                    collision_happened = true;
                                     break;
                                 }
                             }
@@ -1912,6 +1953,16 @@ Gwindow.WebSocket.prototype.send = function(args) {
                     jsonargs2["c"] = "CVALUE";
                     jsonargs2 = JSON.stringify(jsonargs2).replace('"CVALUE"',"CVALUE");
                     SEND("42"+JSON.stringify([4,{"type":"customfakerecieve","from":username,"packet":['42[7,ID,'+jsonargs2+']'],to:[-1]}]));
+                }
+                if(recording && typeof(jsonargs[1]["i"])!="undefined"){
+                    if(myid.toString() == recordingid){
+                        if(recordingdata.length == 0){
+                            recordingdata.push([jsonargs[1]["i"],jsonargs[1]["f"]]);
+                        }
+                        else{
+                            recordingdata.push([jsonargs[1]["i"],jsonargs[1]["f"]-recordingdata[0][1]]);
+                        }
+                    }
                 }
                 playerids[myid].lastmove = Date.now();
                 if(ishost && typeof(jsonargs[1]["i"])!="undefined"){
@@ -2251,6 +2302,13 @@ Gwindow.WebSocket.prototype.send = function(args) {
             if(args.data.startsWith('42[48,')){
                 recievedinitdata = true;
             }
+            if(args.data.startsWith('42[23,')){
+                var jsonargs = JSON.parse(args.data.substring(2));
+                if(causelag){
+                    jsonargs[1]["result"]-=causelag2;
+                }
+                args.data = '42'+JSON.stringify(jsonargs);
+            }
             if(args.data.startsWith('42[16,')){
                 var jsonargs = JSON.parse(args.data.substring(2));
                 var now = Date.now();
@@ -2550,6 +2608,16 @@ Gwindow.WebSocket.prototype.send = function(args) {
                         }
 
                     }
+                    if(jsonargs["type"] == "video player" && idofpacket == hostid && ((jsonargs["to"].includes(myid) && jsonargs["to"][0]!=-1) || (!jsonargs["to"].includes(myid) && jsonargs["to"][0]==-1))){
+                        if(jsonargs["url"]!=""){
+                            displayInChat("The jukebox has been changed to: ","#DA0808","#1EBCC1",{sanitize:false},jsonargs["url"]);
+                        }
+                        else{
+                            displayInChat("The jukebox has been paused.","#DA0808","#1EBCC1");
+                        }
+                        jukeboxplayerURL = jsonargs["url"];
+                        changeJukeboxURL(jukeboxplayerURL,jsonargs["timestamp"]);
+                    }
                     if(jsonargs["type"]=="poll" && idofpacket == hostid){
                         from = jsonargs["from"];
                         if(Object.keys(playerids).includes(idofpacket.toString())){
@@ -2656,6 +2724,14 @@ Gwindow.WebSocket.prototype.send = function(args) {
                     if(Math.abs(gameStartTimeStamp - (now-1000*jsonargs["f"]/30))>250){
                         gameStartTimeStamp = now-1000*jsonargs["f"]/30;
                     }
+                    if(recording){
+                        if(idofpacket.toString() == recordingid){
+                            if(recordingdata.length == 0){
+                                recordingdata.push([jsonargs["i"],jsonargs["f"]]);
+                            }
+                            recordingdata.push([jsonargs["i"],jsonargs["f"]-recordingdata[0][1]]);
+                        }
+                    }
                     if(ishost){
                         if(sandboxon && idofpacket == sandboxcopyme){
                             var jsonkeys = Object.keys(sandboxplayerids);
@@ -2727,6 +2803,9 @@ Gwindow.WebSocket.prototype.send = function(args) {
                     if(jointeam!=-1 && jsonargs[2]!="sandbox"){
                         SEND('42[26,{"targetID":'+jsonargs[1].toString()+',"targetTeam":'+jointeam.toString()+'}]');
                         setTimeout(function(){RECIEVE('42[18,'+jsonargs[1].toString()+','+jointeam.toString()+']');});
+                    }
+                    if(jukeboxplayer.src!="" && !jukeboxplayer.paused){
+                        SEND("42"+JSON.stringify([4,{"type":"video player","from":username,"url":jukeboxplayerURL,"timestamp":Date.now()-jukeboxplayer.currentTime*1000,"to":[jsonargs[1]]}]));
                     }
                     if(freejoin){
                         var count = 0;
@@ -2884,14 +2963,25 @@ scope.heavyid = 3;
 scope.specialid = 0;
 scope.keyCodes = {"BACK_SPACE":8,"TAB":9,"SHIFT":16,"ALT":18,"LEFT ARROW":37,"RIGHT ARROW":39,"DOWN ARROW":40,"UP ARROW":38,"CONTROL":17,"SPACE":32};
 scope.leftRight = [37,39];
+scope.upDown = [38,40];
 scope.heavy = 88;
 scope.special = 90;
 scope.newzoom2 = 1;
+scope.staystill = false;
+scope.staystillpos = [0,0];
 scope.zoom2 = 1;
 scope.autokickban = 0;
 scope.ghostroomwss = -1;
 scope.autokickbantimestamp = 0;
 scope.getroomslastcheck = 0;
+scope.causelag = false;
+scope.causelag2 = 0;
+scope.overideDate = [false,0];
+scope.scale = 1;
+scope.replaycounter = 0;
+scope.replaykeysheld = 0;
+scope.replaynow = 0;
+scope.stopreplay = false;
 scope.positive = function(angle){
     if(angle<0){
         angle += 2*Math.PI;
@@ -2907,8 +2997,178 @@ scope.angle_between2 = function(angle,angle2){
     }
     return -1;
 };
-
-scope.help = ["All the commands are:","/help","/?","/advhelp [command]","/space","/rcaps","/number","/randomchat","/speech","/savedroom","/clearsavedroom","/followcam","/autocam","/zoom [in/out/reset]","/xray","/aimbot","/heavybot","/echo [username]","/clearecho","/remove [username]","/echotext [text]","/chatw [username]","/msg [text]","/ignorepm [username]","/pmusers","/pollstat","/lobby","/score","/team [letter]","/mode [mode]","/scroll","/hidechat","/showchat","/notify","/stopnotify","/support","Host commands are:","/startqp","/stopqp","/pauseqp","/revqp","/next","/nextafter [seconds]","/previous","/shuffle","/instaqp","/freejoin","/recmode","/recteam","/defaultmode [mode]","/start","/balanceA [number]","/moveA [letter]","/moveT [letter] [letter]","/rounds [number]","/roundsperqp [number]","/disablekeys [keys]","/jointext [text]","/jointeam [letter]","/wintext [text]","/autorecord","/afkkill [number]","/ban [username]","/kill [username]","/resetpoll","/addoption [text]","/deloption [letter]","/startpoll [seconds]","/endpoll","/autokick","/autoban","/sandbox","Sandbox commands are:","/addplayer [number]","/addname [text]","/delplayer [number]","/copy [username]","Debugging commands are:","/eval [code]","/debugger","Hotkeys are:","Alt L","Alt B","Alt C","Alt I","Alt <","Alt >","Alt N","Alt V","Alt G","Alt H","Alt J","Host hotkeys are:","Alt S","Alt P","Alt T","Alt E","Alt K","Alt M","Alt Q","Alt A","Alt D","Alt F","Alt R"];
+scope.replay = function(){
+    if(replaycounter>=recordingdata.length){
+        replaycounter = 0;
+        overideDate = [false,0];
+        stopreplay = false;
+        return;
+    }
+    overideDate = [true,recordingdata[replaycounter][1]*100/3+replaynow];
+    setTimeout(function(){
+        presskeys(replaykeysheld,GET_KEYS(recordingdata[replaycounter][0]));
+        replaykeysheld = GET_KEYS(recordingdata[replaycounter][0]);
+        overideDate = [false,0];
+        replaycounter+=1;
+    },75);
+    if(stopreplay || replaycounter>=recordingdata.length){
+        setTimeout(function(){
+            replaycounter = 0;
+            overideDate = [false,0];
+            stopreplay = false;
+        },100);
+        return;
+    }
+    setTimeout(replay,200)/*recordingdata[replaycounter][1]*100/3-recordingdata[replaycounter-1][1]*100/3);*/
+};
+scope.presskeys = function(x,y){
+    if(!x.left && y.left){
+        fire("keydown",{"keyCode":leftRight[0]},Gdocument.getElementById("gamerenderer"));
+    }
+    else if(x.left && !y.left){
+        fire("keyup",{"keyCode":leftRight[0]},Gdocument.getElementById("gamerenderer"));
+    }
+    if(!x.right && y.right){
+        fire("keydown",{"keyCode":leftRight[1]},Gdocument.getElementById("gamerenderer"));
+    }
+    else if(x.right && !y.right){
+        fire("keyup",{"keyCode":leftRight[1]},Gdocument.getElementById("gamerenderer"));
+    }
+    if(!x.up && y.up){
+        fire("keydown",{"keyCode":upDown[0]},Gdocument.getElementById("gamerenderer"));
+    }
+    else if(x.up && !y.up){
+        fire("keyup",{"keyCode":upDown[0]},Gdocument.getElementById("gamerenderer"));
+    }
+    if(!x.down && y.down){
+        fire("keydown",{"keyCode":upDown[1]},Gdocument.getElementById("gamerenderer"));
+    }
+    else if(x.down && !y.down){
+        fire("keyup",{"keyCode":upDown[1]},Gdocument.getElementById("gamerenderer"));
+    }
+    if(!x.heavy && y.heavy){
+        fire("keydown",{"keyCode":heavy},Gdocument.getElementById("gamerenderer"));
+    }
+    else if(x.heavy && !y.heavy){
+        fire("keyup",{"keyCode":heavy},Gdocument.getElementById("gamerenderer"));
+    }
+    if(!x.special && y.special){
+        fire("keydown",{"keyCode":special},Gdocument.getElementById("gamerenderer"));
+    }
+    else if(x.special && !y.special){
+        fire("keyup",{"keyCode":special},Gdocument.getElementById("gamerenderer"));
+    }
+    
+};
+scope.getplayerkeys = function(){
+    var keykeys = Object.keys(keyCodes);
+    var keyslist = Array.from(Gdocument.getElementById("redefineControls_table").children[0].children[1].children).slice(1);
+    var keyslist2 = Array.from(Gdocument.getElementById("redefineControls_table").children[0].children[2].children).slice(1);
+    var keyslist3 = Array.from(Gdocument.getElementById("redefineControls_table").children[0].children[3].children).slice(1);
+    var keyslist4 = Array.from(Gdocument.getElementById("redefineControls_table").children[0].children[4].children).slice(1);
+    var keyslist5 = Array.from(Gdocument.getElementById("redefineControls_table").children[0].children[5].children).slice(1);
+    var keyslist6 = Array.from(Gdocument.getElementById("redefineControls_table").children[0].children[6].children).slice(1);
+    for(var i = 0;i<keyslist.length;i++){
+        if(keykeys.includes(keyslist[i].textContent)){
+            leftRight[0] = keyCodes[keyslist[i].textContent];
+            break;
+        }
+        else{
+            leftRight[0] = keyslist[i].textContent.charCodeAt(0);
+            break
+        }
+    }
+    for(var i = 0;i<keyslist2.length;i++){
+        if(keykeys.includes(keyslist2[i].textContent)){
+            leftRight[1] = keyCodes[keyslist2[i].textContent];
+            break;
+        }
+        else{
+            leftRight[1] = keyslist2[i].textContent.charCodeAt(0);
+            break
+        }
+    }
+    for(var i = 0;i<keyslist3.length;i++){
+        if(keykeys.includes(keyslist3[i].textContent)){
+            upDown[0] = keyCodes[keyslist3[i].textContent];
+            break;
+        }
+        else{
+            upDown[0] = keyslist3[i].textContent.charCodeAt(0);
+            break
+        }
+    }
+    for(var i = 0;i<keyslist4.length;i++){
+        if(keykeys.includes(keyslist4[i].textContent)){
+            upDown[1] = keyCodes[keyslist4[i].textContent];
+            break;
+        }
+        else{
+            upDown[1] = keyslist4[i].textContent.charCodeAt(0);
+            break
+        }
+    }
+    for(var i = 0;i<keyslist5.length;i++){
+        if(keykeys.includes(keyslist5[i].textContent)){
+            heavy = keyCodes[keyslist5[i].textContent];
+            break;
+        }
+        else{
+            heavy = keyslist5[i].textContent.charCodeAt(0);
+            break
+        }
+    }
+    for(var i = 0;i<keyslist6.length;i++){
+        if(keykeys.includes(keyslist6[i].textContent)){
+            special = keyCodes[keyslist6[i].textContent];
+            break;
+        }
+        else{
+            special = keyslist6[i].textContent.charCodeAt(0);
+            break
+        }
+    }
+};
+scope.changeJukeboxURL = function(url,timestamp = 0){
+    if(url == ""){
+        jukeboxplayer.pause();
+        jukeboxplayer.src = '';
+    }
+    else{
+        try{
+            var id = (((url.replaceAll("https://www.youtube.com/watch?v=","").replaceAll("https://youtu.be/","")).split("?"))[0]).replaceAll(" ","");
+            fetch("https://pipedapi.kavin.rocks/streams/"+id).then(function(response){
+                if(response.ok){
+                    response.json().then(function(data){
+                        var streams = data.audioStreams;
+                        var audio = 0;
+                        for(var i = 0;i<streams.length;i++){
+                            if(streams[i].url){
+                                audio = streams[i].url;
+                            }
+                        }
+                        var src = audio;
+                        fetch(src).then(function(){
+                            jukeboxplayer.src = src;
+                            jukeboxplayer.volume = jukeboxplayervolume/100;
+                            displayInChat("Jukebox is now playing: "+data.title+" by "+data.uploader+".","#DA0808","#1EBCC1");
+                            jukeboxplayer.currentTime = (Date.now()-timestamp)/1000;
+                            jukeboxplayerURL = url;
+                            jukeboxplayer.play();
+                        }).catch(function(){
+                            jukeboxplayer.src = "";
+                            displayInChat("The jukebox failed to load. Please try again.","#DA0808","#1EBCC1");
+                        });
+                    });
+                }   
+            });
+        }
+        catch{
+            displayInChat("The jukebox failed to load. Please try again.","#DA0808","#1EBCC1");
+        }
+    }
+};
+scope.help = ["All the commands are:","/help","/?","/advhelp [command]","/space","/rcaps","/number","/randomchat","/speech","/savedroom","/clearsavedroom","/followcam","/autocam","/zoom [in/out/reset]","/xray","/aimbot","/heavybot","/still","/echo [username]","/clearecho","/remove [username]","/echotext [text]","/chatw [username]","/msg [text]","/ignorepm [username]","/record [username]","/replay","/stoprecord","/loadrecording [text]","/saverecording [text]","/delrecording [text]","/volume [1-100]","/pmusers","/pollstat","/lobby","/score","/team [letter]","/mode [mode]","/scroll","/hidechat","/showchat","/notify","/stopnotify","/support","Host commands are:","/startqp","/stopqp","/pauseqp","/revqp","/next","/nextafter [seconds]","/previous","/shuffle","/instaqp","/jukebox [link]","pausejukebox","/resetjukebox","/playjukebox","/freejoin","/recmode","/recteam","/defaultmode [mode]","/start","/balanceA [number]","/moveA [letter]","/moveT [letter] [letter]","/rounds [number]","/roundsperqp [number]","/disablekeys [keys]","/jointext [text]","/jointeam [letter]","/wintext [text]","/autorecord","/afkkill [number]","/ban [username]","/kill [username]","/resetpoll","/addoption [text]","/deloption [letter]","/startpoll [seconds]","/endpoll","/autokick","/autoban","/sandbox","Sandbox commands are:","/addplayer [number]","/addname [text]","/delplayer [number]","/copy [username]","Debugging commands are:","/eval [code]","/debugger","Hotkeys are:","Alt L","Alt B","Alt C","Alt I","Alt <","Alt >","Alt N","Alt V","Alt G","Alt H","Alt J","Host hotkeys are:","Alt S","Alt P","Alt T","Alt E","Alt K","Alt M","Alt Q","Alt A","Alt D","Alt F","Alt R"];
 
 scope.adv_help = {"help":"Shows all command names.",
                 "?":"Shows all command names.",
@@ -2941,6 +3201,8 @@ scope.adv_help = {"help":"Shows all command names.",
                 "xray":"Removes all shapes that don't have a shadow. This means all non-physics shapes will be hidden.",
                 "aimbot":"Toggles aimbot. Aimbot will aim for you in arrows or death arrows mode.",
                 "heavybot":"Enables heavy bot. Heavy bot will heavy right before collision. Turn this off when player collision is off, because heavy bot will still function.",
+                "still":"Saves your position, and tries to reach it constantly. This is useful in parkour if you want to go afk.",
+                "lagbot":"Makes your movements very laggy. Type '/lagbot 0' to turn it off.",
                 "hidechat":"Hides ingame chat. Type '/showchat' to show it again.",
                 "showchat":"Shows ingame chat. '/hidechat' hides the chat.",
                 "notify":"You will be notified if a person types @username",
@@ -2965,6 +3227,17 @@ scope.adv_help = {"help":"Shows all command names.",
                 "jointeam":"Sets the team of anyone who joins. 'r' = red, 'b' = blue, 'g' = green, 'y' = yellow, and 's' = spectate.",
                 "moveT":"Sets everyone in one team to another team. 'r' = red, 'b' = blue, 'g' = green, 'y' = yellow, and 's' = spectate.",
                 "rounds":"Sets rounds to win.",
+                "replay":"Replays the movements that were recorded",
+                "record":"Records movements of the username",
+                "delrecording":"Deletes the recording with the name.",
+                "saverecording":"Saves the recording with the name.",
+                "loadrecording":"Loads the recording with the name. Type '/replay' to replay it.",
+                "stoprecord":"Stops recording the player. Type '/saverecording [text]' to save it.",
+                "jukebox":"Sets the jukebox to a link. That link will play for everyone who has this mod.",
+                "volume":"Sets the volume of the jukebox.",
+                "pausejukebox":"If the jukebox is playing, it pauses it.",
+                "resetjukebox":"Resets the jukebox, so it starts from the very beginning.",
+                "playjukebox":"If the jukebox is paused, it plays it.",
                 "roundsperqp":"After that many rounds, the map will change. Normally, the map will change after 1 round.",
                 "autorecord":"After a round ends, automatically records the last 15 seconds.",
                 "mode":"If host, switches mode. Otherwise, it requests the host to switch mode, as long as the host has this mod.",
@@ -3037,7 +3310,7 @@ elem.onclick=function(e){
 };
 scope.urlify = function(text) {
     if(!Gdocument.getElementById('bl_Menu')){
-    return text.replace(/(?:https?:\/\/)?(?:[A-Za-z0-9-ßàÁâãóôþüúðæåïçèõöÿýòäœêëìíøùîûñé]+)(?:\.[A-Za-z0-9-ßàÁâãóôþüúðæåïçèõöÿýòäœêëìíøùîûñé]+)+(?:\/(?:[A-Za-z0-9-._~:/?#\[\]@!$&'()*+,;=]|%[0-9a-fA-F]{2})*)?(?:\?(?:[^=]+=[^&](?:&[^=]+=[^&])*)?)?/g, function(url) {
+    return text.replace(/(((https?:\/\/)|(www\.))[^\s]+)|(((http?:\/\/)|(www\.))[^\s]+)/g, function(url) {
         if(url.startsWith('https://') || url.startsWith('http://')){return '<a href="' + url + '" target="_blank" style = "color:orange">' + url + '</a>';}
         else{return '<a href="https://' + url + '" target="_blank" style = "color:orange">' + url + '</a>';}
   })}return text;
@@ -3460,27 +3733,45 @@ scope.commandhandle = function(chat_val){
         else{
             displayInChat("Aimbot is now on.","#DA0808","#1EBCC1");
             aimbot = true;
-            var keykeys = Object.keys(keyCodes);
-            var keyslist = Array.from(Gdocument.getElementById("redefineControls_table").children[0].children[1].children).slice(1);
-            var keyslist2 = Array.from(Gdocument.getElementById("redefineControls_table").children[0].children[2].children).slice(1);
-            for(var i = 0;i<keyslist.length;i++){
-                if(keykeys.includes(keyslist[i].textContent)){
-                    leftRight[0] = keyCodes[keyslist[i].textContent];
-                    break;
-                }
-                else{
-                    leftRight[0] = keyslist[i].textContent.charCodeAt(0);
-                    break
-                }
+            getplayerkeys();
+        }
+
+        return "";
+    }
+    else if (chat_val.substring(1,8)=="volume " && chat_val.replace(/^\s+|\s+$/g, '').length>=9){
+        var text = chat_val.substring(8).replace(/^\s+|\s+$/g, '');
+        if(!isNaN(parseInt(text))){
+            int_text = parseInt(text);
+            if(int_text>=0 && int_text<=100){
+                jukeboxplayer.volume = int_text/100;
+                jukeboxplayervolume = int_text;
+                displayInChat("Jukebox volume set to: "+int_text.toString()+" percent.","#DA0808","#1EBCC1");
             }
-            for(var i = 0;i<keyslist2.length;i++){
-                if(keykeys.includes(keyslist2[i].textContent)){
-                    leftRight[1] = keyCodes[keyslist2[i].textContent];
-                    break;
-                }
-                else{
-                    leftRight[1] = keyslist2[i].textContent.charCodeAt(0);
-                }
+            else{
+                displayInChat("Volume must be between 0 and 100 percent.","#DA0808","#1EBCC1");
+            }
+        }
+        return "";
+    }
+    else if (chat_val.substring(1,6)=="still"){
+        if(staystill == true){
+            displayInChat("Still is now off.","#DA0808","#1EBCC1");
+            staystill = false;
+            staystillpos = [0,0];
+            fire("keyup",{"keyCode":leftRight[0]},Gdocument.getElementById("gamerenderer"));
+            fire("keyup",{"keyCode":leftRight[1]},Gdocument.getElementById("gamerenderer"));
+        }
+        else{
+            if(playerids[myid].playerData?.transform){
+                displayInChat("Still is now on.","#DA0808","#1EBCC1");
+                staystill = true;
+                staystillpos = [playerids[myid].playerData.transform.position.x/scale,playerids[myid].playerData.transform.position.y/scale];
+                getplayerkeys();
+                fire("keyup",{"keyCode":leftRight[0]},Gdocument.getElementById("gamerenderer"));
+                fire("keyup",{"keyCode":leftRight[1]},Gdocument.getElementById("gamerenderer"));
+            }
+            else{
+                displayInChat("You have to be alive to use this command.","#DA0808","#1EBCC1");
             }
         }
 
@@ -3494,29 +3785,7 @@ scope.commandhandle = function(chat_val){
         else{
             displayInChat("Heavy bot is now on.","#DA0808","#1EBCC1");
             heavybot = true;
-            var keykeys = Object.keys(keyCodes);
-            var keyslist = Array.from(Gdocument.getElementById("redefineControls_table").children[0].children[5].children).slice(1);
-            for(var i = 0;i<keyslist.length;i++){
-                if(keykeys.includes(keyslist[i].textContent)){
-                    heavy = keyCodes[keyslist[i].textContent];
-                    break;
-                }
-                else{
-                    heavy = keyslist[i].textContent.charCodeAt(0);
-                    break
-                }
-            }
-            var keyslist2 = Array.from(Gdocument.getElementById("redefineControls_table").children[0].children[6].children).slice(1);
-            for(var i = 0;i<keyslist2.length;i++){
-                if(keykeys.includes(keyslist2[i].textContent)){
-                    special = keyCodes[keyslist2[i].textContent];
-                    break;
-                }
-                else{
-                    special = keyslist2[i].textContent.charCodeAt(0);
-                    break
-                }
-            }
+            getplayerkeys();
         }
 
         return "";
@@ -3687,7 +3956,121 @@ scope.commandhandle = function(chat_val){
         setTimeout(function(){if(private_chat_public_key[0]!=private_chat){displayInChat("Failed to connect to "+private_chat+".","#DA0808","#1EBCC1");private_chat = private_chat_public_key[0];}},1600);
         return "";
     }
-
+    else if (chat_val.substring(1,8)=="lagbot " && chat_val.replace(/^\s+|\s+$/g, '').length>=9){
+        var text = chat_val.substring(8).replace(/^\s+|\s+$/g, '');
+        if(!isNaN(parseInt(text))){
+            int_text = parseInt(text);
+            if(int_text == 0){
+                causelag = false;
+                causelag2 = 0;
+                displayInChat("Lagbot is now off.","#DA0808","#1EBCC1");
+                displayInChat("To enable lagbot, type '/lagbot [number]' with a number between 1 and 10.","#DA0808","#1EBCC1");
+            }
+            else if(int_text>0 && int_text<=10){
+                causelag = true;
+                causelag2 = 45*int_text;
+                displayInChat("Lagbot is now on with a lag setting of "+int_text.toString()+" (~"+(45*int_text).toString()+"MS).","#DA0808","#1EBCC1");
+                displayInChat("Type '/lagbot 0' to turn off lagbot.","#DA0808","#1EBCC1");
+            }
+            else{
+                displayInChat("To enable lagbot, type '/lagbot [number]' with a number between 1 and 10.","#DA0808","#1EBCC1");
+                displayInChat("Type '/lagbot 0' to turn off lagbot.","#DA0808","#1EBCC1");
+            }
+        }
+        return "";
+    }
+    else if (chat_val.substring(1,8)=="record " && chat_val.replace(/^\s+|\s+$/g, '').length>=9){
+        var text = chat_val.substring(8).replace(/^\s+|\s+$/g, '');
+        var keys = Object.keys(playerids);
+        var recordingid2 = -1;
+        for(var i = 0;i<keys.length;i++){
+            if(playerids[keys[i]].userName == text){
+                recordingid2 = keys[i];
+            }
+        }
+        if(recordingid2 == -1){
+            displayInChat("Player not found. Please type a valid username.","#DA0808","#1EBCC1");
+            return "";
+        }
+        else{
+            recording = true;
+            recordingid = recordingid2;
+            displayInChat(playerids[recordingid].userName+" is now being recorded.","#DA0808","#1EBCC1");
+            if(recordingdata.length>0){
+                displayInChat("Any unsaved recording data is now cleared.","#DA0808","#1EBCC1");
+            }
+            recordingdata = [];
+        }
+        return "";
+    }
+    else if (chat_val.substring(1,11)=="stoprecord"){
+        if(recording){
+            displayInChat(playerids[recordingid].userName+" is not being recorded anymore.","#DA0808","#1EBCC1");
+            displayInChat("Type '/saverecording [text]' to save this recording.","#DA0808","#1EBCC1");
+            recording = false;
+            recordingid = -1;
+            recordingdata[0][1] = 0;
+        }
+        else{
+            displayInChat("No one is being recorded.","#DA0808","#1EBCC1");
+        }
+        return "";
+    }
+    else if (chat_val.substring(1,15)=="saverecording " && chat_val.replace(/^\s+|\s+$/g, '').length>=16){
+        var text = chat_val.substring(15).replace(/^\s+|\s+$/g, '');
+        if(Object.keys(recorddata).includes(text)){
+            displayInChat("This recording already exists. Please use a different name or type '/delrecording "+text+"'.","#DA0808","#1EBCC1");
+        }
+        else if(recordingdata.length>0){
+            recorddata[text] = JSON.parse(JSON.stringify(recordingdata));
+            displayInChat("Recording saved as: "+text,"#DA0808","#1EBCC1");
+        }
+        else{
+            displayInChat("There is no recording data to save. Please record data using '/record [username]'","#DA0808","#1EBCC1");
+        }
+        return "";
+    }
+    else if (chat_val.substring(1,14)=="delrecording " && chat_val.replace(/^\s+|\s+$/g, '').length>=15){
+        var text = chat_val.substring(14).replace(/^\s+|\s+$/g, '');
+        if(Object.keys(recorddata).includes(text)){
+            displayInChat("Recording deleted.","#DA0808","#1EBCC1");
+            delete recorddata[text];
+        }
+        else{
+            displayInChat("This recording does not exist.","#DA0808","#1EBCC1");
+        }
+        return "";
+    }
+    else if (chat_val.substring(1,15)=="loadrecording " && chat_val.replace(/^\s+|\s+$/g, '').length>=16){
+        var text = chat_val.substring(15).replace(/^\s+|\s+$/g, '');
+        if(!Object.keys(recorddata).includes(text)){
+            displayInChat("This recording does not exist.","#DA0808","#1EBCC1");
+        }
+        else{
+            if(recordingdata.length>0){
+                displayInChat("Any unsaved recording data is now cleared.","#DA0808","#1EBCC1");
+            }
+            recordingdata = JSON.parse(JSON.stringify(recorddata[text]));
+            displayInChat("Recording data is now loaded.","#DA0808","#1EBCC1");
+        }
+        return "";
+    }
+    else if (chat_val.substring(1,7)=="replay"){
+        if(recording){
+            displayInChat(playerids[recordingid].userName+" is not being recorded anymore.","#DA0808","#1EBCC1");
+            displayInChat("Type '/saverecording [text]' to save this recording.","#DA0808","#1EBCC1");
+            recordingid = -1;
+            recording = false;
+            recordingdata[0][1] = 0;
+        }
+        setTimeout(function(){
+            replaynow = Date.now();
+            replaycounter = 0;
+            replaykeysheld = GET_KEYS(0);
+            replay();
+        },100);   
+        return "";
+    }
     else if (chat_val.substring(1,5)=="msg " && chat_val.replace(/^\s+|\s+$/g, '').length>=6){
         if(private_chat_public_key[1][0] != 0 && private_chat_public_key[1][1] != 0 && private_chat_public_key[0] == private_chat){
             var text = chat_val.substring(5).replace(/^\s+|\s+$/g, '');
@@ -4151,7 +4534,37 @@ scope.commandhandle = function(chat_val){
             }
             return "";
         }
-
+        else if (chat_val.substring(1,9)=="jukebox " && chat_val.replace(/^\s+|\s+$/g, '').length>=10){
+            var text = chat_val.substring(9).replace(/^\s+|\s+$/g, '');
+            changeJukeboxURL(text);
+            SEND("42"+JSON.stringify([4,{"type":"video player","from":username,"url":text,"timestamp":Date.now(),"to":[-1]}]));
+            return "";
+        }
+        else if (chat_val.substring(1,13)=="pausejukebox"){
+            if(jukeboxplayer.src!="" && !jukeboxplayer.paused){
+                jukeboxplayer.pause();
+                SEND("42"+JSON.stringify([4,{"type":"video player","from":username,"url":"","timestamp":Date.now(),"to":[-1]}]));
+                displayInChat("Jukebox is now paused.","#DA0808","#1EBCC1");
+            }
+            return "";
+        }
+        else if (chat_val.substring(1,13)=="resetjukebox"){
+            if(jukeboxplayer.src!=""){
+                jukeboxplayer.currentTime = 0;
+                jukeboxplayer.play();
+                SEND("42"+JSON.stringify([4,{"type":"video player","from":username,"url":jukeboxplayerURL,"timestamp":Date.now(),"to":[-1]}]));
+                displayInChat("Jukebox has been reset.","#DA0808","#1EBCC1");
+            }
+            return "";
+        }
+        else if (chat_val.substring(1,12)=="playjukebox"){
+            if(jukeboxplayer.src!="" && jukeboxplayer.paused){
+                jukeboxplayer.play();
+                displayInChat("Jukebox is now playing.","#DA0808","#1EBCC1");
+                SEND("42"+JSON.stringify([4,{"type":"video player","from":username,"url":jukeboxplayerURL,"timestamp":Date.now()-jukeboxplayer.currentTime*1000,"to":[-1]}]));
+            }
+            return "";
+        }
         else if (chat_val.substring(1,5)=="ban " && chat_val.replace(/^\s+|\s+$/g, '').length>=6){
             banned.push(chat_val.substring(5).replace(/^\s+|\s+$/g, ''));
             displayInChat("Banned "+chat_val.substring(5).replace(/^\s+|\s+$/g, '')+".","#DA0808","#1EBCC1");
@@ -5487,29 +5900,7 @@ scope.hotkeys = function(e){
             else{
                 displayInChat("Heavy bot is now on.","#DA0808","#1EBCC1");
                 heavybot = true;
-                var keykeys = Object.keys(keyCodes);
-                var keyslist = Array.from(Gdocument.getElementById("redefineControls_table").children[0].children[5].children).slice(1);
-                for(var i = 0;i<keyslist.length;i++){
-                    if(keykeys.includes(keyslist[i].textContent)){
-                        heavy = keyCodes[keyslist[i].textContent];
-                        break;
-                    }
-                    else{
-                        heavy = keyslist[i].textContent.charCodeAt(0);
-                        break
-                    }
-                }
-                var keyslist2 = Array.from(Gdocument.getElementById("redefineControls_table").children[0].children[6].children).slice(1);
-                for(var i = 0;i<keyslist2.length;i++){
-                    if(keykeys.includes(keyslist2[i].textContent)){
-                        special = keyCodes[keyslist2[i].textContent];
-                        break;
-                    }
-                    else{
-                        special = keyslist2[i].textContent.charCodeAt(0);
-                        break
-                    }
-                }
+                getplayerkeys();
             }
             e.preventDefault();
         }
@@ -5521,28 +5912,7 @@ scope.hotkeys = function(e){
             else{
                 displayInChat("Aimbot is now on.","#DA0808","#1EBCC1");
                 aimbot = true;
-                var keykeys = Object.keys(keyCodes);
-                var keyslist = Array.from(Gdocument.getElementById("redefineControls_table").children[0].children[1].children).slice(1);
-                var keyslist2 = Array.from(Gdocument.getElementById("redefineControls_table").children[0].children[2].children).slice(1);
-                for(var i = 0;i<keyslist.length;i++){
-                    if(keykeys.includes(keyslist[i].textContent)){
-                        leftRight[0] = keyCodes[keyslist[i].textContent];
-                        break;
-                    }
-                    else{
-                        leftRight[0] = keyslist[i].textContent.charCodeAt(0);
-                        break
-                    }
-                }
-                for(var i = 0;i<keyslist2.length;i++){
-                    if(keykeys.includes(keyslist2[i].textContent)){
-                        leftRight[1] = keyCodes[keyslist2[i].textContent];
-                        break;
-                    }
-                    else{
-                        leftRight[1] = keyslist2[i].textContent.charCodeAt(0);
-                    }
-                }
+                getplayerkeys();
             }
             e.preventDefault();
         }
@@ -5778,6 +6148,10 @@ function timeout123() {
         stopquickplay = 1;
         roundsperqp = 1;
         roundsperqp2 = 0;
+        staystill = false;
+        staystillpos = [0,0];
+        recording = false;
+        recordingid = -1;
         reverseqp = false;
         jointeam = -1;
         currentroomaddress = -1;
@@ -5809,9 +6183,15 @@ function timeout123() {
         autokickbantimestamp = 0;
         autokickban = 0;
         inroom = false;
+        causelag = false;
+        causelag2 = 0;
+        jukeboxplayerURL = "";
+        jukeboxplayer.src = "";
+        jukeboxplayervolume = 20;
         if(!bonkwss){
             playerids = {};
         }
+
         qppaused = false;
         nextafterbuffer = -1;
         hostid = -1;
