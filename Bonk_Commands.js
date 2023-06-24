@@ -1709,17 +1709,41 @@ Gwindow.requestAnimationFrame = function(...args){
                     if(playerids[myid].playerData?.transform && playerids[myid].playerData2){
                         if(staystill & staystillpos[0]!=null){
                             var playerpos = playerids[myid].playerData.transform.position;
-                            if(staystillpos[0]+2<playerpos.x/scale || playerids[myid].playerData2.xvel/scale>0){
-                                fire("keydown",{"keyCode":leftRight[0]},Gdocument.getElementById("gamerenderer"));
-                                fire("keyup",{"keyCode":leftRight[1]},Gdocument.getElementById("gamerenderer"));
-                            }
-                            else if(staystillpos[0]-2>playerpos.x/scale || playerids[myid].playerData2.xvel/scale<0){
-                                fire("keyup",{"keyCode":leftRight[0]},Gdocument.getElementById("gamerenderer"));
-                                fire("keydown",{"keyCode":leftRight[1]},Gdocument.getElementById("gamerenderer"));
+                            if(Math.abs(staystillpos[0]-playerpos.x/scale)<3){
+                                if(playerids[myid].playerData2.xvel/scale>0){
+                                    fire("keydown",{"keyCode":leftRight[0]},Gdocument.getElementById("gamerenderer"));
+                                    fire("keyup",{"keyCode":leftRight[1]},Gdocument.getElementById("gamerenderer"));
+                                }
+                                else if(playerids[myid].playerData2.xvel/scale<0){
+                                    fire("keyup",{"keyCode":leftRight[0]},Gdocument.getElementById("gamerenderer"));
+                                    fire("keydown",{"keyCode":leftRight[1]},Gdocument.getElementById("gamerenderer"));
+                                }
+                                else{
+                                    fire("keyup",{"keyCode":leftRight[0]},Gdocument.getElementById("gamerenderer"));
+                                    fire("keyup",{"keyCode":leftRight[1]},Gdocument.getElementById("gamerenderer"));
+                                }
                             }
                             else{
-                                fire("keyup",{"keyCode":leftRight[0]},Gdocument.getElementById("gamerenderer"));
-                                fire("keyup",{"keyCode":leftRight[1]},Gdocument.getElementById("gamerenderer"));
+                                if(staystillpos[0]>playerpos.x/scale){
+                                    if(playerids[myid].playerData2.xvel/scale>10){
+                                        fire("keydown",{"keyCode":leftRight[0]},Gdocument.getElementById("gamerenderer"));
+                                        fire("keyup",{"keyCode":leftRight[1]},Gdocument.getElementById("gamerenderer"));
+                                    }
+                                    else{
+                                        fire("keyup",{"keyCode":leftRight[0]},Gdocument.getElementById("gamerenderer"));
+                                        fire("keydown",{"keyCode":leftRight[1]},Gdocument.getElementById("gamerenderer"));
+                                    }
+                                }
+                                else if(staystillpos[0]<playerpos.x/scale){
+                                    if(playerids[myid].playerData2.xvel/scale<-10){
+                                        fire("keyup",{"keyCode":leftRight[0]},Gdocument.getElementById("gamerenderer"));
+                                        fire("keydown",{"keyCode":leftRight[1]},Gdocument.getElementById("gamerenderer"));
+                                    }
+                                    else{
+                                        fire("keydown",{"keyCode":leftRight[0]},Gdocument.getElementById("gamerenderer"));
+                                        fire("keyup",{"keyCode":leftRight[1]},Gdocument.getElementById("gamerenderer"));
+                                    }
+                                }
                             }
                         }
                     }
@@ -3837,6 +3861,10 @@ scope.commandhandle = function(chat_val){
                             addto3[i].children[i3].visible = false;
                             if(addto3[i].children[i3].children.length>0){
                                 addto3[i].children[i3].visible = true;
+                                for(var i4 = 0;i4<addto3[i].children[i3].children.length;i4++){
+                                    addto3[i].children[i3].children[i4].position.x = -addto3[i].children[i3].position.x;
+                                    addto3[i].children[i3].children[i4].position.y = -addto3[i].children[i3].position.y;
+                                }
                             }
                         }
                     }
@@ -3848,6 +3876,10 @@ scope.commandhandle = function(chat_val){
                 for(var i = 0;i<addto3.length;i++){
                     for(var i2 = 0;i2<addto3[i].children.length;i2++){
                         addto3[i].children[i2].visible = true;
+                        for(var i4 = 0;i4<addto3[i].children[i2].children.length;i4++){
+                            addto3[i].children[i2].children[i4].position.x = 0;
+                            addto3[i].children[i2].children[i4].position.y = 0;
+                        }
                     }
                 }
             }
@@ -5823,8 +5855,13 @@ scope.hotkeys = function(e){
                         if(addto3[i].children.length>0){
                             for(var i3 = 0;i3<addto3[i].children.length;i3++){
                                 addto3[i].children[i3].visible = false;
+                                
                                 if(addto3[i].children[i3].children.length>0){
                                     addto3[i].children[i3].visible = true;
+                                    for(var i4 = 0;i4<addto3[i].children[i3].children.length;i4++){
+                                        addto3[i].children[i3].children[i4].position.x = -addto3[i].children[i3].position.x;
+                                        addto3[i].children[i3].children[i4].position.y = -addto3[i].children[i3].position.y;
+                                    }
                                 }
                             }
                         }
@@ -5836,6 +5873,13 @@ scope.hotkeys = function(e){
                     for(var i = 0;i<addto3.length;i++){
                         for(var i2 = 0;i2<addto3[i].children.length;i2++){
                             addto3[i].children[i2].visible = true;
+                            if(addto3[i].children[i2].children.length>0){
+                                addto3[i].children[i2].visible = true;
+                                for(var i4 = 0;i4<addto3[i].children[i2].children.length;i4++){
+                                    addto3[i].children[i2].children[i4].position.x = 0;
+                                    addto3[i].children[i2].children[i4].position.y = 0;
+                                }
+                            }
                         }
                     }
                 }
