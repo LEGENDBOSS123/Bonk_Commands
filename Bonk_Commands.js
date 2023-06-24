@@ -3862,8 +3862,8 @@ scope.commandhandle = function(chat_val){
                             if(addto3[i].children[i3].children.length>0){
                                 addto3[i].children[i3].visible = true;
                                 for(var i4 = 0;i4<addto3[i].children[i3].children.length;i4++){
-                                    addto3[i].children[i3].children[i4].position.x = -addto3[i].children[i3].position.x;
-                                    addto3[i].children[i3].children[i4].position.y = -addto3[i].children[i3].position.y;
+                                    addto3[i].children[i3].children[i4].position.x -= 2*scale;
+                                    addto3[i].children[i3].children[i4].position.y -= -2*scale;
                                 }
                             }
                         }
@@ -3877,8 +3877,8 @@ scope.commandhandle = function(chat_val){
                     for(var i2 = 0;i2<addto3[i].children.length;i2++){
                         addto3[i].children[i2].visible = true;
                         for(var i4 = 0;i4<addto3[i].children[i2].children.length;i4++){
-                            addto3[i].children[i2].children[i4].position.x = 0;
-                            addto3[i].children[i2].children[i4].position.y = 0;
+                            addto3[i].children[i2].children[i4].position.x += 2*scale;
+                            addto3[i].children[i2].children[i4].position.y += 2*scale;
                         }
                     }
                 }
@@ -5859,8 +5859,8 @@ scope.hotkeys = function(e){
                                 if(addto3[i].children[i3].children.length>0){
                                     addto3[i].children[i3].visible = true;
                                     for(var i4 = 0;i4<addto3[i].children[i3].children.length;i4++){
-                                        addto3[i].children[i3].children[i4].position.x = -addto3[i].children[i3].position.x;
-                                        addto3[i].children[i3].children[i4].position.y = -addto3[i].children[i3].position.y;
+                                        addto3[i].children[i3].children[i4].position.x -= 2*scale;
+                                        addto3[i].children[i3].children[i4].position.y -= 2*scale;
                                     }
                                 }
                             }
@@ -5876,8 +5876,8 @@ scope.hotkeys = function(e){
                             if(addto3[i].children[i2].children.length>0){
                                 addto3[i].children[i2].visible = true;
                                 for(var i4 = 0;i4<addto3[i].children[i2].children.length;i4++){
-                                    addto3[i].children[i2].children[i4].position.x = 0;
-                                    addto3[i].children[i2].children[i4].position.y = 0;
+                                    addto3[i].children[i2].children[i4].position.x += 2*scale;
+                                    addto3[i].children[i2].children[i4].position.y += 2*scale;
                                 }
                             }
                         }
