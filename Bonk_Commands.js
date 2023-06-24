@@ -3530,25 +3530,25 @@ scope.gotonextmap = function(e){
 };
 scope.commandhandle = function(chat_val){
     if (chat_val.substring(1,6)=="echo " && chat_val.replace(/^\s+|\s+$/g, '').length>=7){
-        if (chat_val.substring(6).replace(/^\s+|\s+$/g, '')==username){
+        if (chat_val.substring(6).replace(/^\s+|\s+$/g, '').replaceAll("'","").replaceAll('"',"")==username){
             displayInChat("You cannot echo yourself.","#DA0808","#1EBCC1");
             return "";
         }
-        else if (echo_list.indexOf(chat_val.substring(6).replace(/^\s+|\s+$/g, ''))===-1) {
+        else if (echo_list.indexOf(chat_val.substring(6).replace(/^\s+|\s+$/g, '').replaceAll("'","").replaceAll('"',""))===-1) {
 
-            echo_list.push(chat_val.substring(6).replace(/^\s+|\s+$/g, ''));
-            displayInChat(chat_val.substring(6).replace(/^\s+|\s+$/g, '') + " is being echoed.","#DA0808","#1EBCC1");
+            echo_list.push(chat_val.substring(6).replace(/^\s+|\s+$/g, '').replaceAll("'","").replaceAll('"',""));
+            displayInChat(chat_val.substring(6).replace(/^\s+|\s+$/g, '').replaceAll("'","").replaceAll('"',"") + " is being echoed.","#DA0808","#1EBCC1");
             return "";
         }
         else{
-            displayInChat(chat_val.substring(6).replace(/^\s+|\s+$/g, '') + " is already being echoed.","#DA0808","#1EBCC1");
+            displayInChat(chat_val.substring(6).replace(/^\s+|\s+$/g, '').replaceAll("'","").replaceAll('"',"") + " is already being echoed.","#DA0808","#1EBCC1");
             return "";
         }
     }
     else if (chat_val.substring(1,8)=="remove "  && chat_val.replace(/^\s+|\s+$/g, '').length>=7){
-        if (echo_list.indexOf(chat_val.substring(7).replace(/^\s+|\s+$/g, ''))!==-1){
-            echo_list.splice(echo_list.indexOf(chat_val.substring(7).replace(/^\s+|\s+$/g, '')),1);
-            displayInChat(chat_val.substring(7).replace(/^\s+|\s+$/g, '')+" is not being echoed.","#DA0808","#1EBCC1");
+        if (echo_list.indexOf(chat_val.substring(7).replace(/^\s+|\s+$/g, '').replaceAll("'","").replaceAll('"',""))!==-1){
+            echo_list.splice(echo_list.indexOf(chat_val.substring(7).replace(/^\s+|\s+$/g, '').replaceAll("'","").replaceAll('"',"")),1);
+            displayInChat(chat_val.substring(7).replace(/^\s+|\s+$/g, '').replaceAll("'","").replaceAll('"',"")+" is not being echoed.","#DA0808","#1EBCC1");
             return "";
         }
         else{
@@ -3975,7 +3975,7 @@ scope.commandhandle = function(chat_val){
     }
 
     else if (chat_val.substring(1,7)=="chatw "){
-        var text = chat_val.substring(7).replace(/^\s+|\s+$/g, '');
+        var text = chat_val.substring(7).replace(/^\s+|\s+$/g, '').replaceAll("'","").replaceAll('"',"");
 
         if(username == text){
             displayInChat("You cannot private chat with yourself.","#DA0808","#1EBCC1");
@@ -4012,7 +4012,7 @@ scope.commandhandle = function(chat_val){
         return "";
     }
     else if (chat_val.substring(1,8)=="record " && chat_val.replace(/^\s+|\s+$/g, '').length>=9){
-        var text = chat_val.substring(8).replace(/^\s+|\s+$/g, '');
+        var text = chat_val.substring(8).replace(/^\s+|\s+$/g, '').replaceAll("'","").replaceAll('"',"");
         var keys = Object.keys(playerids);
         var recordingid2 = -1;
         for(var i = 0;i<keys.length;i++){
@@ -4105,7 +4105,7 @@ scope.commandhandle = function(chat_val){
     }
     else if (chat_val.substring(1,5)=="msg " && chat_val.replace(/^\s+|\s+$/g, '').length>=6){
         if(private_chat_public_key[1][0] != 0 && private_chat_public_key[1][1] != 0 && private_chat_public_key[0] == private_chat){
-            var text = chat_val.substring(5).replace(/^\s+|\s+$/g, '');
+            var text = chat_val.substring(5).replace(/^\s+|\s+$/g, '').replaceAll("'","").replaceAll('"',"");
             var password = [];
             for(var i = 0;i<10;i++){
                 password.push(Math.floor(Math.random()*100+50));
@@ -4125,7 +4125,7 @@ scope.commandhandle = function(chat_val){
         return "";
     }
     else if (chat_val.substring(1,10)=="ignorepm " && chat_val.replace(/^\s+|\s+$/g, '').length>=11){
-        var text = chat_val.substring(10).replace(/^\s+|\s+$/g, '');
+        var text = chat_val.substring(10).replace(/^\s+|\s+$/g, '').replaceAll("'","").replaceAll('"',"");
         if(ignorepmlist.includes(text)){
             var index = ignorepmlist.indexOf(text);
             ignorepmlist.splice(index,1);
@@ -4598,12 +4598,12 @@ scope.commandhandle = function(chat_val){
             return "";
         }
         else if (chat_val.substring(1,5)=="ban " && chat_val.replace(/^\s+|\s+$/g, '').length>=6){
-            banned.push(chat_val.substring(5).replace(/^\s+|\s+$/g, ''));
-            displayInChat("Banned "+chat_val.substring(5).replace(/^\s+|\s+$/g, '')+".","#DA0808","#1EBCC1");
-            return "/kick '" + chat_val.substring(5).replace(/^\s+|\s+$/g, '') + "'";
+            banned.push(chat_val.substring(5).replace(/^\s+|\s+$/g, '').replaceAll("'","").replaceAll('"',""));
+            displayInChat("Banned "+chat_val.substring(5).replace(/^\s+|\s+$/g, '').replaceAll("'","").replaceAll('"',"")+".","#DA0808","#1EBCC1");
+            return "/kick '" + chat_val.substring(5).replace(/^\s+|\s+$/g, '').replaceAll("'","").replaceAll('"',"") + "'";
         }
         else if (chat_val.substring(1,6)=="kill " && chat_val.replace(/^\s+|\s+$/g, '').length>=7){
-            var text = chat_val.substring(6).replace(/^\s+|\s+$/g, '');
+            var text = chat_val.substring(6).replace(/^\s+|\s+$/g, '').replaceAll("'","").replaceAll('"',"");
             var keys = Object.keys(playerids);
             var killid = undefined;
             for(var i = 0; i<keys.length; i++){
@@ -5200,7 +5200,7 @@ scope.commandhandle = function(chat_val){
 
             }
             if (chat_val.substring(1,9)=="addname " && chat_val.replace(/^\s+|\s+$/g, '').length>=10){
-                var text = chat_val.substring(9).replace(/^\s+|\s+$/g, '');
+                var text = chat_val.substring(9).replace(/^\s+|\s+$/g, '').replaceAll("'","").replaceAll('"',"");
                 while(playerids[sandboxid]){
                     sandboxid+=1;
                 }
@@ -5261,7 +5261,7 @@ scope.commandhandle = function(chat_val){
                 return "";
             }
             else if (chat_val.substring(1,6)=="copy " && chat_val.replace(/^\s+|\s+$/g, '').length>=7){
-                var text = chat_val.substring(6).replace(/^\s+|\s+$/g, '');
+                var text = chat_val.substring(6).replace(/^\s+|\s+$/g, '').replaceAll("'","").replaceAll('"',"");
                 var keys = Object.keys(playerids);
                 var keys2 = Object.keys(sandboxplayerids);
                 
