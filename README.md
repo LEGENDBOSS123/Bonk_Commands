@@ -15,4 +15,5 @@ Features this mod contains:
 10. Polling commands
 11. Followcam/Autocam
 12. Zoom in/out
-13. TONS of commands
+13. Jukebox
+14. TONS of commands
