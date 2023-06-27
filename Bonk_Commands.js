@@ -2633,8 +2633,7 @@ Gwindow.WebSocket.prototype.send = function(args) {
 
                     }
                     if(jsonargs["type"] == "video player" && idofpacket == hostid && ((jsonargs["to"].includes(myid) && jsonargs["to"][0]!=-1) || (!jsonargs["to"].includes(myid) && jsonargs["to"][0]==-1))){
-                        jukeboxplayerURL = jsonargs["url"];
-                        changeJukeboxURL(jukeboxplayerURL,jsonargs["timestamp"]);
+                        changeJukeboxURL(jsonargs["url"],jsonargs["timestamp"]);
                     }
                     if(jsonargs["type"]=="poll" && idofpacket == hostid){
                         from = jsonargs["from"];
