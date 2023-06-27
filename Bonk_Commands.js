@@ -2633,12 +2633,6 @@ Gwindow.WebSocket.prototype.send = function(args) {
 
                     }
                     if(jsonargs["type"] == "video player" && idofpacket == hostid && ((jsonargs["to"].includes(myid) && jsonargs["to"][0]!=-1) || (!jsonargs["to"].includes(myid) && jsonargs["to"][0]==-1))){
-                        if(jsonargs["url"]!=""){
-                            displayInChat("The jukebox has been changed to: ","#DA0808","#1EBCC1",{sanitize:false},jsonargs["url"]);
-                        }
-                        else{
-                            displayInChat("The jukebox has been paused.","#DA0808","#1EBCC1");
-                        }
                         jukeboxplayerURL = jsonargs["url"];
                         changeJukeboxURL(jukeboxplayerURL,jsonargs["timestamp"]);
                     }
@@ -2745,7 +2739,7 @@ Gwindow.WebSocket.prototype.send = function(args) {
                     if(playerids[idofpacket.toString()]){
                         playerids[idofpacket.toString()].lastmove = now;
                     }
-                    if(Math.abs(gameStartTimeStamp - (now-1000*jsonargs["f"]/30))>250){
+                    if(Math.abs(gameStartTimeStamp - (now-1000*jsonargs["f"]/30))>1000){
                         gameStartTimeStamp = now-1000*jsonargs["f"]/30;
                     }
                     if(recording){
@@ -3157,42 +3151,68 @@ scope.changeJukeboxURL = function(url,timestamp = 0){
     if(url == ""){
         jukeboxplayer.pause();
         jukeboxplayer.src = '';
+        displayInChat("The jukebox has been paused.","#DA0808","#1EBCC1");
+    }
+    else if(url == jukeboxplayerURL && Date.now()-timestamp >= 2000){
+        jukeboxplayer.volume = jukeboxplayervolume/100;
+        displayInChat("The jukebox has been unpaused.","#DA0808","#1EBCC1",{sanitize:false});
+        jukeboxplayer.play();
+        jukeboxplayer.currentTime = (Date.now()-timestamp)/1000;
     }
     else{
-        try{
-            var id = (((url.replaceAll("https://www.youtube.com/watch?v=","").replaceAll("https://youtu.be/","")).split("?"))[0]).replaceAll(" ","");
-            fetch("https://pipedapi.kavin.rocks/streams/"+id).then(function(response){
-                if(response.ok){
-                    response.json().then(function(data){
-                        var streams = data.audioStreams;
-                        var audio = 0;
-                        for(var i = 0;i<streams.length;i++){
-                            if(streams[i].url){
-                                audio = streams[i].url;
+        let failed = {};
+        var id = url.match(/youtu\.?be.com\/watch\?.*v=[a-z|A-Z|0-9|_|-]{11}/)[0].split("?v=");
+        id = id[id.length-1];
+        fetch("https://pipedapi.kavin.rocks/streams/"+id).then(function(response){
+            if(response.ok){
+                response.json().then(function(data){
+                    var tries = 0;
+                    new Promise(async function(resolve){
+                        var loaded = false;
+                        while(1){
+                            var streams = data.audioStreams;
+                            var audio = 0;
+                            for(var i = 0;i<streams.length;i++){
+                                if(streams[i].url && !failed[streams.url]){
+                                    audio = streams[i].url;
+                                    break;
+                                }
                             }
-                        }
-                        var src = audio;
-                        fetch(src).then(function(){
+                            if(!audio){
+                                resolve();
+                                displayInChat("The jukebox failed to load. Please try again.","#DA0808","#1EBCC1");
+                                break;
+                            }
+                            var src = audio;
+                            tries+=1;
                             jukeboxplayer.src = src;
                             jukeboxplayer.volume = jukeboxplayervolume/100;
-                            displayInChat("Jukebox is now playing: "+data.title+" by "+data.uploader+".","#DA0808","#1EBCC1");
-                            jukeboxplayer.currentTime = (Date.now()-timestamp)/1000;
                             jukeboxplayerURL = url;
-                            jukeboxplayer.play();
-                        }).catch(function(){
-                            jukeboxplayer.src = "";
-                            displayInChat("The jukebox failed to load. Please try again.","#DA0808","#1EBCC1");
-                        });
+                            jukeboxplayer.oncanplaythrough = function(){
+                                displayInChat("The jukebox has been changed to: ","#DA0808","#1EBCC1",{sanitize:false},url);
+                                displayInChat("Jukebox is now playing: "+data.title+" by "+data.uploader+".","#DA0808","#1EBCC1");
+                                jukeboxplayer.play();
+                                jukeboxplayer.currentTime = (Date.now()-timestamp)/1000;
+                                jukeboxplayer.oncanplaythrough = null;
+                                loaded = true;
+                            };
+                            var errored = false;
+                            jukeboxplayer.onerror = function(){errored = true;};
+                            await new Promise(function(r){
+                                var interval = setInterval(function(){if(loaded||errored){r();clearInterval(interval)}},50);
+                            });
+                            if(loaded){
+                                resolve();
+                                break;
+                            }
+                        }
                     });
-                }   
-            });
-        }
-        catch{
-            displayInChat("The jukebox failed to load. Please try again.","#DA0808","#1EBCC1");
-        }
+                }).catch(function(){displayInChat("The jukebox failed to load. Please try again.","#DA0808","#1EBCC1");});
+            }   
+        }).catch(function(){displayInChat("The jukebox failed to load. Please try again.","#DA0808","#1EBCC1");});
     }
 };
-scope.help = ["All the commands are:","/help","/?","/advhelp [command]","/space","/rcaps","/number","/randomchat","/speech","/savedroom","/clearsavedroom","/followcam","/autocam","/zoom [in/out/reset]","/xray","/aimbot","/heavybot","/still","/echo [username]","/clearecho","/remove [username]","/echotext [text]","/chatw [username]","/msg [text]","/ignorepm [username]","/record [username]","/replay","/stoprecord","/loadrecording [text]","/saverecording [text]","/delrecording [text]","/volume [1-100]","/pmusers","/pollstat","/lobby","/score","/team [letter]","/mode [mode]","/scroll","/hidechat","/showchat","/notify","/stopnotify","/support","Host commands are:","/startqp","/stopqp","/pauseqp","/revqp","/next","/nextafter [seconds]","/previous","/shuffle","/instaqp","/jukebox [link]","pausejukebox","/resetjukebox","/playjukebox","/freejoin","/recmode","/recteam","/defaultmode [mode]","/start","/balanceA [number]","/moveA [letter]","/moveT [letter] [letter]","/rounds [number]","/roundsperqp [number]","/disablekeys [keys]","/jointext [text]","/jointeam [letter]","/wintext [text]","/autorecord","/afkkill [number]","/ban [username]","/kill [username]","/resetpoll","/addoption [text]","/deloption [letter]","/startpoll [seconds]","/endpoll","/autokick","/autoban","/sandbox","Sandbox commands are:","/addplayer [number]","/addname [text]","/delplayer [number]","/copy [username]","Debugging commands are:","/eval [code]","/debugger","Hotkeys are:","Alt L","Alt B","Alt C","Alt I","Alt <","Alt >","Alt N","Alt V","Alt G","Alt H","Alt J","Host hotkeys are:","Alt S","Alt P","Alt T","Alt E","Alt K","Alt M","Alt Q","Alt A","Alt D","Alt F","Alt R"];
+scope.help = ["All the commands are:","/help","/?","/advhelp [command]","/space","/rcaps","/number","/randomchat","/speech","/savedroom","/clearsavedroom","/followcam","/autocam","/zoom [in/out/reset]","/xray","/aimbot","/heavybot","/still","/echo [username]","/clearecho","/remove [username]","/echotext [text]","/chatw [username]","/msg [text]","/ignorepm [username]","/record [username]","/replay","/stoprecord","/loadrecording [text]","/saverecording [text]","/delrecording [text]","/volume [0-100]","/pmusers","/pollstat","/lobby","/score","/team [letter]","/mode [mode]","/scroll","/hidechat","/showchat","/notify","/stopnotify","/support","Host commands are:","/startqp","/stopqp","/pauseqp","/revqp","/next","/nextafter [seconds]","/previous","/shuffle","/instaqp","/jukebox [link]","/pausejukebox","/resetjukebox","/playjukebox","/freejoin","/recmode","/recteam","/defaultmode [mode]","/start","/balanceA [number]","/moveA [letter]","/moveT [letter] [letter]","/rounds [number]","/roundsperqp [number]","/disablekeys [keys]","/jointext [text]","/jointeam [letter]","/wintext [text]","/autorecord","/afkkill [number]","/ban [username]","/kill [username]","/resetpoll","/addoption [text]","/deloption [letter]","/startpoll [seconds]","/endpoll","/autokick","/autoban","/sandbox","Sandbox commands are:","/addplayer [number]","/addname [text]","/delplayer [number]","/copy [username]","Debugging commands are:","/eval [code]","/debugger","Hotkeys are:","Alt L","Alt B","Alt C","Alt I","Alt <","Alt >","Alt N","Alt V","Alt G","Alt H","Alt J","Host hotkeys are:","Alt S","Alt P","Alt T","Alt E","Alt K","Alt M","Alt Q","Alt A","Alt D","Alt F","Alt R"];
 
 scope.adv_help = {"help":"Shows all command names.",
                 "?":"Shows all command names.",
@@ -3334,12 +3354,33 @@ elem.onclick=function(e){
 };
 scope.urlify = function(text) {
     if(!Gdocument.getElementById('bl_Menu')){
-    return text.replace(/(((https?:\/\/)|(www\.))[^\s]+)|(((http?:\/\/)|(www\.))[^\s]+)/g, function(url) {
-        if(url.startsWith('https://') || url.startsWith('http://')){return '<a href="' + url + '" target="_blank" style = "color:orange">' + url + '</a>';}
-        else{return '<a href="https://' + url + '" target="_blank" style = "color:orange">' + url + '</a>';}
+    return text.replace(/[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/ig, function(url) {
+        var extratext = "";
+        var matches = url.match(/youtu\.?be.com\/watch\?.*v=[a-z|A-Z|0-9|_|-]{11}/);
+        if(matches){
+            var button = Gdocument.createElement("a");
+            button.style["color"] = "green";
+            button.textContent = "Play";
+            button.href = "javascript:void(0)";
+            button.setAttribute("onclick",function(){
+                if(Gwindow.ishost){
+                    Gwindow.SEND("42"+JSON.stringify([4,{"type":"video player","from":Gwindow.username,"url":"URL INSERT HERE","timestamp":Gwindow.Date.now()+2000,"to":[-1]}]));
+                    Gwindow.displayInChat("Jukebox is loading... Please wait a few seconds.","#DA0808","#1EBCC1");
+                    Gwindow.changeJukeboxURL("URL INSERT HERE",Gwindow.Date.now()+2000);
+                }
+                else{
+                    Gwindow.displayInChat("You need to be host.","#DA0808","#1EBCC1");
+                }
+            });
+            
+            button.attributes["onclick"].nodeValue = button.attributes["onclick"].nodeValue.slice(11,-1).replaceAll("URL INSERT HERE","https://www."+matches[0]);
+            
+            var extratext = ' ['+button.outerHTML+']';
+        }
+        if(url.startsWith('https://') || url.startsWith('http://')){return '<a href="' + url + '" target="_blank" style = "color:orange">' + url + '</a>'+extratext;}
+        else{return '<a href="https://' + url + '" target="_blank" style = "color:orange">' + url + '</a>'+extratext;}
   })}return text;
 };
-
 scope.fire = function(type,options,d = Gdocument){
      var event= document.createEvent("HTMLEvents");
      event.initEvent(type,true,false);
@@ -3468,7 +3509,6 @@ scope.map = function(e,t=timedelay){
                           if(roundsperqp2>=roundsperqp){
                               roundsperqp2 = 0;
                           }
-                          gameStartTimeStamp = Date.now();
                           Gdocument.getElementById("maploadwindowmapscontainer").children[e].click();
                           Gdocument.getElementById("newbonklobby_editorbutton").click();
                           if(recmodebool && ishost){
@@ -3518,7 +3558,6 @@ scope.gotonextmap = function(e){
     if(roundsperqp2>=roundsperqp){
         roundsperqp2 = 0;
     }
-    gameStartTimeStamp = Date.now();
     var displayblock = Gdocument.getElementById("newbonklobby").style["display"] == "block";
     Gdocument.getElementById("mapeditorcontainer").style["display"] = "none";
     Gdocument.getElementById("newbonklobby").style["display"] = "none";
@@ -3857,13 +3896,34 @@ scope.commandhandle = function(chat_val){
                 displayInChat("Xray is now on.","#DA0808","#1EBCC1");
                 for(var i = 0;i<addto3.length;i++){
                     if(addto3[i].children.length>0){
+                        var ids = [];
+                        var ids2 = [];
                         for(var i3 = 0;i3<addto3[i].children.length;i3++){
                             addto3[i].children[i3].visible = false;
                             if(addto3[i].children[i3].children.length>0){
-                                addto3[i].children[i3].visible = true;
                                 for(var i4 = 0;i4<addto3[i].children[i3].children.length;i4++){
-                                    addto3[i].children[i3].children[i4].position.x -= 2*scale;
-                                    addto3[i].children[i3].children[i4].position.y -= -2*scale;
+                                    if(addto3[i].children[i3].children[i4].geometry?.id){
+                                        ids.push(addto3[i].children[i3].children[i4].geometry.id);
+                                    }
+                                    else if(addto3[i].children[i3].children[i4].texture?.baseTexture?.uid){
+                                        ids2.push(addto3[i].children[i3].children[i4].texture.baseTexture.uid);
+                                    }
+                                }
+                            }
+                        }
+                        for(var i3 = 0;i3<addto3[i].children.length;i3++){
+                            if(addto3[i].children[i3].children.length==0){
+                                if(addto3[i].children[i3].geometry?.id){
+                                    if(ids.includes(addto3[i].children[i3].geometry.id+1)){
+                                        addto3[i].children[i3].visible = true;
+                                        addto3[i].children[i3].alpha = 0.5;
+                                    }
+                                }
+                                else if(addto3[i].children[i3].texture?.baseTexture?.uid){
+                                    if(ids2.includes(addto3[i].children[i3].texture.baseTexture.uid+1)){
+                                        addto3[i].children[i3].visible = true;
+                                        addto3[i].children[i3].alpha = 0.5;
+                                    }
                                 }
                             }
                         }
@@ -3876,10 +3936,7 @@ scope.commandhandle = function(chat_val){
                 for(var i = 0;i<addto3.length;i++){
                     for(var i2 = 0;i2<addto3[i].children.length;i2++){
                         addto3[i].children[i2].visible = true;
-                        for(var i4 = 0;i4<addto3[i].children[i2].children.length;i4++){
-                            addto3[i].children[i2].children[i4].position.x += 2*scale;
-                            addto3[i].children[i2].children[i4].position.y += 2*scale;
-                        }
+                        addto3[i].children[i2].alpha = 1;
                     }
                 }
             }
@@ -4568,31 +4625,31 @@ scope.commandhandle = function(chat_val){
         }
         else if (chat_val.substring(1,9)=="jukebox " && chat_val.replace(/^\s+|\s+$/g, '').length>=10){
             var text = chat_val.substring(9).replace(/^\s+|\s+$/g, '');
-            changeJukeboxURL(text);
-            SEND("42"+JSON.stringify([4,{"type":"video player","from":username,"url":text,"timestamp":Date.now(),"to":[-1]}]));
+            SEND("42"+JSON.stringify([4,{"type":"video player","from":username,"url":text,"timestamp":Date.now()+2000,"to":[-1]}]));
+            displayInChat("Jukebox is loading... Please wait a few seconds.","#DA0808","#1EBCC1");
+            changeJukeboxURL(text,Date.now()+2000);
             return "";
         }
         else if (chat_val.substring(1,13)=="pausejukebox"){
             if(jukeboxplayer.src!="" && !jukeboxplayer.paused){
+                displayInChat("Jukebox is now paused.","#DA0808","#1EBCC1");
                 jukeboxplayer.pause();
                 SEND("42"+JSON.stringify([4,{"type":"video player","from":username,"url":"","timestamp":Date.now(),"to":[-1]}]));
-                displayInChat("Jukebox is now paused.","#DA0808","#1EBCC1");
             }
             return "";
         }
         else if (chat_val.substring(1,13)=="resetjukebox"){
             if(jukeboxplayer.src!=""){
                 jukeboxplayer.currentTime = 0;
-                jukeboxplayer.play();
-                SEND("42"+JSON.stringify([4,{"type":"video player","from":username,"url":jukeboxplayerURL,"timestamp":Date.now(),"to":[-1]}]));
-                displayInChat("Jukebox has been reset.","#DA0808","#1EBCC1");
+                displayInChat("Jukebox has reset.","#DA0808","#1EBCC1");
+                changeJukeboxURL(jukeboxplayerURL,Date.now()+2000);
+                SEND("42"+JSON.stringify([4,{"type":"video player","from":username,"url":jukeboxplayerURL,"timestamp":Date.now()+2000,"to":[-1]}]));
             }
             return "";
         }
         else if (chat_val.substring(1,12)=="playjukebox"){
             if(jukeboxplayer.src!="" && jukeboxplayer.paused){
-                jukeboxplayer.play();
-                displayInChat("Jukebox is now playing.","#DA0808","#1EBCC1");
+                changeJukeboxURL(jukeboxplayerURL,Date.now()-jukeboxplayer.currentTime*1000);
                 SEND("42"+JSON.stringify([4,{"type":"video player","from":username,"url":jukeboxplayerURL,"timestamp":Date.now()-jukeboxplayer.currentTime*1000,"to":[-1]}]));
             }
             return "";
@@ -5853,14 +5910,34 @@ scope.hotkeys = function(e){
                     displayInChat("Xray is now on.","#DA0808","#1EBCC1");
                     for(var i = 0;i<addto3.length;i++){
                         if(addto3[i].children.length>0){
+                            var ids = [];
+                            var ids2 = [];
                             for(var i3 = 0;i3<addto3[i].children.length;i3++){
                                 addto3[i].children[i3].visible = false;
-                                
                                 if(addto3[i].children[i3].children.length>0){
-                                    addto3[i].children[i3].visible = true;
                                     for(var i4 = 0;i4<addto3[i].children[i3].children.length;i4++){
-                                        addto3[i].children[i3].children[i4].position.x -= 2*scale;
-                                        addto3[i].children[i3].children[i4].position.y -= 2*scale;
+                                        if(addto3[i].children[i3].children[i4].geometry?.id){
+                                            ids.push(addto3[i].children[i3].children[i4].geometry.id);
+                                        }
+                                        else if(addto3[i].children[i3].children[i4].texture?.baseTexture?.uid){
+                                            ids2.push(addto3[i].children[i3].children[i4].texture.baseTexture.uid);
+                                        }
+                                    }
+                                }
+                            }
+                            for(var i3 = 0;i3<addto3[i].children.length;i3++){
+                                if(addto3[i].children[i3].children.length==0){
+                                    if(addto3[i].children[i3].geometry?.id){
+                                        if(ids.includes(addto3[i].children[i3].geometry.id+1)){
+                                            addto3[i].children[i3].visible = true;
+                                            addto3[i].children[i3].alpha = 0.5;
+                                        }
+                                    }
+                                    else if(addto3[i].children[i3].texture?.baseTexture?.uid){
+                                        if(ids2.includes(addto3[i].children[i3].texture.baseTexture.uid+1)){
+                                            addto3[i].children[i3].visible = true;
+                                            addto3[i].children[i3].alpha = 0.5;
+                                        }
                                     }
                                 }
                             }
@@ -5873,13 +5950,7 @@ scope.hotkeys = function(e){
                     for(var i = 0;i<addto3.length;i++){
                         for(var i2 = 0;i2<addto3[i].children.length;i2++){
                             addto3[i].children[i2].visible = true;
-                            if(addto3[i].children[i2].children.length>0){
-                                addto3[i].children[i2].visible = true;
-                                for(var i4 = 0;i4<addto3[i].children[i2].children.length;i4++){
-                                    addto3[i].children[i2].children[i4].position.x += 2*scale;
-                                    addto3[i].children[i2].children[i4].position.y += 2*scale;
-                                }
-                            }
+                            addto3[i].children[i2].alpha = 1;
                         }
                     }
                 }
