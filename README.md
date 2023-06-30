@@ -4,15 +4,16 @@ A script for bonk.io. You can check Bonk Commands in greasyfork.org for the user
 
 Features this mod contains:
 1. Never disconnect in quickplay.
-2. a Map Requests menu so you can view all map requests you have seen.
+2. Map Requests menu so you can view all map requests you have seen.
 3. Sandbox lobby - add infinite players.
 4. Private Chat (with the mod users).
 5. Ability to save rooms that are full, so in another room, you will be notified if any of the saved rooms open up.
 6. Ability to view lobby from ingame.
 7. Ability to join Ghost Rooms - rooms that initial data timeout.
-8. Custom Quickplay
-9. Echoing players
-10. Polling commands
-11. Followcam/Autocam
-12. Zoom in/out
-13. TONS of commands
+8. Custom Quickplay.
+9. Echoing players.
+10. Polling commands.
+11. Followcam/Autocam.
+12. Zoom in/out.
+13. Translator.
+14. TONS of commands.

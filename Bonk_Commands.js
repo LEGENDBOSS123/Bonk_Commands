@@ -288,6 +288,62 @@ if(typeof(scope.currentroomaddress)=='undefined'){scope.currentroomaddress = -1;
 if(typeof(scope.savedroomsdata)=='undefined'){scope.savedroomsdata = {};}
 if(typeof(scope.jukeboxplayerURL)=='undefined'){scope.jukeboxplayerURL = "";}
 if(typeof(scope.jukeboxplayervolume)=='undefined'){scope.jukeboxplayervolume = 20;}
+if(typeof(scope.gameStartTimeStamp)=='undefined'){scope.gameStartTimeStamp = 0;}
+if(typeof(scope.pipedurl)=='undefined'){
+    scope.pipedurl = "";
+    scope.pipedurllist = [
+        "https://pipedapi.kavin.rocks/streams/",
+        "https://pipedapi.syncpundit.io/streams/",
+        "https://api-piped.mha.fi/streams/",
+        "https://piped-api.garudalinux.org/streams/",
+        "https://pipedapi.rivo.lol/streams/",
+        "https://pipedapi.leptons.xyz/streams/",
+        "https://piped-api.lunar.icu/streams/",
+        "https://ytapi.dc09.ru/streams/",
+        "https://piped.tokhmi.xyz/streams/",
+        "https://pipedapi.aeong.one/streams/"];
+    scope.pipedindexes = [];
+    scope.checkInstance = async function(index){
+        var doesitwork = false;
+        await fetch(pipedurllist[index]+"dQw4w9WgXcQ").then(
+            function(r){
+                return r.json();
+            }
+        ).then(async function(r){
+            if (r.audioStreams && !r.error){
+                for(var i2 = 0;i2<r.audioStreams.length;i2++){
+                    if(r.audioStreams[i2].url){
+                        try{
+                            var f = await fetch(r.audioStreams[i2].url);
+                            if(f.ok){
+                                doesitwork = true;
+                                return;
+                            }
+    
+                        }
+                        catch(e){}
+                    }
+                }
+            }
+        }).catch(function(e){});
+        if(!doesitwork){
+            return -1;
+        }
+        return index;
+    };
+    
+    scope.checkInstances = async function (){
+        for (var index = 0;index<pipedurllist.length;index++){
+            var e = await checkInstance(index);
+            if(e!=-1){
+                pipedindexes.push(e);
+                pipedurl = pipedurllist[pipedindexes[0]];
+            }
+        }
+        
+    };
+    checkInstances();
+}
 
 
 
@@ -319,7 +375,18 @@ if(typeof(scope.recording)=='undefined'){scope.recording = false;}
 if(typeof(scope.recordingdata)=='undefined'){scope.recordingdata = [];}
 if(typeof(scope.recorddata)=='undefined'){scope.recorddata = {};}
 if(typeof(scope.recordingid)=='undefined'){scope.recordingid = -1;}
-
+if(typeof(scope.wordlist)=='undefined'){
+    scope.wordlist = [];
+    fetch("https://api.github.com/repos/first20hours/google-10000-english/contents/20k.txt").then(function(data){
+        return data.json();
+    }).then(function(data){
+        fetch("https://api.github.com/repos/first20hours/google-10000-english/git/blobs/"+data.sha).then(function(data){
+            return data.json();
+        }).then(function(data){
+            scope.wordlist = atob(data.content).split("\n");
+        });
+    });
+}
 
 
     
@@ -1374,7 +1441,6 @@ Gdocument.getElementById("ingamechatcontent").appendChild = function(args){
 };  
 Gwindow.Date.now = function(){
     if(overideDate[0]){
-        /*console.log(overideDate[1])*/
         return overideDate[1];
     }
     else if(causelag){
@@ -1626,6 +1692,7 @@ Gwindow.requestAnimationFrame = function(...args){
         zoom2 = zoom2 + 0.15*(zoom-zoom2);
         addto.scale.x = newzoom2 * zoom2;
         addto.scale.y = newzoom2 * zoom2;
+
         
         if(holdheavy>0){
             if(holdheavy==1){
@@ -1978,6 +2045,15 @@ Gwindow.WebSocket.prototype.send = function(args) {
                     jsonargs2 = JSON.stringify(jsonargs2).replace('"CVALUE"',"CVALUE");
                     SEND("42"+JSON.stringify([4,{"type":"customfakerecieve","from":username,"packet":['42[7,ID,'+jsonargs2+']'],to:[-1]}]));
                 }
+                if(typeof(jsonargs[1]["i"]) != "undefined"){
+                    if(playerids[myid].movecount>=jsonargs[1]["c"]){
+                        jsonargs[1]["c"] = playerids[myid].movecount;
+                        playerids[myid].movecount+=1;
+                    }
+                    else{
+                        playerids[myid].movecount = jsonargs[1]["c"]+1;
+                    }
+                }
                 if(recording && typeof(jsonargs[1]["i"])!="undefined"){
                     if(myid.toString() == recordingid){
                         if(recordingdata.length == 0){
@@ -2002,6 +2078,7 @@ Gwindow.WebSocket.prototype.send = function(args) {
                         }
                     }
                 }
+                args = "42"+JSON.stringify(jsonargs);
             }
             if(args.startsWith('42[29,')){
                 var jsonargs = JSON.parse(args.substring(2));
@@ -2025,6 +2102,16 @@ Gwindow.WebSocket.prototype.send = function(args) {
                 inroom = true;
                 if(savedrooms.length>0){
                     Gdocument.getElementById("roomlistrefreshbutton").click();
+                }
+            }
+            if(args.startsWith('42[10')){
+                var jsonargs = JSON.parse(args.substring(2));
+                if(jsonargs[2]){
+                    args = "42"+JSON.stringify([10,jsonargs[1]]);
+                }
+                else if(translating2[0]){
+                    text = translate(jsonargs[1]["message"],"auto",translating2[1]).then(function(r){SEND("42"+JSON.stringify([10,{"message":r},true]))});
+                    return;
                 }
             }
             if(args.startsWith('42[23,') && recteams){
@@ -2378,6 +2465,9 @@ Gwindow.WebSocket.prototype.send = function(args) {
             }
             if(args.data.startsWith('42[20,')){
                 var jsonargs = JSON.parse(args.data.substring(2));
+                if(translating[0]){
+                    translate(jsonargs[2],"auto",translating[1]).then(function(r){displayInChat(playerids[jsonargs[1]].userName+": "+r,"#DA0808","#1EBCC1")});
+                }
                 if(echo_list.includes(playerids[jsonargs[1]].userName)){
                     chat(flag_manage(echotext.replaceAll("username",playerids[jsonargs[1]].userName).replaceAll("message",jsonargs[2])));
                 }
@@ -2440,6 +2530,7 @@ Gwindow.WebSocket.prototype.send = function(args) {
                     myid = jsonargs[1];
                     bonkwss = this;
                     playerids[myid].commands = true;
+                    /*setTimeout(function(){var me = playerids[myid];RECIEVE('42'+JSON.stringify([4,myid,me.peerID,me.userName,me.guest,me.level,me.team,me.avatar]));});*/
                 }
                 else{
                     bonkwssextra.push(this);
@@ -2449,6 +2540,7 @@ Gwindow.WebSocket.prototype.send = function(args) {
                 SEND('42[4,{"type":"commands"}]');
                 ghostroomwss = bonkwss;
                 Gdocument.getElementById("roomlistrefreshbutton").click();
+                
                 setTimeout(function(){if(bonkwss == ghostroomwss && !sandboxon && !recievedinitdata && myid!=0){RECIEVE('42[21,{"map":{"v":13,"s":{"re":false,"nc":false,"pq":1,"gd":25,"fl":false},"physics":{"shapes":[],"fixtures":[],"bodies":[],"bro":[],"joints":[],"ppm":12},"spawns":[],"capZones":[],"m":{"a":"","n":"","dbv":0,"dbid":0,"authid":-1,"date":"","rxid":0,"rxn":"","rxa":"","rxdb":0,"cr":[],"pub":false,"mo":"","vu":0,"vd":0}},"gt":2,"wl":3,"q":false,"tl":false,"tea":false,"ga":"b","mo":"b","bal":[]}]');displayInChat("You have joined a ghost room.","#DA0808","#1EBCC1");}},6000);
 
             }
@@ -2462,11 +2554,17 @@ Gwindow.WebSocket.prototype.send = function(args) {
                 mode = jsonargs[1]["gs"]["mo"];
                 FFA = !jsonargs[1]["gs"]["tea"];
             }
+            if(args.data.startsWith('42[49,')){
+                /*
+                var me = playerids[myid];
+                RECIEVE('42'+JSON.stringify([4,myid,me.peerID,me.userName,me.guest,me.level,me.team,me.avatar]));
+                */
+            }
             if(args.data.startsWith('42[15,')){
                 var jsonargs = JSON.parse(args.data.substring(2));
                 dontswitch = false;
                 mode = jsonargs[3]["mo"];
-                gameStartTimeStamp = Date.now();
+                gameStartTimeStamp = jsonargs[1];
                 killedids = [];
                 Gdocument.getElementById("newbonklobby").style["z-index"] = "unset";
                 Gdocument.getElementById("mapeditorcontainer").style["z-index"] = "unset";
@@ -2734,11 +2832,13 @@ Gwindow.WebSocket.prototype.send = function(args) {
                 }
                 else{
                     var now = Date.now();
-                    playerids[idofpacket.toString()].movecount+=1;
                     if(playerids[idofpacket.toString()]){
                         playerids[idofpacket.toString()].lastmove = now;
                     }
-                    if(Math.abs(gameStartTimeStamp - (now-1000*jsonargs["f"]/30))>1000){
+                    if(idofpacket!=myid){
+                        playerids[idofpacket.toString()].movecount+=1;
+                    }
+                    if(Math.abs(gameStartTimeStamp - (now-1000*jsonargs["f"]/30))>1000 && idofpacket!=myid){
                         gameStartTimeStamp = now-1000*jsonargs["f"]/30;
                     }
                     if(recording){
@@ -2910,7 +3010,6 @@ scope.beenKickedTimeStamp = 0;
 scope.stopquickplay = 1;
 scope.currentFrame = 0;
 scope.text2speech = false;
-scope.gameStartTimeStamp = 0;
 scope.canceled = false;
 scope.wintext = "";
 scope.banned = [];
@@ -2933,6 +3032,7 @@ scope.space_flag = false;
 scope.rcaps_flag = false;
 scope.number_flag = false;
 scope.reverse_flag = false;
+scope.autocorrect = false;
 scope.request_public_key_time_stamp = 0;
 scope.sandboxcopyme = -1;
 scope.recteams = false;
@@ -2995,10 +3095,21 @@ scope.causelag = false;
 scope.causelag2 = 0;
 scope.overideDate = [false,0];
 scope.scale = 1;
-scope.replaycounter = 0;
-scope.replaykeysheld = 0;
-scope.replaynow = 0;
-scope.stopreplay = false;
+scope.translating = [false,""];
+scope.translating2 = [false,""];
+scope.translatingkeys = {"english":"en","chinese":"zh","hindi":"hi","spanish":"es","portugese":"pt","french":"fr","arabic":"ar","russian":"ru","korean":"ko"};
+scope.translate = function(text,fromL,toL) {
+    var fL = fromL || 'en';
+    var tL = toL || 'de';
+    var url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl='+ fL + "&tl=" + tL + "&dt=t&q=" + encodeURI(text);
+    var parseJSON = txt => JSON.parse(txt.split(',').map( x => x || 'null').join(',')) ;
+    var joinSnippets = json => json[0].map( x => x[0] ).join('');
+    return fetch(url).then(function(res){
+        return res.text();
+    }).then(function(text){
+        return joinSnippets(parseJSON(text));
+    });
+};
 scope.positive = function(angle){
     if(angle<0){
         angle += 2*Math.PI;
@@ -3014,29 +3125,78 @@ scope.angle_between2 = function(angle,angle2){
     }
     return -1;
 };
+
+scope.stringdistance = function(s1,s2){
+    s1 = s1.toLowerCase();
+    s2 = s2.toLowerCase();
+    var matrix = Array(s1.length+1);
+    for(var i = 0;i<matrix.length;i++){
+        matrix[i] = Array(s2.length+1);
+        matrix[i][0] = i;
+    }
+    for(var i = 0;i<matrix[0].length;i++){
+        matrix[0][i] = i;
+    }
+    for(var i = 1;i<s1.length+1;i++){
+        for(var i2 = 1;i2<s2.length+1;i2++){
+            if(s1[i-1]==s2[i2-1]){  
+                matrix[i][i2] = matrix[i-1][i2-1];
+            }
+            else{
+                matrix[i][i2] = Math.min(matrix[i][i2-1],matrix[i-1][i2],matrix[i-1][i2-1])+1;
+            }
+        }
+    }
+    return matrix[s1.length][s2.length];
+};
+scope.closestWord = function(word){
+    if(word.length>20 || word.length<2){
+        return word;
+    }
+    var distances = [word.length,""];
+    var playernamelist = [];
+    var keys = Object.keys(playerids);
+    for(var i = 0;i<keys.length;i++){
+        playernamelist.push(playerids[keys[i]].userName);
+    }
+    var wordlist2 = playernamelist.concat(wordlist);
+    for(var i = 0;i<wordlist2.length;i++){
+        var distance = stringdistance(word,wordlist2[i]);
+        if(distance<=distances[0]){
+            distances[0] = distance;
+            distances[1] = wordlist2[i];
+            if(distance == 0){
+                return wordlist2[i];
+            }
+        }
+    };
+    if(distances[1] == ""){
+        return word;
+    }
+    return distances[1];
+};
+
+
+
 scope.replay = function(){
-    if(replaycounter>=recordingdata.length){
-        replaycounter = 0;
-        overideDate = [false,0];
-        stopreplay = false;
-        return;
+    var frame = getCurrentFrame();
+    /*var replaycounter = 0;
+    while(1){
+        if(replaycounter != recordingdata.length-1){
+            for(var i = 0;i<recordingdata[replaycounter+1][1]-recordingdata[replaycounter][1];i++){
+                RECIEVE('42[7,'+myid+',{"i":'+recordingdata[replaycounter][0]+',"f":'+(frame+i+recordingdata[replaycounter][1]).toString()+',"c":'+playerids[myid].movecount+'}]');
+                playerids[myid].movecount+=1;
+            }
+            replaycounter+=1;
+        }
+        else{
+            break;
+        }
+    }*/
+    
+    for(var i = 0;i<recordingdata.length;i++){
+        SEND('42[4,{"i":'+recordingdata[i][0]+',"f":'+(frame+recordingdata[i][1]).toString()+',"c":'+playerids[myid].movecount+'}]');
     }
-    overideDate = [true,recordingdata[replaycounter][1]*100/3+replaynow];
-    setTimeout(function(){
-        presskeys(replaykeysheld,GET_KEYS(recordingdata[replaycounter][0]));
-        replaykeysheld = GET_KEYS(recordingdata[replaycounter][0]);
-        overideDate = [false,0];
-        replaycounter+=1;
-    },75);
-    if(stopreplay || replaycounter>=recordingdata.length){
-        setTimeout(function(){
-            replaycounter = 0;
-            overideDate = [false,0];
-            stopreplay = false;
-        },100);
-        return;
-    }
-    setTimeout(replay,200)/*recordingdata[replaycounter][1]*100/3-recordingdata[replaycounter-1][1]*100/3);*/
 };
 scope.presskeys = function(x,y){
     if(!x.left && y.left){
@@ -3147,6 +3307,10 @@ scope.getplayerkeys = function(){
     }
 };
 scope.changeJukeboxURL = function(url,timestamp = 0){
+    if(pipedurl == ""){
+        displayInChat("The jukebox is still being set up.","#DA0808","#1EBCC1");
+        return;
+    }
     if(url == ""){
         jukeboxplayer.pause();
         jukeboxplayer.src = '';
@@ -3162,7 +3326,7 @@ scope.changeJukeboxURL = function(url,timestamp = 0){
         let failed = {};
         var id = url.match(/youtu\.?be.com\/watch\?.*v=[a-z|A-Z|0-9|_|-]{11}/)[0].split("?v=");
         id = id[id.length-1];
-        fetch("https://pipedapi.kavin.rocks/streams/"+id).then(function(response){
+        fetch(pipedurl+id).then(function(response){
             if(response.ok){
                 response.json().then(function(data){
                     var tries = 0;
@@ -3206,12 +3370,12 @@ scope.changeJukeboxURL = function(url,timestamp = 0){
                             }
                         }
                     });
-                }).catch(function(){displayInChat("The jukebox failed to load. Please try again.","#DA0808","#1EBCC1");});
+                }).catch(function(e){displayInChat("The jukebox failed to load. Please try again.","#DA0808","#1EBCC1");});
             }   
-        }).catch(function(){displayInChat("The jukebox failed to load. Please try again.","#DA0808","#1EBCC1");});
+        }).catch(function(e){displayInChat("The jukebox failed to load. Please try again.","#DA0808","#1EBCC1");});
     }
 };
-scope.help = ["All the commands are:","/help","/?","/advhelp [command]","/space","/rcaps","/number","/randomchat","/speech","/savedroom","/clearsavedroom","/followcam","/autocam","/zoom [in/out/reset]","/xray","/aimbot","/heavybot","/still","/echo [username]","/clearecho","/remove [username]","/echotext [text]","/chatw [username]","/msg [text]","/ignorepm [username]","/record [username]","/replay","/stoprecord","/loadrecording [text]","/saverecording [text]","/delrecording [text]","/volume [0-100]","/pmusers","/pollstat","/lobby","/score","/team [letter]","/mode [mode]","/scroll","/hidechat","/showchat","/notify","/stopnotify","/support","Host commands are:","/startqp","/stopqp","/pauseqp","/revqp","/next","/nextafter [seconds]","/previous","/shuffle","/instaqp","/jukebox [link]","/pausejukebox","/resetjukebox","/playjukebox","/freejoin","/recmode","/recteam","/defaultmode [mode]","/start","/balanceA [number]","/moveA [letter]","/moveT [letter] [letter]","/rounds [number]","/roundsperqp [number]","/disablekeys [keys]","/jointext [text]","/jointeam [letter]","/wintext [text]","/autorecord","/afkkill [number]","/ban [username]","/kill [username]","/resetpoll","/addoption [text]","/deloption [letter]","/startpoll [seconds]","/endpoll","/autokick","/autoban","/sandbox","Sandbox commands are:","/addplayer [number]","/addname [text]","/delplayer [number]","/copy [username]","Debugging commands are:","/eval [code]","/debugger","Hotkeys are:","Alt L","Alt B","Alt C","Alt I","Alt <","Alt >","Alt N","Alt V","Alt G","Alt H","Alt J","Host hotkeys are:","Alt S","Alt P","Alt T","Alt E","Alt K","Alt M","Alt Q","Alt A","Alt D","Alt F","Alt R"];
+scope.help = ["All the commands are:","/help","/?","/advhelp [command]","/space","/rcaps","/number","/autocorrect","/translateto [language]","/translate [language]","/randomchat","/speech","/savedroom","/clearsavedroom","/followcam","/autocam","/zoom [in/out/reset]","/xray","/aimbot","/heavybot","/still","/echo [username]","/clearecho","/remove [username]","/echotext [text]","/chatw [username]","/msg [text]","/ignorepm [username]","/record [username]","/replay","/stoprecord","/loadrecording [text]","/saverecording [text]","/delrecording [text]","/volume [0-100]","/pmusers","/pollstat","/lobby","/score","/team [letter]","/mode [mode]","/scroll","/hidechat","/showchat","/notify","/stopnotify","/support","Host commands are:","/startqp","/stopqp","/pauseqp","/revqp","/next","/nextafter [seconds]","/previous","/shuffle","/instaqp","/jukebox [link]","/pausejukebox","/resetjukebox","/playjukebox","/freejoin","/recmode","/recteam","/defaultmode [mode]","/start","/balanceA [number]","/moveA [letter]","/moveT [letter] [letter]","/rounds [number]","/roundsperqp [number]","/disablekeys [keys]","/jointext [text]","/jointeam [letter]","/wintext [text]","/autorecord","/afkkill [number]","/ban [username]","/kill [username]","/resetpoll","/addoption [text]","/deloption [letter]","/startpoll [seconds]","/endpoll","/autokick","/autoban","/sandbox","Sandbox commands are:","/addplayer [number]","/addname [text]","/delplayer [number]","/copy [username]","Debugging commands are:","/eval [code]","/debugger","Hotkeys are:","Alt L","Alt B","Alt C","Alt I","Alt <","Alt >","Alt N","Alt V","Alt G","Alt H","Alt J","Host hotkeys are:","Alt S","Alt P","Alt T","Alt E","Alt K","Alt M","Alt Q","Alt A","Alt D","Alt F","Alt R"];
 
 scope.adv_help = {"help":"Shows all command names.",
                 "?":"Shows all command names.",
@@ -3233,6 +3397,9 @@ scope.adv_help = {"help":"Shows all command names.",
                 "pollstat":"Displays the current poll and its votes.",
                 "eval":"Evaluates code. Only use this if you are experienced in javascript.",
                 "debugger":"Opens debugger.",
+                "translate":"Translates peoples texts to the chosen language.",
+                "translateto":"You will now speak the chosen language.",
+                "autocorrect":"Fixes spelling mistakes.",
                 "randomchat":"Spams random chat messages from the past.",
                 "lobby":"Makes lobby visible when you are ingame. Type '/lobby' again to close lobby.",
                 "score":"Displays the current score while ingame. Type '/score' again to hide the score.",
@@ -3351,9 +3518,13 @@ elem.onclick=function(e){
         }
     }
 };
+scope.getCurrentFrame = function(){
+    currentFrame = Math.floor((Date.now() - gameStartTimeStamp)/1000*30);
+    return currentFrame;
+};
 scope.urlify = function(text) {
     if(!Gdocument.getElementById('bl_Menu')){
-    return text.replace(/[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/ig, function(url) {
+    return text.replace(/[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:;%.\-_\+~#=]{2,256}\.[\-a-z]{2,6}\b([\-a-zA-Z0-9@:;%_\+.~#?&//=]*)/ig, function(url) {
         var extratext = "";
         var matches = url.match(/youtu\.?be.com\/watch\?.*v=[a-z|A-Z|0-9|_|-]{11}/);
         if(matches){
@@ -3624,6 +3795,58 @@ scope.commandhandle = function(chat_val){
         }
         return "";
     }
+    else if (chat_val.substring(1,12)=="autocorrect"){
+        if(autocorrect == true){
+            displayInChat("Autocorrect is now off.","#DA0808","#1EBCC1");
+            autocorrect = false;
+        }
+        else{
+            displayInChat("Autocorrect is now on.","#DA0808","#1EBCC1");
+            autocorrect = true;
+        }
+        return "";
+    }
+    else if (chat_val.substring(1,13)=="translateto " && chat_val.replace(/^\s+|\s+$/g, '').length>=14){
+        var text = chat_val.substring(13).replace(/^\s+|\s+$/g, '').toLowerCase();
+        var keys = Object.keys(translatingkeys);
+        if(keys.includes(text)){
+            translating2 = [true,translatingkeys[text]];
+            displayInChat("You will now speak the "+text+" language.","#DA0808","#1EBCC1");
+        }
+        else{
+            displayInChat("Invalid language. Here are the current language options:","#DA0808","#1EBCC1");
+            for(var i = 0;i<keys.length;i++){
+                displayInChat(keys[i],"#DA0808","#1EBCC1");
+            }
+        }
+        return "";
+    }
+    else if (chat_val.substring(1,12)=="translateto"){
+       translating2 = [false,""];
+       displayInChat("Translator has been turned off.","#DA0808","#1EBCC1");
+       return "";
+    }
+    else if (chat_val.substring(1,11)=="translate " && chat_val.replace(/^\s+|\s+$/g, '').length>=12){
+        var text = chat_val.substring(11).replace(/^\s+|\s+$/g, '').toLowerCase();
+        var keys = Object.keys(translatingkeys);
+        if(keys.includes(text)){
+            translating = [true,translatingkeys[text]];
+            displayInChat("Translator has been set to the "+text+" language.","#DA0808","#1EBCC1");
+        }
+        else{
+            displayInChat("Invalid language. Here are the current language options:","#DA0808","#1EBCC1");
+            for(var i = 0;i<keys.length;i++){
+                displayInChat(keys[i],"#DA0808","#1EBCC1");
+            }
+        }
+        return "";
+    }
+    else if (chat_val.substring(1,10)=="translate"){
+       translating = [false,""];
+       displayInChat("Translator has been turned off.","#DA0808","#1EBCC1");
+       return "";
+    }
+    
     else if (chat_val.substring(1,6)=="space"){
         if(space_flag == true){
             displayInChat("Space is now off.","#DA0808","#1EBCC1");
@@ -4005,12 +4228,13 @@ scope.commandhandle = function(chat_val){
     }
     else if (chat_val.substring(1,6)=="score"){
         var element = Gdocument.getElementById("ingamewinner_scores");
-        element.style["visibility"] = "visible";
         if(element.style["opacity"]<1){
             element.style["opacity"] = 1;
+            element.style["visibility"] = "visible";
         }
         else{
             element.style["opacity"] = 0;
+            element.style["visibility"] = "unset";
         }
         return "";
     }
@@ -4151,12 +4375,7 @@ scope.commandhandle = function(chat_val){
             recording = false;
             recordingdata[0][1] = 0;
         }
-        setTimeout(function(){
-            replaynow = Date.now();
-            replaycounter = 0;
-            replaykeysheld = GET_KEYS(0);
-            replay();
-        },100);   
+        replay();
         return "";
     }
     else if (chat_val.substring(1,5)=="msg " && chat_val.replace(/^\s+|\s+$/g, '').length>=6){
@@ -5355,6 +5574,13 @@ scope.commandhandle = function(chat_val){
 
 scope.flag_manage = function(t){
     var text = t;
+    if(autocorrect == true){
+        var text2 = text.split(" ");
+        for(var i = 0;i<text2.length;i++){
+            text2[i] = closestWord(text2[i]);
+        }
+        text = text2.join(" ");
+    }
     if(reverse_flag == true){
         text = text.split("").reverse().join("")
     }
@@ -5857,12 +6083,13 @@ scope.hotkeys = function(e){
         }
         if(keycode == "KeyB"){
             var element = Gdocument.getElementById("ingamewinner_scores");
-            element.style["visibility"] = "visible";
             if(element.style["opacity"]<1){
                 element.style["opacity"] = 1;
+                element.style["visibility"] = "visible";
             }
             else{
                 element.style["opacity"] = 0;
+                element.style["visibility"] = "unset";
             }
             e.preventDefault();
         }
@@ -6245,6 +6472,7 @@ function timeout123() {
         space_flag = false;
         number_flag = false;
         reverse_flag = false;
+        autocorrect = false;
         echo_list = [];
         scroll = false;
         FollowCam = false;
