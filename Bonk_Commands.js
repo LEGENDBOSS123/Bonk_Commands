@@ -6473,6 +6473,8 @@ function timeout123() {
         number_flag = false;
         reverse_flag = false;
         autocorrect = false;
+        translating2 = [false,""];
+        translating = [false,""];
         echo_list = [];
         scroll = false;
         FollowCam = false;
