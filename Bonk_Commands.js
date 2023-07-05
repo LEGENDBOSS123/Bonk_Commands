@@ -289,10 +289,79 @@ if(typeof(scope.savedroomsdata)=='undefined'){scope.savedroomsdata = {};}
 if(typeof(scope.jukeboxplayerURL)=='undefined'){scope.jukeboxplayerURL = "";}
 if(typeof(scope.jukeboxplayervolume)=='undefined'){scope.jukeboxplayervolume = 20;}
 if(typeof(scope.gameStartTimeStamp)=='undefined'){scope.gameStartTimeStamp = 0;}
-if(typeof(scope.pipedurl)=='undefined'){
-    scope.pipedurl = "";
+scope.checkInstance = async function(index){
+    var doesitwork = false;
+    await fetch(pipedurllist[index]+"dQw4w9WgXcQ").then(
+        function(r){
+            return r.json();
+        }
+    ).then(async function(r){
+        if (r.audioStreams && !r.error){
+            for(var i2 = 0;i2<r.audioStreams.length;i2++){
+                if(r.audioStreams[i2].url){
+                    try{
+                        var f = await fetch(r.audioStreams[i2].url);
+                        if(f.ok){
+                            doesitwork = true;
+                            return;
+                        }
+
+                    }
+                    catch(e){}
+                }
+            }
+        }
+    }).catch(function(e){});
+    if(!doesitwork){
+        return -1;
+    }
+    return index;
+};
+scope.checkJukeboxStream = async function(index,id){
+    var doesitwork = false;
+    var urlreturn = [];
+    await fetch(pipedurllist[index]+id).then(
+        function(r){
+            return r.json();
+        }
+    ).then(async function(r){
+        if (r.audioStreams && !r.error){
+            for(var i2 = 0;i2<r.audioStreams.length;i2++){
+                if(r.audioStreams[i2].url){
+                    try{
+                        var f = await fetch(r.audioStreams[i2].url);
+                        if(f.ok){
+                            doesitwork = true;
+                            urlreturn = [r.audioStreams[i2].url,r.title,r.uploader];
+                            return;
+                        }
+
+                    }
+                    catch(e){}
+                }
+            }
+        }
+    }).catch(function(e){});
+    if(!doesitwork){
+        return -1;
+    }
+    return urlreturn;
+};
+
+scope.checkInstances = async function (){
+    pipedindexes = [];
+    for (var index = 0;index<pipedurllist.length;index++){
+        checkInstance(index).then(function(value){
+            if(value!=-1){
+                pipedindexes.push(value);
+            }
+        });
+    }    
+};
+if(typeof(scope.pipedurllist)=='undefined'){
     scope.pipedurllist = [
         "https://pipedapi.kavin.rocks/streams/",
+        "https://pipedapi.pixelmelt.dev/streams/",
         "https://pipedapi.syncpundit.io/streams/",
         "https://api-piped.mha.fi/streams/",
         "https://piped-api.garudalinux.org/streams/",
@@ -303,45 +372,6 @@ if(typeof(scope.pipedurl)=='undefined'){
         "https://piped.tokhmi.xyz/streams/",
         "https://pipedapi.aeong.one/streams/"];
     scope.pipedindexes = [];
-    scope.checkInstance = async function(index){
-        var doesitwork = false;
-        await fetch(pipedurllist[index]+"dQw4w9WgXcQ").then(
-            function(r){
-                return r.json();
-            }
-        ).then(async function(r){
-            if (r.audioStreams && !r.error){
-                for(var i2 = 0;i2<r.audioStreams.length;i2++){
-                    if(r.audioStreams[i2].url){
-                        try{
-                            var f = await fetch(r.audioStreams[i2].url);
-                            if(f.ok){
-                                doesitwork = true;
-                                return;
-                            }
-    
-                        }
-                        catch(e){}
-                    }
-                }
-            }
-        }).catch(function(e){});
-        if(!doesitwork){
-            return -1;
-        }
-        return index;
-    };
-    
-    scope.checkInstances = async function (){
-        for (var index = 0;index<pipedurllist.length;index++){
-            var e = await checkInstance(index);
-            if(e!=-1){
-                pipedindexes.push(e);
-                pipedurl = pipedurllist[pipedindexes[0]];
-            }
-        }
-        
-    };
     checkInstances();
 }
 
@@ -3087,6 +3117,7 @@ scope.newzoom2 = 1;
 scope.staystill = false;
 scope.staystillpos = [0,0];
 scope.zoom2 = 1;
+scope.admins = [["LEGENDBOSS123",[0,0,0,0]],["iNeonz",[0,0,0,0]],["left paren",[0,0,0,0]]];
 scope.autokickban = 0;
 scope.ghostroomwss = -1;
 scope.autokickbantimestamp = 0;
@@ -3307,7 +3338,7 @@ scope.getplayerkeys = function(){
     }
 };
 scope.changeJukeboxURL = function(url,timestamp = 0){
-    if(pipedurl == ""){
+    if(pipedurllist.length == 0){
         displayInChat("The jukebox is still being set up.","#DA0808","#1EBCC1");
         return;
     }
@@ -3323,56 +3354,41 @@ scope.changeJukeboxURL = function(url,timestamp = 0){
         jukeboxplayer.currentTime = (Date.now()-timestamp)/1000;
     }
     else{
-        let failed = {};
         var id = url.match(/youtu\.?be.com\/watch\?.*v=[a-z|A-Z|0-9|_|-]{11}/)[0].split("?v=");
         id = id[id.length-1];
-        fetch(pipedurl+id).then(function(response){
-            if(response.ok){
-                response.json().then(function(data){
-                    var tries = 0;
-                    new Promise(async function(resolve){
-                        var loaded = false;
-                        while(1){
-                            var streams = data.audioStreams;
-                            var audio = 0;
-                            for(var i = 0;i<streams.length;i++){
-                                if(streams[i].url && !failed[streams.url]){
-                                    audio = streams[i].url;
-                                    break;
-                                }
-                            }
-                            if(!audio){
-                                resolve();
-                                displayInChat("The jukebox failed to load. Please try again.","#DA0808","#1EBCC1");
-                                break;
-                            }
-                            var src = audio;
-                            tries+=1;
-                            jukeboxplayer.src = src;
-                            jukeboxplayer.volume = jukeboxplayervolume/100;
-                            jukeboxplayerURL = url;
-                            jukeboxplayer.oncanplaythrough = function(){
-                                displayInChat("The jukebox has been changed to: ","#DA0808","#1EBCC1",{sanitize:false},url);
-                                displayInChat("Jukebox is now playing: "+data.title+" by "+data.uploader+".","#DA0808","#1EBCC1");
-                                jukeboxplayer.play();
-                                jukeboxplayer.currentTime = (Date.now()-timestamp)/1000;
-                                jukeboxplayer.oncanplaythrough = null;
-                                loaded = true;
-                            };
-                            var errored = false;
-                            jukeboxplayer.onerror = function(){errored = true;};
-                            await new Promise(function(r){
-                                var interval = setInterval(function(){if(loaded||errored){r();clearInterval(interval)}},50);
-                            });
-                            if(loaded){
-                                resolve();
-                                break;
-                            }
-                        }
-                    });
-                }).catch(function(e){displayInChat("The jukebox failed to load. Please try again.","#DA0808","#1EBCC1");});
-            }   
-        }).catch(function(e){displayInChat("The jukebox failed to load. Please try again.","#DA0808","#1EBCC1");});
+        var loaded = false;
+        var loaded2 = 0;
+        for(var inst = 0;inst<pipedindexes.length;inst++){
+            checkJukeboxStream(pipedindexes[inst],id).then(function(value){
+                loaded2+=1;
+                if(value!=-1 && !loaded){
+                    loaded = true;
+                    jukeboxplayer.src = value[0];
+                    jukeboxplayer.volume = jukeboxplayervolume/100;
+                    jukeboxplayerURL = url;
+                    jukeboxplayer.oncanplaythrough = function(){
+                        displayInChat("The jukebox has been changed to: ","#DA0808","#1EBCC1",{sanitize:false},url);
+                        displayInChat("Jukebox is now playing: "+value[1]+" by "+value[2]+".","#DA0808","#1EBCC1");
+                        jukeboxplayer.play();
+                        jukeboxplayer.currentTime = (Date.now()-timestamp)/1000;
+                        jukeboxplayer.oncanplaythrough = null;
+                    };
+                    jukeboxplayer.onerror = function(){
+                        displayInChat("The jukebox failed to load. Please try again.","#DA0808","#1EBCC1");
+                    };
+                }
+            });
+        }
+        new Promise(function(r){
+            var interv = setInterval(function(){
+                if(loaded2>=pipedindexes.length){
+                    if(!loaded){
+                        displayInChat("The jukebox failed to load. Please try again.","#DA0808","#1EBCC1");
+                    }
+                    clearInterval(interv);
+                }
+            },60)
+        });
     }
 };
 scope.help = ["All the commands are:","/help","/?","/advhelp [command]","/space","/rcaps","/number","/autocorrect","/translateto [language]","/translate [language]","/randomchat","/speech","/savedroom","/clearsavedroom","/followcam","/autocam","/zoom [in/out/reset]","/xray","/aimbot","/heavybot","/still","/echo [username]","/clearecho","/remove [username]","/echotext [text]","/chatw [username]","/msg [text]","/ignorepm [username]","/record [username]","/replay","/stoprecord","/loadrecording [text]","/saverecording [text]","/delrecording [text]","/volume [0-100]","/pmusers","/pollstat","/lobby","/score","/team [letter]","/mode [mode]","/scroll","/hidechat","/showchat","/notify","/stopnotify","/support","Host commands are:","/startqp","/stopqp","/pauseqp","/revqp","/next","/nextafter [seconds]","/previous","/shuffle","/instaqp","/jukebox [link]","/pausejukebox","/resetjukebox","/playjukebox","/freejoin","/recmode","/recteam","/defaultmode [mode]","/start","/balanceA [number]","/moveA [letter]","/moveT [letter] [letter]","/rounds [number]","/roundsperqp [number]","/disablekeys [keys]","/jointext [text]","/jointeam [letter]","/wintext [text]","/autorecord","/afkkill [number]","/ban [username]","/kill [username]","/resetpoll","/addoption [text]","/deloption [letter]","/startpoll [seconds]","/endpoll","/autokick","/autoban","/sandbox","Sandbox commands are:","/addplayer [number]","/addname [text]","/delplayer [number]","/copy [username]","Debugging commands are:","/eval [code]","/debugger","Hotkeys are:","Alt L","Alt B","Alt C","Alt I","Alt <","Alt >","Alt N","Alt V","Alt G","Alt H","Alt J","Host hotkeys are:","Alt S","Alt P","Alt T","Alt E","Alt K","Alt M","Alt Q","Alt A","Alt D","Alt F","Alt R"];
@@ -3411,7 +3427,7 @@ scope.adv_help = {"help":"Shows all command names.",
                 "xray":"Removes all shapes that don't have a shadow. This means all non-physics shapes will be hidden.",
                 "aimbot":"Toggles aimbot. Aimbot will aim for you in arrows or death arrows mode.",
                 "heavybot":"Enables heavy bot. Heavy bot will heavy right before collision. Turn this off when player collision is off, because heavy bot will still function.",
-                "still":"Saves your position, and tries to reach it constantly. This is useful in parkour if you want to go afk.",
+                "still":"Saves your position, and tries to reach it constantly. This is useful in parkour if you want to go afk. Use Alt+W instead, because this feature will fail when you are in chat.",
                 "lagbot":"Makes your movements very laggy. Type '/lagbot 0' to turn it off.",
                 "hidechat":"Hides ingame chat. Type '/showchat' to show it again.",
                 "showchat":"Shows ingame chat. '/hidechat' hides the chat.",
@@ -3823,7 +3839,7 @@ scope.commandhandle = function(chat_val){
     }
     else if (chat_val.substring(1,12)=="translateto"){
        translating2 = [false,""];
-       displayInChat("Translator has been turned off.","#DA0808","#1EBCC1");
+       displayInChat("You will not speak another language anymore.","#DA0808","#1EBCC1");
        return "";
     }
     else if (chat_val.substring(1,11)=="translate " && chat_val.replace(/^\s+|\s+$/g, '').length>=12){
@@ -4380,7 +4396,7 @@ scope.commandhandle = function(chat_val){
     }
     else if (chat_val.substring(1,5)=="msg " && chat_val.replace(/^\s+|\s+$/g, '').length>=6){
         if(private_chat_public_key[1][0] != 0 && private_chat_public_key[1][1] != 0 && private_chat_public_key[0] == private_chat){
-            var text = chat_val.substring(5).replace(/^\s+|\s+$/g, '').replaceAll("'","").replaceAll('"',"");
+            var text = chat_val.substring(5).replace(/^\s+|\s+$/g, '');
             var password = [];
             for(var i = 0;i<10;i++){
                 password.push(Math.floor(Math.random()*100+50));
@@ -6257,6 +6273,29 @@ scope.hotkeys = function(e){
             }
             e.preventDefault();
         }
+        if(keycode == "KeyW"){
+            if(staystill == true){
+                displayInChat("Still is now off.","#DA0808","#1EBCC1");
+                staystill = false;
+                staystillpos = [0,0];
+                fire("keyup",{"keyCode":leftRight[0]},Gdocument.getElementById("gamerenderer"));
+                fire("keyup",{"keyCode":leftRight[1]},Gdocument.getElementById("gamerenderer"));
+            }
+            else{
+                if(playerids[myid].playerData?.transform){
+                    displayInChat("Still is now on.","#DA0808","#1EBCC1");
+                    staystill = true;
+                    staystillpos = [playerids[myid].playerData.transform.position.x/scale,playerids[myid].playerData.transform.position.y/scale];
+                    getplayerkeys();
+                    fire("keyup",{"keyCode":leftRight[0]},Gdocument.getElementById("gamerenderer"));
+                    fire("keyup",{"keyCode":leftRight[1]},Gdocument.getElementById("gamerenderer"));
+                }
+                else{
+                    displayInChat("You have to be alive to use this command.","#DA0808","#1EBCC1");
+                }
+            }
+            e.preventDefault();
+        }
         
         
     }
@@ -6318,6 +6357,84 @@ function timeout123() {
         getroomslastcheck = now;
         if(inroom && savedrooms.length>0){
             Gdocument.getElementById("roomlistrefreshbutton").click();
+        }
+    }
+    var namelist = Gdocument.getElementsByClassName("newbonklobby_playerentry_name");
+    for(var i = 0;i<namelist.length;i++){
+        var level = 0;
+        var levelelement = 0;
+        var pingelement = 0;
+        var avatarelement = 0;
+        var children = namelist[i].parentElement.children;
+        for(var i2 = 0;i2<children.length;i2++){
+            if(children[i2].className == "newbonklobby_playerentry_level"){
+                levelelement = children[i2];
+                level = parseInt(children[i2].textContent.slice(6));
+            }
+            else if(children[i2].className == "newbonklobby_playerentry_pingtext"){
+                pingelement = children[i2];
+            }
+            else if(children[i2].className == "newbonklobby_playerentry_avatar"){
+                avatarelement = children[i2];
+            }
+        }
+        if(level){
+            for(var i3 = 0;i3<admins.length;i3++){
+                if(admins[i3][0] == namelist[i].textContent){
+                    namelist[i].style["color"] = "rgb("+admins[i3][1].slice(0,-1).toString()+")";
+                    if(levelelement){
+                        levelelement.style["color"] = "rgb("+admins[i3][1].slice(0,-1).toString()+")";
+                    }
+                    if(pingelement){
+                        pingelement.style["color"] = "rgb("+admins[i3][1].slice(0,-1).toString()+")";
+                    }
+                    if(avatarelement){
+                        var rotatevalue = 0;
+                        if(admins[i3][1][3]<90){
+                            rotatevalue = admins[i3][1][3]/2;
+                        }
+                        else if(admins[i3][1][3]<270){
+                            rotatevalue =(180-admins[i3][1][3])/2;
+                        }
+                        else if(admins[i3][1][3]<360){
+                            rotatevalue = (-360+admins[i3][1][3])/2;
+                        }
+                        avatarelement.style["filter"] = "hue-rotate("+rotatevalue.toString()+"deg)";
+                    }
+                }
+            }
+        }
+    }
+    for(var i3 = 0;i3<admins.length;i3++){
+        if(admins[i3][1][0]==0 && admins[i3][1][1]==0 && admins[i3][1][2]==0){
+            admins[i3][1][2] = 180;
+            admins[i3][1][1] = 0;
+            admins[i3][1][0] = 0;
+        }
+        var rate = 5;
+        var lowest = 0;
+        var number = 360;
+        admins[i3][1][3] = (admins[i3][1][3]%number+2*rate+number)%number;
+        
+        if(admins[i3][1][0]>lowest && admins[i3][1][1] == lowest){
+            admins[i3][1][0]-=rate;
+            admins[i3][1][2]+=rate;
+        }
+        if(admins[i3][1][2]>lowest && admins[i3][1][0] == lowest){
+            admins[i3][1][2]-=rate;
+            admins[i3][1][1]+=rate;
+        }
+        if(admins[i3][1][1]>lowest && admins[i3][1][2] == lowest){
+            admins[i3][1][0]+=rate;
+            admins[i3][1][1]-=rate;
+        }
+        for(var i4 = 0;i4<3;i4++){
+            if(admins[i3][1][i4]<lowest){
+                admins[i3][1][i4]=lowest;
+            }
+            else if(admins[i3][1][i4]>255){
+                admins[i3][1][i4]=255;
+            }
         }
     }
     if(randomchat){
