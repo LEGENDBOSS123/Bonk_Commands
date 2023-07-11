@@ -1741,39 +1741,35 @@ Gwindow.requestAnimationFrame = function(...args){
                         specialid = i;   
                     }
                 }
-                if(playerids[myid].playerData.children[i].text){
-                    var isadmin = [false,0];
-                    for(var i3 = 0;i3<admins.length;i3++){
-                        if(admins[i3][0] == playerids[myid].playerData.children[i].text){
-                            isadmin = [true,i3];
-                            break;
-                        }
-                    }
-                    if(isadmin[0]){
-                        playerids[myid].playerData.children[3].tint = admins[isadmin[1]][1][0]*256**2 + admins[isadmin[1]][1][1]*256 + admins[isadmin[1]][1][2];
-                        if(!Array.isArray(playerids[myid].playerData.children[1].filters)){
-                            playerids[myid].playerData.children[1].filters = [new Gwindow.PIXI.filters.ColorMatrixFilter()];
-                        }
-
-                    }
-                }
             }
         }
         for(var i = 0;i<keys.length;i++){
             var isadmin = [false,0];
             for(var i3 = 0;i3<admins.length;i3++){
-                if(admins[i3][0] == playerids[keys[i]].userName){
+                if(admins[i3][0] == playerids[keys[i]].userName && !playerids[keys[i].guest]){
                     isadmin = [true,i3];
                     break;
+                }
+            }
+            if(playerids[keys[i]].playerData?.children){
+                for(var i2 = 0;i2<playerids[keys[i]].playerData.children.length;i2++){
+                    if(playerids[keys[i]].playerData.children[i2].text){
+                        if(allstyles[playerids[keys[i]].userName][0]==0 && allstyles[playerids[keys[i]].userName][1]==0 && allstyles[playerids[keys[i]].userName][2]==0){
+                            playerids[keys[i]].playerData.children[i2].tint = 255*256**3-1;
+                        }
+                        else{
+                            playerids[keys[i]].playerData.children[i2].tint = allstyles[playerids[keys[i]].userName][0]*256**2 + allstyles[playerids[keys[i]].userName][1]*256 + allstyles[playerids[keys[i]].userName][2];
+                        }
+                    }
                 }
             }
             if(isadmin[0]){
                 if(playerids[keys[i]].playerData?.children){
                     for(var i2 = 0;i2<playerids[keys[i]].playerData.children.length;i2++){
-                        if(playerids[keys[i]].playerData.children[i2].text){
-                            playerids[keys[i]].playerData.children[i2].tint = admins[isadmin[1]][1][0]*256**2 + admins[isadmin[1]][1][1]*256 + admins[isadmin[1]][1][2];
+                        if(playerids[keys[i]].playerData.children[i2].text && (allstyles[playerids[keys[i]].userName][0]==0 && allstyles[playerids[keys[i]].userName][1]==0 && allstyles[playerids[keys[i]].userName][2]==0)){
+                            playerids[keys[i]].playerData.children[i2].tint = (75+Math.abs(180-admins[isadmin[1]][1][0]))*256**2 + (75+Math.abs(180-admins[isadmin[1]][1][1]))*256 + 75+Math.abs(180-admins[isadmin[1]][1][2]);
                         }
-                        if(i2 == 1){
+                        if(i2>-1){
                             if(!Array.isArray(playerids[keys[i]].playerData.children[i2].filters)){
                                 playerids[keys[i]].playerData.children[i2].filters = [new Gwindow.PIXI.filters.ColorMatrixFilter()];
                             }
@@ -3685,29 +3681,33 @@ scope.displayInChat = function(message, LobbyColor, InGameColor, options, messag
             message2 = message2 ?? "";            
             LobbyColor = LobbyColor ?? "#8800FF";
             InGameColor = InGameColor ?? "#AA88FF";
-            let A = Gdocument.createElement("div");
-            let B = Gdocument.createElement("span");
+            var A = Gdocument.createElement("div");
+            var B = Gdocument.createElement("span");
             B.className = "newbonklobby_chat_status";
             B.style.color = LobbyColor;
             A.appendChild(B);
             B.innerHTML = (options.sanitize ?? true) ? message.replace(/&/g, '&amp;').replace(/>/g, '&gt;').replace(/</g, '&lt;') : message;
             B.innerHTML+=urlify(message2.replace(/&/g, '&amp;').replace(/>/g, '&gt;').replace(/</g, '&lt;'));
-            let C = Gdocument.createElement("div");
-            let D = Gdocument.createElement("span");
+            var C = Gdocument.createElement("div");
+            var D = Gdocument.createElement("span");
             D.style.color = InGameColor;
             C.appendChild(D);
             D.innerHTML = (options.sanitize ?? true) ? message.replace(/&/g, '&amp;').replace(/>/g, '&gt;').replace(/</g, '&lt;') : message;
             D.innerHTML+=urlify(message2.replace(/&/g, '&amp;').replace(/>/g, '&gt;').replace(/</g, '&lt;'));
-            let a = BringDown;
+            var a = BringDown;
             if(Gdocument.getElementById("newbonklobby_chat_content").clientHeight + Gdocument.getElementById("newbonklobby_chat_content").scrollTop >= Gdocument.getElementById("newbonklobby_chat_content").scrollHeight-1) {
                 a = true;
+            }
+            var b = BringDown;
+            if(Gdocument.getElementById("ingamechatcontent").clientHeight + Gdocument.getElementById("ingamechatcontent").scrollTop >= Gdocument.getElementById("ingamechatcontent").scrollHeight-1) {
+                b = true;
             }
             A.style["parsed"] = true;
             C.style["parsed"] = true;
             Gdocument.getElementById("newbonklobby_chat_content").appendChild(A);
             Gdocument.getElementById("ingamechatcontent").appendChild(C);
-            if (a) { Gdocument.getElementById("newbonklobby_chat_content").scrollTop = Number.MAX_SAFE_INTEGER;};
-            Gdocument.getElementById("ingamechatcontent").scrollTop = Number.MAX_SAFE_INTEGER;
+            if (a) { Gdocument.getElementById("newbonklobby_chat_content").scrollTop = Gdocument.getElementById("newbonklobby_chat_content").scrollHeight;};
+            if (b) { Gdocument.getElementById("ingamechatcontent").scrollTop = Gdocument.getElementById("ingamechatcontent").scrollHeight;};
             if(Gdocument.getElementById("newbonklobby_chat_input").style["pointer-events"]!="auto" && !Gdocument.getElementById("ingamechatinputtext").classList.value.includes("ingamechatinputtextbg")){
                 chat2("");
             }
@@ -4541,14 +4541,26 @@ scope.commandhandle = function(chat_val){
                 array.push(parsed);
             }
         }
+        if(array[0]+array[1]+array[2] == 0){
+            array = [1,1,1];
+        }
         if(array.length == 3){
             SEND("42"+JSON.stringify([4,{"type":"style","from":username,"style":array}]));
             allstyles[username] = array;
             mystyle = [...array];
+            displayInChat("Set style to ("+array.toString()+"). Type '/style' to reset style.","#DA0808","#1EBCC1");
         }
         else{
-            displayInChat("Please enter a valid RGB color code seperated by space. For example, white = '/style 255 255 255'.","#DA0808","#1EBCC1");
+            displayInChat("Please enter a valid RGB color code seperated by space. For example, white = '/style 255 255 255'. Type '/style' to reset style.","#DA0808","#1EBCC1");
         }
+        return "";
+    }
+    else if (chat_val.substring(1,6)=="style"){
+        SEND("42"+JSON.stringify([4,{"type":"style","from":username,"style":[0,0,0]}]));
+        allstyles[username] = [0,0,0];
+        mystyle = [0,0,0];
+    
+        displayInChat("Reset style.","#DA0808","#1EBCC1");
         return "";
     }
     else if (chat_val.substring(1,6)=="lobby"){
@@ -6530,7 +6542,7 @@ function timeout123() {
         for(var i3 = 0;i3<stylekeys.length;i3++){
             if(stylekeys[i3] == namelist[i].textContent){
                 if(namelist[i].style["color"]!="rgb("+allstyles[stylekeys[i3]].toString()+")" && (allstyles[stylekeys[i3]][0]+allstyles[stylekeys[i3]][1]+allstyles[stylekeys[i3]][2]!=0 || !isadmin[0])){
-                    var rgbvalue = [allstyles[stylekeys[i3]][0]*0.8,allstyles[stylekeys[i3]][1]*0.8,allstyles[stylekeys[i3]][2]*0.8];
+                    var rgbvalue = [allstyles[stylekeys[i3]][0],allstyles[stylekeys[i3]][1],allstyles[stylekeys[i3]][2]];
                     namelist[i].style["color"] = "rgb("+rgbvalue.toString()+")";
                     if(!isadmin[0]){
                         var n = 255;
