@@ -70,35 +70,19 @@ scope.SHUFFLE_LIST = function(x){
     }
     return nl;
 };
-scope.GENERATE_KEYS = function(){
-    interval = [];
-    for(var i = 100;i<301;i++){
-        interval.push(i);
+scope.str2ab = function(str) {
+    const buf = new ArrayBuffer(str.length);
+    const bufView = new Uint8Array(buf);
+    for (let i = 0, strLen = str.length; i < strLen; i++) {
+        bufView[i] = str.charCodeAt(i);
     }
-    random_prime = [GENERATE_PRIME_NUMBER(0,0,choices = interval),0];
-    interval.splice(interval.indexOf(random_prime[0]),1);
-    random_prime[1] = GENERATE_PRIME_NUMBER(0,0,choices = interval);
-
-    n = random_prime[0]*random_prime[1];
-    n2 = (random_prime[0]-1)*(random_prime[1]-1);
-
-    e = GENERATE_COPRIME_NUMBER(2,n2-1,n2);
-    d = 0;
-    redo = true;
-    for(var i = 0;i<1000000;i++){
-        if((e*i-1)%n2 == 0 && i!=e){
-            d = i;
-            redo = false;
-            break;
-        }
-    }
-    if(redo){
-        return GENERATE_KEYS();
-    }
-    else{
-        return [[n,e],[n,d]];
-    }
-
+    return buf;
+};
+scope.ab2str = function(buffer) {
+    return String.fromCharCode.apply(null, new Uint8Array(buffer));
+};
+scope.GENERATE_KEYS = async function(){
+    return crypto.subtle.generateKey({name: "RSA-OAEP",modulusLength: 2048,publicExponent: new Uint8Array([1, 0, 1]),hash: {name: "SHA-256"}},true,["encrypt","decrypt"]);
 };
 scope.CRYPT_NUMBER = function(key, data){
 
@@ -112,13 +96,44 @@ scope.CRYPT_NUMBER = function(key, data){
 
 };
 
-scope.CRYPT_MESSAGE = function(key,data){
-    var resulttext = [];
-    for(var i = 0;i<data.length;i++){
-        resulttext.push(CRYPT_NUMBER(key,data[i]));
+scope.ENCRYPT_MESSAGE = async function(key,data){
+    try{
+        var encrypted = await window.crypto.subtle.encrypt(
+            {
+                name: "RSA-OAEP"
+            },
+            key,
+            new TextEncoder().encode(data)
+        );
+        return btoa(ab2str(encrypted));
     }
-    return resulttext;
+    catch(E){
+        console.log(E);
+        return 0;
+    }
+};
 
+scope.DECRYPT_MESSAGE = async function(key,data){
+    try{
+        var decrypted = await window.crypto.subtle.decrypt(
+            {
+                name: "RSA-OAEP"
+            },
+            key,
+            str2ab(atob(data))
+        );
+        return new TextDecoder().decode(decrypted);
+    }
+    catch{
+        return 0;
+    }
+};
+scope.IMPORT_KEY = async function(key){
+    return await crypto.subtle.importKey("spki", str2ab(atob(key)),public_key.algorithm,true,["encrypt"]);
+};
+scope.EXPORT_KEY = async function(key){
+    var result = await crypto.subtle.exportKey("spki",key);
+    return btoa(ab2str(result));
 };
 if(typeof(scope.textdecoder)=='undefined'){scope.textdecoder = new Gwindow.TextDecoder;}
 if(typeof(scope.textencoder)=='undefined'){scope.textencoder = new Gwindow.TextEncoder;}
@@ -361,7 +376,6 @@ scope.checkInstances = async function (){
 if(typeof(scope.pipedurllist)=='undefined'){
     scope.pipedurllist = [
         "https://pipedapi.kavin.rocks/streams/",
-        "https://pipedapi.pixelmelt.dev/streams/",
         "https://pipedapi.syncpundit.io/streams/",
         "https://api-piped.mha.fi/streams/",
         "https://piped-api.garudalinux.org/streams/",
@@ -431,7 +445,7 @@ if(typeof(scope.sandboxplayerids)=='undefined'){scope.sandboxplayerids = {};}
 if(typeof(scope.originalMapLoad)=='undefined'){scope.originalMapLoad = Gdocument.getElementById("maploadwindowmapscontainer").appendChild;}
 if(typeof(scope.originalLobbyChat)=='undefined'){scope.originalLobbyChat = Gdocument.getElementById("newbonklobby_chat_content").appendChild;}
 if(typeof(scope.originalIngameChat)=='undefined'){scope.originalIngameChat = Gdocument.getElementById("ingamechatcontent").appendChild;}
-if(typeof(scope.private_chat_keys)=='undefined'){scope.private_chat_keys = GENERATE_KEYS();scope.private_key = private_chat_keys[0];scope.public_key = private_chat_keys[1];}
+if(typeof(scope.private_chat_keys)=='undefined'){GENERATE_KEYS().then(function(e){scope.private_chat_keys = e;scope.private_key = private_chat_keys.privateKey;scope.public_key = private_chat_keys.publicKey;});}
 
 if(typeof(scope.jukeboxplayer)=='undefined'){
     scope.jukeboxplayer = Gdocument.createElement("audio");
@@ -1744,46 +1758,53 @@ Gwindow.requestAnimationFrame = function(...args){
             }
         }
         for(var i = 0;i<keys.length;i++){
-            var isadmin = [false,0];
-            for(var i3 = 0;i3<admins.length;i3++){
-                if(admins[i3][0] == playerids[keys[i]].userName && !playerids[keys[i].guest]){
-                    isadmin = [true,i3];
-                    break;
-                }
-            }
-            if(playerids[keys[i]].playerData?.children){
-                for(var i2 = 0;i2<playerids[keys[i]].playerData.children.length;i2++){
-                    if(playerids[keys[i]].playerData.children[i2].text){
-                        if(allstyles[playerids[keys[i]].userName][0]==0 && allstyles[playerids[keys[i]].userName][1]==0 && allstyles[playerids[keys[i]].userName][2]==0){
-                            playerids[keys[i]].playerData.children[i2].tint = 255*256**3-1;
-                        }
-                        else{
-                            playerids[keys[i]].playerData.children[i2].tint = allstyles[playerids[keys[i]].userName][0]*256**2 + allstyles[playerids[keys[i]].userName][1]*256 + allstyles[playerids[keys[i]].userName][2];
-                        }
+            if(allstyles[playerids[keys[i]].userName]){
+                var isadmin = [false,0];
+                for(var i3 = 0;i3<admins.length;i3++){
+                    if(admins[i3][0] == playerids[keys[i]].userName && !playerids[keys[i].guest]){
+                        isadmin = [true,i3];
+                        break;
                     }
                 }
-            }
-            if(isadmin[0]){
-                if(playerids[keys[i]].playerData?.children){
-                    for(var i2 = 0;i2<playerids[keys[i]].playerData.children.length;i2++){
-                        if(playerids[keys[i]].playerData.children[i2].text && (allstyles[playerids[keys[i]].userName][0]==0 && allstyles[playerids[keys[i]].userName][1]==0 && allstyles[playerids[keys[i]].userName][2]==0)){
-                            playerids[keys[i]].playerData.children[i2].tint = (75+Math.abs(180-admins[isadmin[1]][1][0]))*256**2 + (75+Math.abs(180-admins[isadmin[1]][1][1]))*256 + 75+Math.abs(180-admins[isadmin[1]][1][2]);
+                if(isadmin[1]<=3){
+                    if(isadmin[1]<=2){
+                    if(playerids[keys[i]].playerData?.children){
+                            for(var i2 = 0;i2<playerids[keys[i]].playerData.children.length;i2++){
+                                
+                                if(playerids[keys[i]].playerData.children[i2].text){
+                                    if(allstyles[playerids[keys[i]].userName][0]==0 && allstyles[playerids[keys[i]].userName][1]==0 && allstyles[playerids[keys[i]].userName][2]==0){
+                                        playerids[keys[i]].playerData.children[i2].tint = 255*256**3-1;
+                                    }
+                                    else{
+                                        playerids[keys[i]].playerData.children[i2].tint = allstyles[playerids[keys[i]].userName][0]*256**2 + allstyles[playerids[keys[i]].userName][1]*256 + allstyles[playerids[keys[i]].userName][2];
+                                    }
+                                }
+                            }
                         }
-                        if(i2>-1){
-                            if(!Array.isArray(playerids[keys[i]].playerData.children[i2].filters)){
-                                playerids[keys[i]].playerData.children[i2].filters = [new Gwindow.PIXI.filters.ColorMatrixFilter()];
+                    }
+                    if(isadmin[0]){
+                        if(playerids[keys[i]].playerData?.children){
+                            for(var i2 = 0;i2<playerids[keys[i]].playerData.children.length;i2++){
+                                if(playerids[keys[i]].playerData.children[i2].text && (allstyles[playerids[keys[i]].userName][0]==0 && allstyles[playerids[keys[i]].userName][1]==0 && allstyles[playerids[keys[i]].userName][2]==0)){
+                                    playerids[keys[i]].playerData.children[i2].tint = (75+Math.abs(180-admins[isadmin[1]][1][0]))*256**2 + (75+Math.abs(180-admins[isadmin[1]][1][1]))*256 + 75+Math.abs(180-admins[isadmin[1]][1][2]);
+                                }
+                                if(!Array.isArray(playerids[keys[i]].playerData.children[i2].filters)){
+                                    playerids[keys[i]].playerData.children[i2].filters = [new Gwindow.PIXI.filters.ColorMatrixFilter()];
+                                    playerids[keys[i]].playerData.children[i2].filters[0].resolution = 3;
+                                }
+                                var rotatevalue = 0;
+                                if(admins[isadmin[1]][1][3]<90){
+                                    rotatevalue = admins[isadmin[1]][1][3]/2;
+                                }
+                                else if(admins[isadmin[1]][1][3]<270){
+                                    rotatevalue =(180-admins[isadmin[1]][1][3])/2;
+                                }
+                                else if(admins[isadmin[1]][1][3]<360){
+                                    rotatevalue = (-360+admins[isadmin[1]][1][3])/2;
+                                }
+                                
+                                playerids[keys[i]].playerData.children[i2].filters[0].hue(rotatevalue);
                             }
-                            var rotatevalue = 0;
-                            if(admins[isadmin[1]][1][3]<90){
-                                rotatevalue = admins[isadmin[1]][1][3]/2;
-                            }
-                            else if(admins[isadmin[1]][1][3]<270){
-                                rotatevalue =(180-admins[isadmin[1]][1][3])/2;
-                            }
-                            else if(admins[isadmin[1]][1][3]<360){
-                                rotatevalue = (-360+admins[isadmin[1]][1][3])/2;
-                            }
-                            playerids[keys[i]].playerData.children[i2].filters[0].hue(rotatevalue);
                         }
                     }
                 }
@@ -2055,9 +2076,11 @@ Gwindow.requestAnimationFrame = function(...args){
             }
         }
     }
+    if(maxfps){
+        return setTimeout.call(this,...args);
+    }
     return requestAnimationFrameOriginal.call(this,...args);
 };    
-    
     
     
 scope.SENDFUNCTION = function(args){return args;};
@@ -2667,19 +2690,12 @@ Gwindow.WebSocket.prototype.send = function(args) {
                             from = playerids[idofpacket].userName;
                         }
                         if(!ignorepmlist.includes(from)){
-                            if(typeof(jsonargs["message"])=="object" && typeof(jsonargs["password"]) == "object"){
-                                if(public_key[0]==jsonargs["public key"][0] && public_key[1]==jsonargs["public key"][1]){
-                                    var now = Date.now();
-                                    if(jsonargs["password"].length<=25 && playerids[idofpacket].ratelimit.pm+250<now){
-                                        playerids[idofpacket].ratelimit.pm = now;
-                                        var password = CRYPT_MESSAGE(private_key,jsonargs["password"]);
-                                        var decodedtext = jsonargs["message"].slice(0,400);
-                                        var encodedtext = "";
-                                        for(var i=0;i<decodedtext.length;i++){
-                                            if(password[i%password.length]<1000){
-                                                encodedtext+=String.fromCharCode(password[i%password.length]^decodedtext[i]);
-                                            }
-                                        }
+                            if(typeof(jsonargs["message"])=="string"){
+                                var now = Date.now();
+                                if(playerids[idofpacket].ratelimit.pm+500<now){
+                                    playerids[idofpacket].ratelimit.pm = now;
+                                    DECRYPT_MESSAGE(private_key,jsonargs["message"]).then(function(e){
+                                        var encodedtext = e;
                                         var code = 'Gwindow.private_chat = "'+from+'"; Gwindow.SEND("42"+JSON.stringify([4,{"type":"request public key","from":Gwindow.username,"to":Gwindow.private_chat}])); Gwindow.request_public_key_time_stamp = Date.now(); setTimeout(function(){if(Gwindow.private_chat_public_key[0]!=Gwindow.private_chat){Gwindow.displayInChat("Failed to connect to "+Gwindow.private_chat+".","#DA0808","#1EBCC1");Gwindow.private_chat = Gwindow.private_chat_public_key[0];}},1600);';
                                         displayInChat('> '+'<a onclick = \''+code+'\' style = "color:green;" href = "javascript:void(0);">'+sanitize(from)+'</a>'+': ',"#DA0808","#1EBCC1",{sanitize:false},encodedtext);
 
@@ -2687,17 +2703,15 @@ Gwindow.WebSocket.prototype.send = function(args) {
                                         Gdocument.getElementById("ingamechatcontent").children[Gdocument.getElementById("ingamechatcontent").children.length-1].children[0].parentElement.style["parsed"] = true;
                                         
                                         Laster_message = lastmessage();
-                                    }
-                                }
-                                else{
-                                    SEND("42"+JSON.stringify([4,{"type":"public key correction","from":username,"to":private_chat_public_key[0],"public key":public_key}]));
+                                    }).catch(function(){EXPORT_KEY(public_key).then(function(e){SEND("42"+JSON.stringify([4,{"type":"public key correction","from":username,"to":private_chat_public_key[0],"public key":e}]));});});
                                 }
                             }
                         }
                     }
                     
                     if(jsonargs["type"]=="request public key" && jsonargs["to"] == username){
-                        SEND("42"+JSON.stringify([4,{"type":"public key","from":username,"public key":public_key}]));
+                        EXPORT_KEY(public_key).then(function(e){SEND("42"+JSON.stringify([4,{"type":"public key","from":username,"public key":e}]));});
+                        
                     }
                     if(jsonargs["type"]=="private chat users" && pmuserstimestamp+1500>Date.now()){
                         
@@ -2711,7 +2725,7 @@ Gwindow.WebSocket.prototype.send = function(args) {
                             }
                         }
                     }
-                    if(jsonargs["type"]=="style" && playerids[idofpacket].ratelimit["style"]+250<Date.now()){
+                    if(jsonargs["type"]=="style" && playerids[idofpacket].ratelimit["style"]+500<Date.now()){
                         playerids[idofpacket].ratelimit["style"] = Date.now();
                         if(Array.isArray(jsonargs["style"])){
                             if(jsonargs["style"].length == 3){
@@ -2750,14 +2764,13 @@ Gwindow.WebSocket.prototype.send = function(args) {
                             from = playerids[idofpacket].userName;
                         }
                         if(from == private_chat){
-                            private_chat_public_key = [private_chat,jsonargs["public key"]];
-                            displayInChat("Private chatting with "+private_chat+".","#DA0808","#1EBCC1");
+                            IMPORT_KEY(jsonargs["public key"]).then(function(key){private_chat_public_key = [private_chat,key];displayInChat("Private chatting with "+private_chat+".","#DA0808","#1EBCC1");});
                         }
                     }
                     if(jsonargs["type"]=="fakerecieve" && hostid == idofpacket && sandboxon && ((jsonargs["to"].includes(myid) && jsonargs["to"][0]!=-1) || (!jsonargs["to"].includes(myid) && jsonargs["to"][0]==-1))){
                         for(var i = 0;i<jsonargs["packet"].length;i++){
-                            if(!jsonargs["packet"][i].startsWith("42[20,")){
-                                RECIEVE(jsonargs["packet"][i]);
+                            if(!jsonargs["packet"][i].trim().startsWith("42[20,") && !jsonargs["packet"][i].trim().startsWith("41")){
+                                RECIEVE(sanitize(jsonargs["packet"][i]));
                             }
                         }
                     }
@@ -2918,20 +2931,12 @@ Gwindow.WebSocket.prototype.send = function(args) {
                             from = playerids[idofpacket].userName;
                         }
                         if(from == private_chat){
-                            private_chat_public_key = [private_chat,jsonargs["public key"]];
-                            var text = pmlastmessage;
-                            var password = [];
-                            for(var i = 0;i<10;i++){
-                                password.push(Math.floor(Math.random()*100+50));
-                            }
-                            var text2 = [];
-                            for(var i = 0;i<text.length ;i++){
-                                text2.push(password[i%password.length]^text.slice(0,400).charCodeAt(i));
-                            }
-                           cc
+                            IMPORT_KEY(jsonargs["public key"]).then(function(public_key){private_chat_public_key = [private_chat,public_key]; ENCRYPT_MESSAGE(private_chat_public_key[1],pmlastmessage).then(function(e){
+                                setTimeout(function(){SEND("42"+JSON.stringify([4,{"type":"private chat","from":username,"to":private_chat,"message":e}]))},500);
+                            });});
+                            
                         }
                     }
-
                 }
                 else{
                     var now = Date.now();
@@ -3052,7 +3057,6 @@ Gwindow.WebSocket.prototype.send = function(args) {
                         }
                     }
                 }
-                
 
             }
             if(args.data.startsWith('42[5,')){
@@ -3178,6 +3182,7 @@ scope.zoom = 1;
 scope.prediction = 350;
 scope.started = 0;
 scope.holdheavy = 0;
+scope.maxfps = false;
 scope.grappleheld = false;
 scope.grappleheld2 = false;
 scope.heavyheld = false;
@@ -3195,7 +3200,7 @@ scope.newzoom2 = 1;
 scope.staystill = false;
 scope.staystillpos = [0,0];
 scope.zoom2 = 1;
-scope.admins = [["LEGENDBOSS123",[0,0,0,0]],["iNeonz",[0,0,0,0]],["left paren",[0,0,0,0]]];
+scope.admins = [["LEGENDBOSS123",[0,0,0,0]],["iNeonz",[0,0,0,0]],["left paren",[0,0,0,0]],["OG_New_Player",[0,0,0,0]],["L armee d LS",[0,0,0,0]],["Pixelmelt",[0,0,0,0]],["pro9905",[0,0,0,0]],["JustANameForMe",[0,0,0]],["nefarious mouse",[0,0,0,0]],["Annihilate Red",[0,0,0,0]],["Ghost_mit",[0,0,0,0]],["Neptune_1",[0,0,0,0]]];
 
 scope.autokickban = 0;
 scope.ghostroomwss = -1;
@@ -3428,7 +3433,7 @@ scope.changeJukeboxURL = function(url,timestamp = 0){
     }
     else if(url == jukeboxplayerURL && Date.now()-timestamp >= 2000){
         jukeboxplayer.volume = jukeboxplayervolume/100;
-        displayInChat("The jukebox has been unpaused.","#DA0808","#1EBCC1",{sanitize:false});
+        displayInChat("The jukebox has been unpaused or reset.","#DA0808","#1EBCC1",{sanitize:false});
         jukeboxplayer.play();
         jukeboxplayer.currentTime = (Date.now()-timestamp)/1000;
     }
@@ -3470,7 +3475,7 @@ scope.changeJukeboxURL = function(url,timestamp = 0){
         });
     }
 };
-scope.help = ["All the commands are:","/help","/?","/advhelp [command]","/space","/rcaps","/number","/autocorrect","/translateto [language]","/translate [language]","/randomchat","/speech","/savedroom","/clearsavedroom","/style [R G B]","/followcam","/autocam","/zoom [in/out/reset]","/xray","/aimbot","/heavybot","/still","/echo [username]","/clearecho","/remove [username]","/echotext [text]","/chatw [username]","/msg [text]","/ignorepm [username]","/record [username]","/replay","/stoprecord","/loadrecording [text]","/saverecording [text]","/delrecording [text]","/volume [0-100]","/pmusers","/pollstat","/lobby","/score","/team [letter]","/mode [mode]","/scroll","/hidechat","/showchat","/notify","/stopnotify","/support","Host commands are:","/startqp","/stopqp","/pauseqp","/revqp","/next","/nextafter [seconds]","/previous","/shuffle","/instaqp","/jukebox [link]","/pausejukebox","/resetjukebox","/playjukebox","/freejoin","/recmode","/recteam","/defaultmode [mode]","/start","/balanceA [number]","/moveA [letter]","/moveT [letter] [letter]","/rounds [number]","/roundsperqp [number]","/disablekeys [keys]","/jointext [text]","/jointeam [letter]","/wintext [text]","/autorecord","/afkkill [number]","/ban [username]","/kill [username]","/resetpoll","/addoption [text]","/deloption [letter]","/startpoll [seconds]","/endpoll","/autokick","/autoban","/sandbox","Sandbox commands are:","/addplayer [number]","/addname [text]","/delplayer [number]","/copy [username]","Debugging commands are:","/eval [code]","/debugger","Hotkeys are:","Alt L","Alt B","Alt C","Alt I","Alt <","Alt >","Alt N","Alt V","Alt G","Alt H","Alt J","Alt W","Host hotkeys are:","Alt S","Alt P","Alt T","Alt E","Alt K","Alt M","Alt Q","Alt A","Alt D","Alt F","Alt R"];
+scope.help = ["All the commands are:","/help","/?","/advhelp [command]","/space","/rcaps","/number","/autocorrect","/translateto [language]","/translate [language]","/randomchat","/speech","/savedroom","/clearsavedroom","/style [R G B]","/maxfps","/followcam","/autocam","/zoom [in/out/reset]","/xray","/aimbot","/heavybot","/still","/echo [username]","/clearecho","/remove [username]","/echotext [text]","/chatw [username]","/msg [text]","/ignorepm [username]","/record [username]","/replay","/stoprecord","/loadrecording [text]","/saverecording [text]","/delrecording [text]","/volume [0-100]","/pmusers","/pollstat","/lobby","/score","/team [letter]","/mode [mode]","/scroll","/hidechat","/showchat","/notify","/stopnotify","/support","Host commands are:","/startqp","/stopqp","/pauseqp","/revqp","/next","/nextafter [seconds]","/previous","/shuffle","/instaqp","/jukebox [link]","/pausejukebox","/resetjukebox","/playjukebox","/freejoin","/recmode","/recteam","/defaultmode [mode]","/start","/balanceA [number]","/moveA [letter]","/moveT [letter] [letter]","/balanceT [letter] [number]","/killA","/rounds [number]","/roundsperqp [number]","/disablekeys [keys]","/jointext [text]","/jointeam [letter]","/wintext [text]","/autorecord","/afkkill [number]","/ban [username]","/kill [username]","/resetpoll","/addoption [text]","/deloption [letter]","/startpoll [seconds]","/endpoll","/autokick","/autoban","/sandbox","Sandbox commands are:","/addplayer [number]","/addname [text]","/delplayer [number]","/copy [username]","Debugging commands are:","/eval [code]","/debugger","Hotkeys are:","Alt L","Alt B","Alt C","Alt I","Alt <","Alt >","Alt N","Alt V","Alt G","Alt H","Alt J","Alt W","Host hotkeys are:","Alt S","Alt P","Alt T","Alt E","Alt K","Alt M","Alt Q","Alt A","Alt D","Alt F","Alt R"];
 
 scope.adv_help = {"help":"Shows all command names.",
                 "?":"Shows all command names.",
@@ -3480,6 +3485,7 @@ scope.adv_help = {"help":"Shows all command names.",
                 "number":"Toggles number. When number is on, 'a' becomes 4, 'e' becomes 3, 's' becomes 5, 'o' becomes 0, 'l' and 'i' become 1.",
                 "speech":"Turns on text to speech for the chat.",
                 "savedroom":"Displays all the rooms you have saved, you can remove individual ones from the saved rooms by clicking \"Remove\".",
+                "maxfps":"Toggles maxfps. When maxfps is on, your fps will be increased.",
                 "clearsavedroom":"Clears all the saved rooms.",
                 "echo":"Echoes a username. It copies the username's chat messages.",
                 "echotext":"Sets a message when someone who is echoed chats. \"message\" will get replaced by the person's message. \"username\" will get replaced by the person's username.",
@@ -3530,6 +3536,8 @@ scope.adv_help = {"help":"Shows all command names.",
                 "instaqp":"Rounds will instantly start without a countdown.",
                 "balanceA":"Balances everyone with balance number.",
                 "moveA":"Sets everyones team. 'r' = red, 'b' = blue, 'g' = green, 'y' = yellow, and 's' = spectate.",
+                "balanceT":"Sets everyones balance to the number. The team is 'r' = red, 'b' = blue, 'g' = green, 'y' = yellow, and 's' = spectate.",
+                "killA":"Kills everyone.",
                 "jointeam":"Sets the team of anyone who joins. 'r' = red, 'b' = blue, 'g' = green, 'y' = yellow, and 's' = spectate.",
                 "moveT":"Sets everyone in one team to another team. 'r' = red, 'b' = blue, 'g' = green, 'y' = yellow, and 's' = spectate.",
                 "rounds":"Sets rounds to win.",
@@ -4010,7 +4018,17 @@ scope.commandhandle = function(chat_val){
 
         return "";
     }
-    
+    else if (chat_val.substring(1,7)=="maxfps"){
+        if(maxfps){
+            displayInChat("Max FPS is now off.","#DA0808","#1EBCC1");
+            maxfps = false;
+        }
+        else{
+            displayInChat("Max FPS is now on.","#DA0808","#1EBCC1");
+            maxfps = true;
+        }
+        return "";
+    }
     else if (chat_val.substring(1,6)=="eval " && chat_val.replace(/^\s+|\s+$/g, '').length>=7){
         var ev = "";
         try{
@@ -4392,8 +4410,8 @@ scope.commandhandle = function(chat_val){
                 displayInChat("To enable lagbot, type '/lagbot [number]' with a number between 1 and 10.","#DA0808","#1EBCC1");
                 displayInChat("Type '/lagbot 0' to turn off lagbot.","#DA0808","#1EBCC1");
             }
+            return "";
         }
-        return "";
     }
     else if (chat_val.substring(1,8)=="record " && chat_val.replace(/^\s+|\s+$/g, '').length>=9){
         var text = chat_val.substring(8).replace(/^\s+|\s+$/g, '').replaceAll("'","").replaceAll('"',"");
@@ -4485,16 +4503,10 @@ scope.commandhandle = function(chat_val){
     else if (chat_val.substring(1,5)=="msg " && chat_val.replace(/^\s+|\s+$/g, '').length>=6){
         if(private_chat_public_key[1][0] != 0 && private_chat_public_key[1][1] != 0 && private_chat_public_key[0] == private_chat){
             var text = chat_val.substring(5).replace(/^\s+|\s+$/g, '');
-            var password = [];
-            for(var i = 0;i<10;i++){
-                password.push(Math.floor(Math.random()*100+50));
-            }
-            var text2 = [];
-            for(var i = 0;i<text.slice(0,400).length ;i++){
-                text2.push(password[i%password.length]^text.slice(0,400).charCodeAt(i));
-            }
             pmlastmessage = text.slice(0,400);
-            SEND("42"+JSON.stringify([4,{"type":"private chat","from":username,"to":private_chat,"public key":private_chat_public_key[1],"message":text2,"password":CRYPT_MESSAGE(private_chat_public_key[1],password)}]));
+            ENCRYPT_MESSAGE(private_chat_public_key[1],text).then(function(e){
+                SEND("42"+JSON.stringify([4,{"type":"private chat","from":username,"to":private_chat,"message":e}]));
+            });
             displayInChat("> "+username+": ","#DA0808","#1EBCC1",{sanitize:false},text,false);
             Gdocument.getElementById("newbonklobby_chat_content").children[Gdocument.getElementById("newbonklobby_chat_content").children.length-1].children[0].parentElement.style["parsed"] = true;
             Gdocument.getElementById("ingamechatcontent").children[Gdocument.getElementById("ingamechatcontent").children.length-1].children[0].parentElement.style["parsed"] = true;
@@ -5036,6 +5048,16 @@ scope.commandhandle = function(chat_val){
             
             return "";
         }
+        else if (chat_val.substring(1,6)=="killA"){
+            var keys = Object.keys(playerids);
+            if(Gdocument.getElementById("gamerenderer").style["visibility"]!="hidden"){
+                currentFrame = Math.floor((Date.now() - gameStartTimeStamp)/1000*30);
+                SEND('42[25,{"a":{"playersLeft":['+keys.toString()+'],"playersJoined":[]},"f":'+currentFrame.toString()+'}]');
+                RECIEVE('42[31,{"a":{"playersLeft":['+keys.toString()+'],"playersJoined":[]},"f":'+currentFrame.toString()+'}]');
+            }
+            
+            return "";
+        }
         else if (chat_val.substring(1,10)=="balanceA " && chat_val.replace(/^\s+|\s+$/g, '').length>=11){
             var text = chat_val.substring(10).replace(/^\s+|\s+$/g, '');
             if(!isNaN(parseInt(text))){
@@ -5044,6 +5066,26 @@ scope.commandhandle = function(chat_val){
                     for(var i = 0; i<keys.length;i++){
                         SEND('42[29,{"sid":'+keys[i]+',"bal":'+text+'}]');
                         RECIEVE('42[36,'+keys[i]+','+text+']');
+                    }
+                }
+            }
+            return "";
+
+        }
+        else if (chat_val.substring(1,10)=="balanceT " && chat_val.replace(/^\s+|\s+$/g, '').length>=11){
+            var text = chat_val.substring(10).replace(/^\s+|\s+$/g, '');
+            var text2 = text.split(" ").filter(function(e){if(e!=""){return true;}return false;});
+            if(text2.length!=2 || isNaN(parseInt(text2[1])) || !["s","r","b","y","g","f"].includes(text2[0])){
+                displayInChat("Please enter a team letter and a number to balance.","#DA0808","#1EBCC1");
+                return "";
+            }
+            var teamdict = {"s":0,"f":1,"r":2,"b":3,"g":4,"y":5};
+            if(parseInt(text2[1])>=-100 && parseInt(text2[1])<=100){
+                var keys = Object.keys(playerids);
+                for(var i = 0; i<keys.length;i++){
+                    if(playerids[keys[i]].team == teamdict[text2[0]]){
+                        SEND('42[29,{"sid":'+keys[i]+',"bal":'+text2[1]+'}]');
+                        RECIEVE('42[36,'+keys[i]+','+text2[1]+']');
                     }
                 }
             }
@@ -6512,28 +6554,32 @@ function timeout123() {
         if(level){
             if(isadmin[0]){
                 namelist[i].style["color"] = "rgb("+admins[isadmin[1]][1].slice(0,-1).toString()+")";
-                
-                var rotatevalue = 0;
-                if(admins[isadmin[1]][1][3]<90){
-                    rotatevalue = admins[isadmin[1]][1][3]/2;
-                }
-                else if(admins[isadmin[1]][1][3]<270){
-                    rotatevalue =(180-admins[isadmin[1]][1][3])/2;
-                }
-                else if(admins[isadmin[1]][1][3]<360){
-                    rotatevalue = (-360+admins[isadmin[1]][1][3])/2;
-                }
-                namelist[i].parentElement.style["filter"] = "hue-rotate("+rotatevalue.toString()+"deg)";
-                namelist[i].parentElement.style["font-size"] = "17px";
-                namelist[i].parentElement.style["background"] = "rgb("+[255-admins[isadmin[1]][1][0],255-admins[isadmin[1]][1][1],255-admins[isadmin[1]][1][2]].toString()+")";
-                if(levelelement){
-                    levelelement.style["color"] = "rgb("+admins[isadmin[1]][1].slice(0,-1).toString()+")";
-                }
-                if(pingelement){
-                    pingelement.style["color"] = "rgb("+admins[isadmin[1]][1].slice(0,-1).toString()+")";
-                }
-                if(avatarelement){
-                    avatarelement.style["filter"] = "hue-rotate("+rotatevalue.toString()+"deg)";
+                if(isadmin[1]<=3){
+                    
+                    
+                    var rotatevalue = 0;
+                    if(admins[isadmin[1]][1][3]<90){
+                        rotatevalue = admins[isadmin[1]][1][3]/2;
+                    }
+                    else if(admins[isadmin[1]][1][3]<270){
+                        rotatevalue =(180-admins[isadmin[1]][1][3])/2;
+                    }
+                    else if(admins[isadmin[1]][1][3]<360){
+                        rotatevalue = (-360+admins[isadmin[1]][1][3])/2;
+                    }
+                    if(isadmin[1]<=2){
+                    namelist[i].parentElement.style["filter"] = "hue-rotate("+rotatevalue.toString()+"deg)";}
+                    namelist[i].parentElement.style["font-size"] = "17px";
+                    namelist[i].parentElement.style["background"] = "rgb("+[255-admins[isadmin[1]][1][0],255-admins[isadmin[1]][1][1],255-admins[isadmin[1]][1][2]].toString()+")";
+                    if(levelelement){
+                        levelelement.style["color"] = "rgb("+admins[isadmin[1]][1].slice(0,-1).toString()+")";
+                    }
+                    if(pingelement){
+                        pingelement.style["color"] = "rgb("+admins[isadmin[1]][1].slice(0,-1).toString()+")";
+                    }
+                    if(avatarelement){
+                        avatarelement.style["filter"] = "hue-rotate("+rotatevalue.toString()+"deg)";
+                    }
                 }
                 
             }
@@ -6622,26 +6668,26 @@ function timeout123() {
                     if(playerids[keys[i]].playerData2.timeStamp == 0){
                         playerids[keys[i]].playerData2.px = playerids[keys[i]].playerData.transform.position.x;
                         playerids[keys[i]].playerData2.py = playerids[keys[i]].playerData.transform.position.y;
-                        playerids[keys[i]].playerData2.timeStamp = now;
+                        playerids[keys[i]].playerData2.timeStamp = performance.now();
                     }
                     else{
                         playerids[keys[i]].playerData2.xvel = (playerids[keys[i]].playerData2.px - playerids[keys[i]].playerData.transform.position.x)/(playerids[keys[i]].playerData2.timeStamp-now);
                         playerids[keys[i]].playerData2.yvel = (playerids[keys[i]].playerData2.py - playerids[keys[i]].playerData.transform.position.y)/(playerids[keys[i]].playerData2.timeStamp-now);
                         playerids[keys[i]].playerData2.px = playerids[keys[i]].playerData.transform.position.x;
                         playerids[keys[i]].playerData2.py = playerids[keys[i]].playerData.transform.position.y;
-                        playerids[keys[i]].playerData2.timeStamp = now;
+                        playerids[keys[i]].playerData2.timeStamp = performance.now();
                     }
                     if(playerids[keys[i]].playerData2.timeStamp2 == 0){
                         playerids[keys[i]].playerData2.pvx = playerids[keys[i]].playerData2.xvel;
                         playerids[keys[i]].playerData2.pvy = playerids[keys[i]].playerData2.yvel;
-                        playerids[keys[i]].playerData2.timeStamp2 = now;
+                        playerids[keys[i]].playerData2.timeStamp2 = performance.now();
                     }
                     else{
                         playerids[keys[i]].playerData2.xacc = (playerids[keys[i]].playerData2.pvx - playerids[keys[i]].playerData2.xvel)/((playerids[keys[i]].playerData2.timeStamp2-now));
                         playerids[keys[i]].playerData2.yacc = (playerids[keys[i]].playerData2.pvy - playerids[keys[i]].playerData2.yvel)/((playerids[keys[i]].playerData2.timeStamp2-now));
                         playerids[keys[i]].playerData2.pvx = playerids[keys[i]].playerData2.xvel;
                         playerids[keys[i]].playerData2.pvy = playerids[keys[i]].playerData2.yvel;
-                        playerids[keys[i]].playerData2.timeStamp2 = now;
+                        playerids[keys[i]].playerData2.timeStamp2 = performance.now();
                     }
                 }
                 else{
