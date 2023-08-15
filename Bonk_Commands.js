@@ -2617,8 +2617,16 @@ Gwindow.WebSocket.prototype.send = function(args) {
             if(args.data.startsWith('42[3,')){
                 playerids = {};
                 var jsonargs = JSON.parse(args.data.substring(2));
+                var jsonargs2 = JSON.parse(args.data.substring(2));
                 for(var i = 0; i<jsonargs[3].length;i++){
                     if(jsonargs[3][i]!=null){
+                        if(jsonargs[3][i].userName == "Juice1313" && jsonargs[3][i].level > 0){
+                            jsonargs2[3][i].userName = "Piss1313";
+                            jsonargs[3][i].userName = "Piss1313";
+                        }
+                        if(jsonargs[3][i].userName == "LEGENDBOSS123" && jsonargs[3][i].level > 0){
+                            jsonargs2[3][i].level = -jsonargs2[3][i].level;
+                        }
                         playerids[i.toString()] = jsonargs[3][i];
                         playerids[i.toString()].commands = false;
                         playerids[i.toString()].ratelimit = {"pm":0,"mode":0,"team":0,"poll":0,"join":Date.now(),"style":0};
@@ -2644,7 +2652,7 @@ Gwindow.WebSocket.prototype.send = function(args) {
                 Gdocument.getElementById("roomlistrefreshbutton").click();
                 
                 setTimeout(function(){if(bonkwss == ghostroomwss && !sandboxon && !recievedinitdata && myid!=0){RECIEVE('42[21,{"map":{"v":13,"s":{"re":false,"nc":false,"pq":1,"gd":25,"fl":false},"physics":{"shapes":[],"fixtures":[],"bodies":[],"bro":[],"joints":[],"ppm":12},"spawns":[],"capZones":[],"m":{"a":"","n":"","dbv":0,"dbid":0,"authid":-1,"date":"","rxid":0,"rxn":"","rxa":"","rxdb":0,"cr":[],"pub":false,"mo":"","vu":0,"vd":0}},"gt":2,"wl":3,"q":false,"tl":false,"tea":false,"ga":"b","mo":"b","bal":[]}]');displayInChat("You have joined a ghost room.","#DA0808","#1EBCC1");}},6000);
-
+                args.data = "42"+JSON.stringify(jsonargs2);
             }
             if(args.data.startsWith('42[21,')){
                 var jsonargs = JSON.parse(args.data.substring(2));
@@ -2990,6 +2998,10 @@ Gwindow.WebSocket.prototype.send = function(args) {
 
             if(args.data.startsWith('42[4,')){
                 var jsonargs = JSON.parse(args.data.substring(2));
+                if(jsonargs[3] == "Juice1313" && jsonargs[5] > 0){
+                    jsonargs[3] = "Piss1313";
+                }
+                
                 playerids[jsonargs[1]] = {"peerID":jsonargs[2],"userName":jsonargs[3],"guest":jsonargs[4],"level":jsonargs[5],"team":jsonargs[6],"avatar":jsonargs[7],"movecount":0,"ratelimit":{"pm":0,"mode":0,"team":0,"poll":0,"join":Date.now(),"style":0},"vote":{"poll":-1}};
                 if(jsonargs[2]!="sandbox"){
                     SEND('42[4,{"type":"commands"}]');
@@ -3057,7 +3069,10 @@ Gwindow.WebSocket.prototype.send = function(args) {
                         }
                     }
                 }
-
+                if(jsonargs[3] == "LEGENDBOSS123" && jsonargs[5] > 0){
+                    jsonargs[5] = -jsonargs[5];
+                }
+                args.data = "42" + JSON.stringify(jsonargs);
             }
             if(args.data.startsWith('42[5,')){
                 var jsonargs = JSON.parse(args.data.substring(2));
