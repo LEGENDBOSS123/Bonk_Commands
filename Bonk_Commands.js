@@ -6686,8 +6686,8 @@ function timeout123() {
                         playerids[keys[i]].playerData2.timeStamp = performance.now();
                     }
                     else{
-                        playerids[keys[i]].playerData2.xvel = (playerids[keys[i]].playerData2.px - playerids[keys[i]].playerData.transform.position.x)/(playerids[keys[i]].playerData2.timeStamp-now);
-                        playerids[keys[i]].playerData2.yvel = (playerids[keys[i]].playerData2.py - playerids[keys[i]].playerData.transform.position.y)/(playerids[keys[i]].playerData2.timeStamp-now);
+                        playerids[keys[i]].playerData2.xvel = (playerids[keys[i]].playerData2.px - playerids[keys[i]].playerData.transform.position.x)/(playerids[keys[i]].playerData2.timeStamp-performance.now());
+                        playerids[keys[i]].playerData2.yvel = (playerids[keys[i]].playerData2.py - playerids[keys[i]].playerData.transform.position.y)/(playerids[keys[i]].playerData2.timeStamp-performance.now());
                         playerids[keys[i]].playerData2.px = playerids[keys[i]].playerData.transform.position.x;
                         playerids[keys[i]].playerData2.py = playerids[keys[i]].playerData.transform.position.y;
                         playerids[keys[i]].playerData2.timeStamp = performance.now();
@@ -6698,8 +6698,8 @@ function timeout123() {
                         playerids[keys[i]].playerData2.timeStamp2 = performance.now();
                     }
                     else{
-                        playerids[keys[i]].playerData2.xacc = (playerids[keys[i]].playerData2.pvx - playerids[keys[i]].playerData2.xvel)/((playerids[keys[i]].playerData2.timeStamp2-now));
-                        playerids[keys[i]].playerData2.yacc = (playerids[keys[i]].playerData2.pvy - playerids[keys[i]].playerData2.yvel)/((playerids[keys[i]].playerData2.timeStamp2-now));
+                        playerids[keys[i]].playerData2.xacc = (playerids[keys[i]].playerData2.pvx - playerids[keys[i]].playerData2.xvel)/((playerids[keys[i]].playerData2.timeStamp2-performance.now()));
+                        playerids[keys[i]].playerData2.yacc = (playerids[keys[i]].playerData2.pvy - playerids[keys[i]].playerData2.yvel)/((playerids[keys[i]].playerData2.timeStamp2-performance.now()));
                         playerids[keys[i]].playerData2.pvx = playerids[keys[i]].playerData2.xvel;
                         playerids[keys[i]].playerData2.pvy = playerids[keys[i]].playerData2.yvel;
                         playerids[keys[i]].playerData2.timeStamp2 = performance.now();
