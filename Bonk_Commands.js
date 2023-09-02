@@ -1766,47 +1766,46 @@ Gwindow.requestAnimationFrame = function(...args){
                         break;
                     }
                 }
-                if(isadmin[1]<=3){
-                    if(isadmin[1]<=2){
-                    if(playerids[keys[i]].playerData?.children){
-                            for(var i2 = 0;i2<playerids[keys[i]].playerData.children.length;i2++){
-                                
-                                if(playerids[keys[i]].playerData.children[i2].text){
-                                    if(allstyles[playerids[keys[i]].userName][0]==0 && allstyles[playerids[keys[i]].userName][1]==0 && allstyles[playerids[keys[i]].userName][2]==0){
-                                        playerids[keys[i]].playerData.children[i2].tint = 255*256**3-1;
-                                    }
-                                    else{
-                                        playerids[keys[i]].playerData.children[i2].tint = allstyles[playerids[keys[i]].userName][0]*256**2 + allstyles[playerids[keys[i]].userName][1]*256 + allstyles[playerids[keys[i]].userName][2];
-                                    }
+                
+                if(playerids[keys[i]].playerData?.children){
+                        for(var i2 = 0;i2<playerids[keys[i]].playerData.children.length;i2++){
+                            
+                            if(playerids[keys[i]].playerData.children[i2].text){
+                                if(allstyles[playerids[keys[i]].userName][0]==0 && allstyles[playerids[keys[i]].userName][1]==0 && allstyles[playerids[keys[i]].userName][2]==0){
+                                    playerids[keys[i]].playerData.children[i2].tint = 255*256**3-1;
+                                }
+                                else{
+                                    playerids[keys[i]].playerData.children[i2].tint = allstyles[playerids[keys[i]].userName][0]*256**2 + allstyles[playerids[keys[i]].userName][1]*256 + allstyles[playerids[keys[i]].userName][2];
                                 }
                             }
                         }
                     }
-                    if(isadmin[0]){
-                        if(playerids[keys[i]].playerData?.children){
-                            for(var i2 = 0;i2<playerids[keys[i]].playerData.children.length;i2++){
-                                if(playerids[keys[i]].playerData.children[i2].text && (allstyles[playerids[keys[i]].userName][0]==0 && allstyles[playerids[keys[i]].userName][1]==0 && allstyles[playerids[keys[i]].userName][2]==0)){
-                                    playerids[keys[i]].playerData.children[i2].tint = (75+Math.abs(180-admins[isadmin[1]][1][0]))*256**2 + (75+Math.abs(180-admins[isadmin[1]][1][1]))*256 + 75+Math.abs(180-admins[isadmin[1]][1][2]);
-                                }
-                                if(!Array.isArray(playerids[keys[i]].playerData.children[i2].filters)){
-                                    playerids[keys[i]].playerData.children[i2].filters = [new Gwindow.PIXI.filters.ColorMatrixFilter()];
-                                    playerids[keys[i]].playerData.children[i2].filters[0].resolution = 3;
-                                }
-                                var rotatevalue = 0;
-                                if(admins[isadmin[1]][1][3]<90){
-                                    rotatevalue = admins[isadmin[1]][1][3]/2;
-                                }
-                                else if(admins[isadmin[1]][1][3]<270){
-                                    rotatevalue =(180-admins[isadmin[1]][1][3])/2;
-                                }
-                                else if(admins[isadmin[1]][1][3]<360){
-                                    rotatevalue = (-360+admins[isadmin[1]][1][3])/2;
-                                }
-                                
-                                playerids[keys[i]].playerData.children[i2].filters[0].hue(rotatevalue);
+                if(isadmin[1]<=2){
+                if(isadmin[0]){
+                    if(playerids[keys[i]].playerData?.children && playerids[keys[i]].guest==false){
+                        for(var i2 = 0;i2<playerids[keys[i]].playerData.children.length;i2++){
+                            if(playerids[keys[i]].playerData.children[i2].text && (allstyles[playerids[keys[i]].userName][0]==0 && allstyles[playerids[keys[i]].userName][1]==0 && allstyles[playerids[keys[i]].userName][2]==0)){
+                                playerids[keys[i]].playerData.children[i2].tint = (75+Math.abs(180-admins[isadmin[1]][1][0]))*256**2 + (75+Math.abs(180-admins[isadmin[1]][1][1]))*256 + 75+Math.abs(180-admins[isadmin[1]][1][2]);
                             }
+                            if(!Array.isArray(playerids[keys[i]].playerData.children[i2].filters)){
+                                playerids[keys[i]].playerData.children[i2].filters = [new Gwindow.PIXI.filters.ColorMatrixFilter()];
+                                playerids[keys[i]].playerData.children[i2].filters[0].resolution = 3;
+                            }
+                            var rotatevalue = 0;
+                            if(admins[isadmin[1]][1][3]<90){
+                                rotatevalue = admins[isadmin[1]][1][3]/2;
+                            }
+                            else if(admins[isadmin[1]][1][3]<270){
+                                rotatevalue =(180-admins[isadmin[1]][1][3])/2;
+                            }
+                            else if(admins[isadmin[1]][1][3]<360){
+                                rotatevalue = (-360+admins[isadmin[1]][1][3])/2;
+                            }
+                            
+                            playerids[keys[i]].playerData.children[i2].filters[0].hue(rotatevalue);
                         }
                     }
+                }
                 }
             }
         }
@@ -3227,7 +3226,7 @@ scope.overideDate = [false,0];
 scope.scale = 1;
 scope.translating = [false,""];
 scope.translating2 = [false,""];
-scope.translatingkeys = {"english":"en","chinese":"zh","hindi":"hi","spanish":"es","portugese":"pt","french":"fr","arabic":"ar","russian":"ru","korean":"ko"};
+scope.translatingkeys = {"english":"en","chinese":"zh","japanese":"ja","dutch":"nl","hindi":"hi","spanish":"es","portugese":"pt","french":"fr","arabic":"ar","russian":"ru","korean":"ko"};
 scope.translate = function(text,fromL,toL) {
     var fL = fromL || 'en';
     var tL = toL || 'de';
