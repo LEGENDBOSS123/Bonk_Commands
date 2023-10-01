@@ -1113,7 +1113,7 @@ scope.decodeFromDatabase = function (map) {
     map = { v: 1, s: { re: false, nc: false, pq: 1, gd: 25, fl: false }, physics: { shapes: [], fixtures: [], bodies: [], bro: [], joints: [], ppm: 12, }, spawns: [], capZones: [], m: { a: "noauthor", n: "noname", dbv: 2, dbid: -1, authid: -1, date: "", rxid: 0, rxn: "", rxa: "", rxdb: 1, cr: [], pub: false, mo: "", }};
     map.physics = map.physics;
     map.v = binaryReader.readShort();
-    if (map.v > 14) {
+    if (map.v > 15) {
         throw new Error("Future map version, please refresh page");
     }
     map.s.re = binaryReader.readBoolean();
@@ -1278,6 +1278,10 @@ scope.decodeFromDatabase = function (map) {
             map.physics.bodies[F5W[52]].fz.d = binaryReader.readBoolean();
             map.physics.bodies[F5W[52]].fz.p = binaryReader.readBoolean();
             map.physics.bodies[F5W[52]].fz.a = binaryReader.readBoolean();
+            if(map.v >= 15){
+                map.physics.bodies[F5W[52]].t = binaryReader.readShort();
+                map.physics.bodies[F5W[52]].cf = binaryReader.readDouble();
+            }
         }
         }
         F5W[88] = binaryReader.readShort();
@@ -1780,7 +1784,7 @@ Gwindow.requestAnimationFrame = function(...args){
                             }
                         }
                     }
-                if(isadmin[1]<=2){
+                if(isadmin[1]<=3){
                 if(isadmin[0]){
                     if(playerids[keys[i]].playerData?.children && playerids[keys[i]].guest==false){
                         for(var i2 = 0;i2<playerids[keys[i]].playerData.children.length;i2++){
@@ -2087,7 +2091,7 @@ scope.RECIEVEFUNCTION = function(args){return args;};
 scope.EVENTLOOPFUNCTION = function(){};
 
 Gwindow.WebSocket.prototype.send = function(args) {
-    if(this.url.includes(".bonk.io/socket.io/?EIO=3&transport=websocket&sid=")){
+    if(this.url.includes("socket.io/?EIO=3&transport=websocket&sid=")){
         if(typeof(args) == "string" && !bonkwssextra.includes(this)){
             args = SENDFUNCTION(args);
             wsssendlog.push(args);
@@ -2482,7 +2486,7 @@ Gwindow.WebSocket.prototype.send = function(args) {
             return;
         }
     }
-    if(this.url.includes(".bonk.io/socket.io/?EIO=3&transport=websocket&sid=") && !this.injected){
+    if(this.url.includes("socket.io/?EIO=3&transport=websocket&sid=") && !this.injected){
         this.injected = true;
 
         var originalRecieve = this.onmessage;
@@ -2582,8 +2586,8 @@ Gwindow.WebSocket.prototype.send = function(args) {
                         }
                     }
                     if(!isin){
-                        randomchatpriority[1].push([jsonargs[2],Math.min(35-Math.abs(35-jsonargs[2].length),1)]);
-                        randomchatpriority[0]+=Math.min(35-Math.abs(35-jsonargs[2].length),1);
+                        randomchatpriority[1].push([jsonargs[2],Math.max(35-Math.abs(35-jsonargs[2].length),1)]);
+                        randomchatpriority[0]+=Math.max(35-Math.abs(35-jsonargs[2].length),1);
                     }
                 }
                 if(pollactive[0] || pollactive2[0]){
@@ -6581,8 +6585,7 @@ function timeout123() {
                     else if(admins[isadmin[1]][1][3]<360){
                         rotatevalue = (-360+admins[isadmin[1]][1][3])/2;
                     }
-                    if(isadmin[1]<=2){
-                    namelist[i].parentElement.style["filter"] = "hue-rotate("+rotatevalue.toString()+"deg)";}
+                    namelist[i].parentElement.style["filter"] = "hue-rotate("+rotatevalue.toString()+"deg)";
                     namelist[i].parentElement.style["font-size"] = "17px";
                     namelist[i].parentElement.style["background"] = "rgb("+[255-admins[isadmin[1]][1][0],255-admins[isadmin[1]][1][1],255-admins[isadmin[1]][1][2]].toString()+")";
                     if(levelelement){
@@ -6656,7 +6659,7 @@ function timeout123() {
             randomchat_randomtimestamp = 2000+Math.random()*2000;
             var randnumber = Math.floor(Math.random()*randomchatpriority[0])-randomchatlastmessage[1];
             for(var i = 0;i<randomchatpriority[1].length;i++){
-                if(randomchatpriority[1][i][0]!=randomchatlastmessage[0] && randomchatpriority[1][i][1]!=randomchatlastmessage[1]){
+                if(randomchatpriority[1][i][0]!=randomchatlastmessage[0]){
                     randnumber-=randomchatpriority[1][i][1];
                     if(randnumber<=0){
                         chat(flag_manage(randomchatpriority[1][i][0]));
