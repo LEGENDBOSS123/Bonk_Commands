@@ -4,7 +4,7 @@ function BonkCommandsScriptInjector(f){
         else{document.addEventListener('readystatechange',function(){setTimeout(f,1500);});}
     }
 }
-
+ 
 BonkCommandsScriptInjector(function(){
 var scope = window;
 scope.scope = scope;
@@ -12,10 +12,10 @@ scope.Gwindow = document.getElementById("maingameframe").contentWindow;
 scope.Gdocument = document.getElementById("maingameframe").contentDocument;
 Gwindow.Gwindow = window;
 Gwindow.Gdocument = document;
-
+ 
 scope.link2pastebin = "https://pastebin.com/2b8XqqYu";
 scope.link2greasyfork = "https://greasyfork.org/en/scripts/451341-bonk-commands";
-
+ 
 if(typeof(scope.injectedBonkCommandsScript)=='undefined'){
     scope.injectedBonkCommandsScript = true;
 }
@@ -85,17 +85,17 @@ scope.GENERATE_KEYS = async function(){
     return crypto.subtle.generateKey({name: "RSA-OAEP",modulusLength: 2048,publicExponent: new Uint8Array([1, 0, 1]),hash: {name: "SHA-256"}},true,["encrypt","decrypt"]);
 };
 scope.CRYPT_NUMBER = function(key, data){
-
+ 
     result = 1;
-
+ 
     for(var i = 0;i<key[1];i++){
         result*=data;
         result = result%key[0];
     }
     return result%key[0];
-
+ 
 };
-
+ 
 scope.ENCRYPT_MESSAGE = async function(key,data){
     try{
         var encrypted = await window.crypto.subtle.encrypt(
@@ -112,7 +112,7 @@ scope.ENCRYPT_MESSAGE = async function(key,data){
         return 0;
     }
 };
-
+ 
 scope.DECRYPT_MESSAGE = async function(key,data){
     try{
         var decrypted = await window.crypto.subtle.decrypt(
@@ -137,7 +137,7 @@ scope.EXPORT_KEY = async function(key){
 };
 if(typeof(scope.textdecoder)=='undefined'){scope.textdecoder = new Gwindow.TextDecoder;}
 if(typeof(scope.textencoder)=='undefined'){scope.textencoder = new Gwindow.TextEncoder;}
-
+ 
 class bytebuffer2 {
   constructor() {
     var g1d = [arguments];
@@ -285,10 +285,10 @@ class bytebuffer2 {
     this.index = 0;
   }
 };
-
+ 
 if(typeof(scope.originalSend)=='undefined'){scope.originalSend = Gwindow.WebSocket.prototype.send;}
 if(typeof(scope.originalDatenow)=='undefined'){scope.originalDatenow = Gwindow.Date.now;}
-
+ 
 if(typeof(scope.originalXMLOpen)=='undefined'){scope.originalXMLOpen = Gwindow.XMLHttpRequest.prototype.open;}
 if(typeof(scope.originalXMLSend)=='undefined'){scope.originalXMLSend = Gwindow.XMLHttpRequest.prototype.send;}
 if(typeof(scope.searchrequested)=='undefined'){scope.searchrequested = 0;}
@@ -320,7 +320,7 @@ scope.checkInstance = async function(index){
                             doesitwork = true;
                             return;
                         }
-
+ 
                     }
                     catch(e){}
                 }
@@ -350,7 +350,7 @@ scope.checkJukeboxStream = async function(index,id){
                             urlreturn = [r.audioStreams[i2].url,r.title,r.uploader];
                             return;
                         }
-
+ 
                     }
                     catch(e){}
                 }
@@ -362,7 +362,7 @@ scope.checkJukeboxStream = async function(index,id){
     }
     return urlreturn;
 };
-
+ 
 scope.checkInstances = async function (){
     pipedindexes = [];
     for (var index = 0;index<pipedurllist.length;index++){
@@ -388,12 +388,12 @@ if(typeof(scope.pipedurllist)=='undefined'){
     scope.pipedindexes = [];
     checkInstances();
 }
-
-
-
+ 
+ 
+ 
 if(typeof(scope.requestAnimationFrameOriginal)=='undefined'){scope.requestAnimationFrameOriginal = Gwindow.requestAnimationFrame;}
-
-
+ 
+ 
 if(typeof(scope.bonkwss)=='undefined'){scope.bonkwss = 0;}
 if(typeof(scope.bonkwssextra)=='undefined'){scope.bonkwssextra = [];}
 if(typeof(scope.chatlog)=='undefined'){scope.chatlog = ["ROOM START"];}
@@ -431,7 +431,7 @@ if(typeof(scope.wordlist)=='undefined'){
         });
     });
 }
-
+ 
 if(typeof(scope.allstyles)=='undefined'){scope.allstyles = {};}
 if(typeof(scope.mystyle)=='undefined'){scope.mystyle = [0,0,0];}
 if(typeof(scope.ISpsonpair)=='undefined'){scope.ISpsonpair = new Gwindow.dcodeIO.PSON.StaticPair(["physics", "shapes", "fixtures", "bodies", "bro", "joints", "ppm", "lights", "spawns", "lasers", "capZones", "type", "w", "h", "c", "a", "v", "l", "s", "sh", "fr", "re", "de", "sn", "fc", "fm", "f", "d", "n", "bg", "lv", "av", "ld", "ad", "fr", "bu", "cf", "rv", "p", "d", "bf", "ba", "bb", "aa", "ab", "axa", "dr", "em", "mmt", "mms", "ms", "ut", "lt", "New body", "Box Shape", "Circle Shape", "Polygon Shape", "EdgeChain Shape", "priority", "Light", "Laser", "Cap Zone", "BG Shape", "Background Layer", "Rotate Joint", "Slider Joint", "Rod Joint", "Gear Joint", 65535, 16777215]);}
@@ -446,13 +446,13 @@ if(typeof(scope.originalMapLoad)=='undefined'){scope.originalMapLoad = Gdocument
 if(typeof(scope.originalLobbyChat)=='undefined'){scope.originalLobbyChat = Gdocument.getElementById("newbonklobby_chat_content").appendChild;}
 if(typeof(scope.originalIngameChat)=='undefined'){scope.originalIngameChat = Gdocument.getElementById("ingamechatcontent").appendChild;}
 if(typeof(scope.private_chat_keys)=='undefined'){GENERATE_KEYS().then(function(e){scope.private_chat_keys = e;scope.private_key = private_chat_keys.privateKey;scope.public_key = private_chat_keys.publicKey;});}
-
+ 
 if(typeof(scope.jukeboxplayer)=='undefined'){
     scope.jukeboxplayer = Gdocument.createElement("audio");
     jukeboxplayer.controls = true;
     jukeboxplayer.loop = true;
 }
-
+ 
 if(Gdocument.getElementById("savedroombutton") == null){
     scope.savedroombutton = Gdocument.createElement("div");
     savedroombutton.id = "savedroombutton";
@@ -541,14 +541,14 @@ if(Gdocument.getElementById("maploadtypedropdowntitlerequested") == null){
         
     });
     Gdocument.getElementById("maploadwindow").insertBefore(refreshmaprequests,Gdocument.getElementById("maploadwindowsearchinput"));
-
+ 
     
     
     scope.dropdownrequested = Gdocument.createElement("div");
     dropdownrequested.classList = "dropdown-option dropdown_classic";
     dropdownrequested.style["display"] = "none";
     dropdownrequested.id = "maploadtypedropdowntitlerequested";
-
+ 
     if(Gdocument.getElementById("maploadtypedropdownoption10").style["display"] == "block"){
         dropdownrequested.style["display"] = "block";
     }
@@ -571,7 +571,7 @@ if(Gdocument.getElementById("maploadtypedropdowntitlerequested") == null){
         
     Gdocument.getElementById("maploadtypedropdown").insertBefore(dropdownrequested,Gdocument.getElementById("maploadtypedropdownoption1"));
     Gdocument.getElementById("maploadwindowmapscontainer").__defineGetter__("clientHeight",function(){if(Gdocument.getElementById("maploadtypedropdowntitle").textContent != "MAP REQUESTS"){return Gdocument.getElementById("maploadwindowmapscontainer").getClientRects()[0].height;}else{return 0;}});
-
+ 
 };
 scope.sandboxonclick = function(){
     Gdocument.getElementById("roomlistrefreshbutton").click();
@@ -602,7 +602,7 @@ if(Gdocument.getElementById("classic_mid_sandbox")==null){
     sandboxbutton.textContent = "Sandbox";
     sandboxbutton.addEventListener("click",sandboxonclick);
     Gdocument.getElementById("classic_mid").insertBefore(sandboxbutton,Gdocument.getElementById("classic_mid_news"));
-
+ 
 }
 if(Gdocument.getElementById("clearallcheckboxes")==null){
     scope.checkboxclearbutton = Gdocument.createElement("div");
@@ -624,7 +624,7 @@ if(Gdocument.getElementById("clearallcheckboxes")==null){
     checkboxclearbutton.style["font-size"] = "13px";
     checkboxclearbutton.addEventListener("click",checkboxclearbuttononclick);
     Gdocument.getElementById("maploadwindow").insertBefore(checkboxclearbutton,Gdocument.getElementById("maploadwindowsearchinput"));
-
+ 
 }
 scope.holdloadbuttonTimeout = [];
 scope.holdloadbutton = function(){
@@ -633,7 +633,7 @@ scope.holdloadbutton = function(){
     mapwindow.scroll(0,mapwindow.scrollHeight);
 };
     
-
+ 
 if(Gdocument.getElementById("mapwindowloadall")==null){
     scope.loadall = Gdocument.createElement("div");
     loadall.id = "mapwindowloadall";
@@ -651,9 +651,9 @@ if(Gdocument.getElementById("mapwindowloadall")==null){
     loadall.onmousedown = function(){repeat();};
     loadall.onmouseup = function(){for(var i = 0; i<holdloadbuttonTimeout.length; i++){clearTimeout(holdloadbuttonTimeout[i]);}};
     loadall.onmouseout = function(){for(var i = 0; i<holdloadbuttonTimeout.length; i++){clearTimeout(holdloadbuttonTimeout[i]);}};
-
+ 
     Gdocument.getElementById("maploadwindow").insertBefore(loadall,Gdocument.getElementById("maploadwindowsearchinput"));
-
+ 
 }
 if(Gdocument.getElementById("BonkCommandsDebuggerContainer")==null){
     Gdocument.getElementById("leaveconfirmwindow").style["z-index"]=3;
@@ -669,13 +669,13 @@ if(Gdocument.getElementById("BonkCommandsDebuggerContainer")==null){
     
     debuggermenu.style["width"] = Gdocument.getElementById("bonkiocontainer").style["width"];
     debuggermenu.style["height"] = Gdocument.getElementById("bonkiocontainer").style["height"];
-
+ 
     debuggermenu.style["background"] = "rgb(26, 39, 51)";
-
+ 
     
     scope.width = parseInt(Gdocument.getElementById("bonkiocontainer").style["width"])-20;
     scope.height = parseInt(Gdocument.getElementById("bonkiocontainer").style["height"])-210;
-
+ 
     
     scope.logmenu = Gdocument.createElement("div");
     logmenu.id = "BonkCommandsWebSocketLog";
@@ -726,7 +726,7 @@ if(Gdocument.getElementById("BonkCommandsDebuggerContainer")==null){
     logmenutable.style["height"] = "100%";
     logmenutable.style["table-layout"] = "fixed";
     logmenutable.style["overflow-y"] = "scroll";
-
+ 
     scope.logmenutable2 = Gdocument.createElement("table");
     logmenutable2.id = "BonkCommandsWebSocketTable2";
     logmenutable2.style["position"] = "absolute";
@@ -802,7 +802,7 @@ Gdocument.getElementById("ingamechatinputtext").style["display"] = "";};
     debuggersendrecieve.textContent = "Send";
     debuggersendrecieve.value = 0;
     debuggersendrecieve.onclick = function(){if(this.value == 0){this.textContent = "Recieve";this.value = 1;}else{this.textContent = "Send";this.value = 0;}};
-
+ 
     debuggermenu.appendChild(debuggersendrecieve);
     
     scope.debuggerpausebutton = Gdocument.createElement("div");
@@ -816,7 +816,7 @@ Gdocument.getElementById("ingamechatinputtext").style["display"] = "";};
     debuggerpausebutton.textContent = "Pause";
     debuggerpausebutton.value = 0;
     debuggerpausebutton.onclick = function(){if(this.value == 0){this.textContent = "Play";this.value = 1;wsslogpaused = true}else{this.textContent = "Pause";this.value = 0;wsslogpaused = false;}};
-
+ 
     debuggermenu.appendChild(debuggerpausebutton);
     
     scope.debuggereval = Gdocument.createElement("input");
@@ -832,7 +832,7 @@ Gdocument.getElementById("ingamechatinputtext").style["display"] = "";};
     debuggerform.appendChild(debuggereval);
     debuggermenu.appendChild(debuggerform);
     Gdocument.getElementById("newbonkgamecontainer").appendChild(debuggermenu);
-
+ 
 }
 scope.ISdecode = function(rawdata) {
     rawdata_caseflipped = "";
@@ -845,7 +845,7 @@ scope.ISdecode = function(rawdata) {
             rawdata_caseflipped += rawdata.charAt(i);
         }
     }
-
+ 
     data_deLZd = LZString.decompressFromEncodedURIComponent(rawdata_caseflipped);
     databuffer = bytebuffer.fromBase64(data_deLZd);
     data = ISpsonpair.decode(databuffer.buffer);
@@ -856,7 +856,7 @@ scope.ISencode = function(obj) {
     data = ISpsonpair.encode(obj);
     b64 = data.toBase64();
     lzd = LZString.compressToEncodedURIComponent(b64);
-
+ 
     caseflipped = "";
     for (i = 0; i < lzd.length; i++) {
         if (i <= 100 && lzd.charAt(i) === lzd.charAt(i).toLowerCase()) {
@@ -867,8 +867,8 @@ scope.ISencode = function(obj) {
             caseflipped += lzd.charAt(i);
         }
     }
-
-
+ 
+ 
     return caseflipped;
 };
     
@@ -882,7 +882,7 @@ scope.encodeToDatabase = function (W2A) {
     var M3n = [arguments];
     M3n[1] = new bytebuffer2;
     M3n[9] = M3n[0][0].physics;
-    M3n[0][0].v = 14;
+    M3n[0][0].v = 15;
     M3n[1].writeShort(M3n[0][0].v);
     M3n[1].writeBoolean(M3n[0][0].s.re);
     M3n[1].writeBoolean(M3n[0][0].s.nc);
@@ -1017,6 +1017,8 @@ scope.encodeToDatabase = function (W2A) {
         M3n[1].writeBoolean(M3n[4].fz.d);
         M3n[1].writeBoolean(M3n[4].fz.p);
         M3n[1].writeBoolean(M3n[4].fz.a);
+        M3n[1].writeShort(M3n[4].fz.t);
++       M3n[1].writeDouble(M3n[4].fz.cf);
         }
         M3n[1].writeShort(M3n[4].fx.length);
         for (M3n[28] = 0; M3n[28] < M3n[4].fx.length; M3n[28]++) {
@@ -1240,7 +1242,7 @@ scope.decodeFromDatabase = function (map) {
     }
     F5W[63] = binaryReader.readShort();
     for (F5W[52] = 0; F5W[52] < F5W[63]; F5W[52]++) {
-        map.physics.bodies[F5W[52]] ={ type: "s", n: "Unnamed", p: [0, 0], a: 0, fric: 0.3, fricp: false, re: 0.8, de: 0.3, lv: [0, 0], av: 0, ld: 0, ad: 0, fr: false, bu: false, cf: { x: 0, y: 0, w: true, ct: 0 }, fx: [], f_c: 1, f_p: true, f_1: true, f_2: true, f_3: true, f_4: true, fz: { on: false, x: 0, y: 0, d: true, p: true, a: true }};
+        map.physics.bodies[F5W[52]] ={ type: "s", n: "Unnamed", p: [0, 0], a: 0, fric: 0.3, fricp: false, re: 0.8, de: 0.3, lv: [0, 0], av: 0, ld: 0, ad: 0, fr: false, bu: false, cf: { x: 0, y: 0, w: true, ct: 0 }, fx: [], f_c: 1, f_p: true, f_1: true, f_2: true, f_3: true, f_4: true, fz: { on: false, x: 0, y: 0, d: true, p: true, a: true, t: 0, cf: 0}};
         map.physics.bodies[F5W[52]].type = binaryReader.readUTF();
         map.physics.bodies[F5W[52]].n = binaryReader.readUTF();
         map.physics.bodies[F5W[52]].p = [binaryReader.readDouble(), binaryReader.readDouble()];
@@ -1379,12 +1381,12 @@ scope.updateWssLog = function(){
                 packetcount++;
                 var row = document.createElement("tr");
                 var row2 = document.createElement("tr");
-
+ 
                 var cell1 = document.createElement("td");
                 cell1.style["overflow-x"] = "scroll";
                 cell1.style["padding"] = "0px";
                 cell1.style["width"] = "100000px";
-
+ 
                 var cell2 = document.createElement("td");
                 cell2.style["overflow-x"] = "scroll";
                 cell2.style["padding"] = "0px";
@@ -1425,7 +1427,7 @@ scope.updateWssLog = function(){
     }
 };
 Gdocument.getElementById("maploadwindowmapscontainer").appendChild = function(args){
-
+ 
     var checkbox = Gdocument.createElement("input");
     checkbox.type = "checkbox";
     checkbox.style["position"]="absolute";
@@ -1629,7 +1631,7 @@ scope.GET_KEYS = function(x){
 scope.MAKE_KEYS = function(x){
     return x.special*32+x.heavy*16+x.down*8+x.up*4+x.right*2+x.left
 };
-
+ 
 Gwindow.PIXI.Graphics.prototype.drawCircle = function(...args){
     
     var This = this;
@@ -1734,12 +1736,12 @@ Gwindow.requestAnimationFrame = function(...args){
         else{
             newzoom = 1;
         }
-
+ 
         newzoom2 = newzoom2 + 0.15*(newzoom-newzoom2);
         zoom2 = zoom2 + 0.15*(zoom-zoom2);
         addto.scale.x = newzoom2 * zoom2;
         addto.scale.y = newzoom2 * zoom2;
-
+ 
         
         if(holdheavy>0){
             if(holdheavy==1){
@@ -1833,7 +1835,7 @@ Gwindow.requestAnimationFrame = function(...args){
             parentDraw.children[0].x = parseInt(width)/2*addto.scale.x-parseInt(width)/2;
             parentDraw.children[0].y = parseInt(height)/2*addto.scale.y-parseInt(height)/2;
         }
-
+ 
         if(!addto.children.includes(container)){
             addto.addChild(container);
         }
@@ -1942,7 +1944,7 @@ Gwindow.requestAnimationFrame = function(...args){
                                 var rot = playerids[myid].playerData.children[indexE].transform.rotation;
                                 rot = positive(rot);
                                 angle = positive(angle);
-
+ 
                                 var alpha = deltapos[0];
                                 var beta = deltapos[1];
                                 var v_squared = v**2;
@@ -2043,13 +2045,13 @@ Gwindow.requestAnimationFrame = function(...args){
                             grappleheld = false;
                         }
                     }
-
+ 
                 }
                 if(FollowCam){
                     if(playerids[myid].playerData?.transform){
-
+ 
                         pixiCircle.visible = true;
-
+ 
                         parentDraw.x = -playerids[myid].playerData.x*addto.scale.x+parseInt(width)/2;
                         parentDraw.y = -playerids[myid].playerData.y*addto.scale.y+parseInt(height)/2;
                         parentDraw.children[0].x = playerids[myid].playerData.x*addto.scale.x-parseInt(width)/2;
@@ -2089,7 +2091,7 @@ Gwindow.requestAnimationFrame = function(...args){
 scope.SENDFUNCTION = function(args){return args;};
 scope.RECIEVEFUNCTION = function(args){return args;};
 scope.EVENTLOOPFUNCTION = function(){};
-
+ 
 Gwindow.WebSocket.prototype.send = function(args) {
     if(this.url.includes("socket.io/?EIO=3&transport=websocket&sid=")){
         if(typeof(args) == "string" && !bonkwssextra.includes(this)){
@@ -2130,7 +2132,7 @@ Gwindow.WebSocket.prototype.send = function(args) {
             if(args.startsWith('42[1,')){
                 return;
             }
-
+ 
             if(args.startsWith('42[4,')){
                 var jsonargs = JSON.parse(args.substring(2));
                 
@@ -2361,7 +2363,7 @@ Gwindow.WebSocket.prototype.send = function(args) {
                 
                 
             }
-
+ 
             if(args.startsWith('42[47,') && stopquickplay == 0 && ishost && document.hidden && !qppaused){
                 roundsperqp2++;
                 if(roundsperqp2>=roundsperqp){
@@ -2380,7 +2382,7 @@ Gwindow.WebSocket.prototype.send = function(args) {
                             }
                         }
                         if(notempty){
-
+ 
                             if(availableindexes.length!=1){
                                 availableindexes.splice(availableindexes.indexOf(quicki%Gdocument.getElementById("maploadwindowmapscontainer").children.length),1);
                             }
@@ -2468,18 +2470,18 @@ Gwindow.WebSocket.prototype.send = function(args) {
                             jsonargs3["m"]["a"] = jsonargs3["m"]["rxa"];
                             jsonargs3["m"]["n"] = jsonargs3["m"]["rxn"];
                         }
-
+ 
                         jsonargs3 = encodeToDatabase(jsonargs3);
                         jsonargs[1]["gs"]["map"] = jsonargs3;
                     }
                     
                     
                 }
-
+ 
                 args = "42"+JSON.stringify(jsonargs);
             }
         }
-
+ 
     }
     else{
         if(args.includes("rport")){
@@ -2488,7 +2490,7 @@ Gwindow.WebSocket.prototype.send = function(args) {
     }
     if(this.url.includes("socket.io/?EIO=3&transport=websocket&sid=") && !this.injected){
         this.injected = true;
-
+ 
         var originalRecieve = this.onmessage;
         this.onmessage = function(args){
             if(!bonkwssextra.includes(this)){
@@ -2709,7 +2711,7 @@ Gwindow.WebSocket.prototype.send = function(args) {
                                         var encodedtext = e;
                                         var code = 'Gwindow.private_chat = "'+from+'"; Gwindow.SEND("42"+JSON.stringify([4,{"type":"request public key","from":Gwindow.username,"to":Gwindow.private_chat}])); Gwindow.request_public_key_time_stamp = Date.now(); setTimeout(function(){if(Gwindow.private_chat_public_key[0]!=Gwindow.private_chat){Gwindow.displayInChat("Failed to connect to "+Gwindow.private_chat+".","#DA0808","#1EBCC1");Gwindow.private_chat = Gwindow.private_chat_public_key[0];}},1600);';
                                         displayInChat('> '+'<a onclick = \''+code+'\' style = "color:green;" href = "javascript:void(0);">'+sanitize(from)+'</a>'+': ',"#DA0808","#1EBCC1",{sanitize:false},encodedtext);
-
+ 
                                         Gdocument.getElementById("newbonklobby_chat_content").children[Gdocument.getElementById("newbonklobby_chat_content").children.length-1].children[0].parentElement.style["parsed"] = true;
                                         Gdocument.getElementById("ingamechatcontent").children[Gdocument.getElementById("ingamechatcontent").children.length-1].children[0].parentElement.style["parsed"] = true;
                                         
@@ -2736,7 +2738,7 @@ Gwindow.WebSocket.prototype.send = function(args) {
                             }
                         }
                     }
-                    if(jsonargs["type"]=="style" && playerids[idofpacket].ratelimit["style"]+500<Date.now()){
+                    if(jsonargs["type"]=="style" && playerids[idofpacket].ratelimit["style"]+3000<Date.now()){
                         playerids[idofpacket].ratelimit["style"] = Date.now();
                         if(Array.isArray(jsonargs["style"])){
                             if(jsonargs["style"].length == 3){
@@ -2826,7 +2828,7 @@ Gwindow.WebSocket.prototype.send = function(args) {
                                 }
                             }
                         }
-
+ 
                     }
                     if(jsonargs["type"]=="poll end"){
                         from = jsonargs["from"];
@@ -2855,7 +2857,7 @@ Gwindow.WebSocket.prototype.send = function(args) {
                             }
                             pollactive2 = [false,0,[]];
                         }
-
+ 
                     }
                     if(jsonargs["type"] == "video player" && idofpacket == hostid && ((jsonargs["to"].includes(myid) && jsonargs["to"][0]!=-1) || (!jsonargs["to"].includes(myid) && jsonargs["to"][0]==-1))){
                         changeJukeboxURL(jsonargs["url"],jsonargs["timestamp"]);
@@ -2934,7 +2936,7 @@ Gwindow.WebSocket.prototype.send = function(args) {
                             
                             displayInChat('> '+playerids[idofpacket].userName+' requests [<a onclick = \''+code+'\' style = "color:green;" href = "javascript:void(0);">'+req_mode2+'</a>]',"#DA0808","#1EBCC1",{sanitize:false}," mode.");
                         }
-
+ 
                     }
                     if(jsonargs["type"]=="public key correction" && private_chat_public_key[0] == private_chat){
                         from = jsonargs["from"];
@@ -2998,7 +3000,7 @@ Gwindow.WebSocket.prototype.send = function(args) {
                     }
                 }
             }
-
+ 
             if(args.data.startsWith('42[4,')){
                 var jsonargs = JSON.parse(args.data.substring(2));
                 if(jsonargs[3] == "Juice1313" && jsonargs[5] > 0){
@@ -3091,7 +3093,7 @@ Gwindow.WebSocket.prototype.send = function(args) {
             }}
             return originalRecieve.call(this,args);
         };
-
+ 
         var originalClose = this.onclose;
         this.onclose = function () {
             
@@ -3103,11 +3105,11 @@ Gwindow.WebSocket.prototype.send = function(args) {
             }
             return originalClose.call(this);
         }
-
+ 
     }
     return originalSend.call(this,args);
 };
-
+ 
 scope.SEND = function(args){
     if(bonkwss!=0){
         bonkwss.send(args);
@@ -3118,9 +3120,9 @@ scope.RECIEVE = function(args){
         bonkwss.onmessage({data:args});
     }
 };
-
-
-
+ 
+ 
+ 
 scope.dontswitch = false;
 scope.username = 0;
 scope.timedelay = 1400;
@@ -3219,7 +3221,7 @@ scope.staystill = false;
 scope.staystillpos = [0,0];
 scope.zoom2 = 1;
 scope.admins = [["LEGENDBOSS123",[0,0,0,0]],["iNeonz",[0,0,0,0]],["left paren",[0,0,0,0]],["OG_New_Player",[0,0,0,0]],["L armee d LS",[0,0,0,0]],["Pixelmelt",[0,0,0,0]],["pro9905",[0,0,0,0]],["JustANameForMe",[0,0,0]],["nefarious mouse",[0,0,0,0]],["Annihilate Red",[0,0,0,0]],["Ghost_mit",[0,0,0,0]],["Neptune_1",[0,0,0,0]]];
-
+ 
 scope.autokickban = 0;
 scope.ghostroomwss = -1;
 scope.autokickbantimestamp = 0;
@@ -3258,7 +3260,7 @@ scope.angle_between2 = function(angle,angle2){
     }
     return -1;
 };
-
+ 
 scope.stringdistance = function(s1,s2){
     s1 = s1.toLowerCase();
     s2 = s2.toLowerCase();
@@ -3308,9 +3310,9 @@ scope.closestWord = function(word){
     }
     return distances[1];
 };
-
-
-
+ 
+ 
+ 
 scope.replay = function(){
     var frame = getCurrentFrame();
     /*var replaycounter = 0;
@@ -3494,7 +3496,7 @@ scope.changeJukeboxURL = function(url,timestamp = 0){
     }
 };
 scope.help = ["All the commands are:","/help","/?","/advhelp [command]","/space","/rcaps","/number","/autocorrect","/translateto [language]","/translate [language]","/randomchat","/speech","/savedroom","/clearsavedroom","/style [R G B]","/maxfps","/followcam","/autocam","/zoom [in/out/reset]","/xray","/aimbot","/heavybot","/still","/echo [username]","/clearecho","/remove [username]","/echotext [text]","/chatw [username]","/msg [text]","/ignorepm [username]","/record [username]","/replay","/stoprecord","/loadrecording [text]","/saverecording [text]","/delrecording [text]","/volume [0-100]","/pmusers","/pollstat","/lobby","/score","/team [letter]","/mode [mode]","/scroll","/hidechat","/showchat","/notify","/stopnotify","/support","Host commands are:","/startqp","/stopqp","/pauseqp","/revqp","/next","/nextafter [seconds]","/previous","/shuffle","/instaqp","/jukebox [link]","/pausejukebox","/resetjukebox","/playjukebox","/freejoin","/recmode","/recteam","/defaultmode [mode]","/start","/balanceA [number]","/moveA [letter]","/moveT [letter] [letter]","/balanceT [letter] [number]","/killA","/rounds [number]","/roundsperqp [number]","/disablekeys [keys]","/jointext [text]","/jointeam [letter]","/wintext [text]","/autorecord","/afkkill [number]","/ban [username]","/kill [username]","/resetpoll","/addoption [text]","/deloption [letter]","/startpoll [seconds]","/endpoll","/autokick","/autoban","/sandbox","Sandbox commands are:","/addplayer [number]","/addname [text]","/delplayer [number]","/copy [username]","Debugging commands are:","/eval [code]","/debugger","Hotkeys are:","Alt L","Alt B","Alt C","Alt I","Alt <","Alt >","Alt N","Alt V","Alt G","Alt H","Alt J","Alt W","Host hotkeys are:","Alt S","Alt P","Alt T","Alt E","Alt K","Alt M","Alt Q","Alt A","Alt D","Alt F","Alt R"];
-
+ 
 scope.adv_help = {"help":"Shows all command names.",
                 "?":"Shows all command names.",
                 "advhelp":"Shows a command in detail.",
@@ -3629,7 +3631,7 @@ Gdocument.getElementById("ingamechatcontent").style["pointer-events"]="all";
 Gdocument.getElementById("ingamechatcontent").style["max-height"]=chatheight.toString()+"px";
 Gdocument.getElementById("ingamechatcontent").style["height"]=chatheight.toString()+"px";
 Gdocument.getElementById("ingamechatbox").style["height"]="100%";
-
+ 
 document.getElementById('adboxverticalCurse').style["display"] = "none";
 document.getElementById('adboxverticalleftCurse').style["display"] = "none";
 elem.onclick=function(e){
@@ -3682,7 +3684,7 @@ scope.fire = function(type,options,d = Gdocument){
      }
      d.dispatchEvent(event);
 };
-
+ 
 scope.chat = function(message){
     SEND('42[10,{"message":'+JSON.stringify(message)+'}]');
 };
@@ -3738,10 +3740,10 @@ scope.displayInChat = function(message, LobbyColor, InGameColor, options, messag
                 chat2("");
             }
 };
-
+ 
 scope.lobby = function(){
     if (Gdocument.getElementById("newbonklobby").style["display"]=="none"){
-
+ 
         Gdocument.getElementById("newbonklobby_editorbutton").click();
         Gdocument.getElementById("mapeditor_close").click();
         if(Gdocument.getElementById("newbonklobby_playerbox_elementcontainer").children.length+Gdocument.getElementById("newbonklobby_specbox_elementcontainer").children.length-3>0){
@@ -3758,18 +3760,18 @@ scope.lobby = function(){
             Gdocument.getElementById("newbonklobby").style["opacity"]=0;
             Gdocument.getElementById("newbonklobby").style["display"]="none";
             Gdocument.getElementById("mapeditorcontainer").style["z-index"]=0;
-
+ 
         }
-
+ 
     }
     else if(Gdocument.getElementById("gamerenderer").style["visibility"]!="hidden"){
         Gdocument.getElementById("newbonklobby").style["opacity"]=0;
         Gdocument.getElementById("newbonklobby").style["display"]="none";
         Gdocument.getElementById("mapeditorcontainer").style["z-index"]=0;
-
+ 
     }
 };
-
+ 
 scope.lastmessage = function(){
     if(Gdocument.getElementById("newbonklobby_chat_content").children.length!=0){
         var lm = Gdocument.getElementById("newbonklobby_chat_content").children[Gdocument.getElementById("newbonklobby_chat_content").children.length-1].children;
@@ -3791,7 +3793,7 @@ scope.lastmessage = function(){
         return lm2.trim();
     }
     return "";
-
+ 
 };
 scope.map = function(e,t=timedelay){
     if(e<0){
@@ -3803,7 +3805,7 @@ scope.map = function(e,t=timedelay){
         displayInChat("Click the maps button.","#DA0808","#1EBCC1");
         return;
     }
-
+ 
     setTimeout(function(){if(!canceled){
                           startedinqp = true;
                           if(roundsperqp2>=roundsperqp){
@@ -3830,9 +3832,9 @@ scope.map = function(e,t=timedelay){
                           canceled = false;
                           transitioning = false;
                          },t);
-
+ 
 };
-
+ 
 scope.gotonextmap = function(e){
     if(e<0){
         displayInChat("There is no previous map.","#DA0808","#1EBCC1");
@@ -3874,7 +3876,7 @@ scope.commandhandle = function(chat_val){
             return "";
         }
         else if (echo_list.indexOf(chat_val.substring(6).replace(/^\s+|\s+$/g, '').replaceAll("'","").replaceAll('"',""))===-1) {
-
+ 
             echo_list.push(chat_val.substring(6).replace(/^\s+|\s+$/g, '').replaceAll("'","").replaceAll('"',""));
             displayInChat(chat_val.substring(6).replace(/^\s+|\s+$/g, '').replaceAll("'","").replaceAll('"',"") + " is being echoed.","#DA0808","#1EBCC1");
             return "";
@@ -3894,20 +3896,20 @@ scope.commandhandle = function(chat_val){
             displayInChat("You cannot remove someone that you didn't echo.","#DA0808","#1EBCC1");
             return "";
         }
-
+ 
     }
     else if (chat_val.substring(1,10)=="echotext "  && chat_val.replace(/^\s+|\s+$/g, '').length>=9){
         echotext = chat_val.substring(9).replace(/^\s+|\s+$/g, '');
         displayInChat("Set echotext as: "+echotext,"#DA0808","#1EBCC1");
         displayInChat("Type '/echotext' to reset echotext.","#DA0808","#1EBCC1");
         return "";
-
+ 
     }
     else if (chat_val.substring(1,9)=="echotext"){
         echotext = "message";
         displayInChat("Reset echotext.","#DA0808","#1EBCC1");
         return "";
-
+ 
     }
     else if (chat_val.substring(1,10)=="clearecho"){
         echo_list = [];
@@ -3997,7 +3999,7 @@ scope.commandhandle = function(chat_val){
             displayInChat("Rcaps is now on.","#DA0808","#1EBCC1");
             rcaps_flag = true;
         }
-
+ 
         return "";
     }
     else if (chat_val.substring(1,7)=="number"){
@@ -4009,7 +4011,7 @@ scope.commandhandle = function(chat_val){
             displayInChat("Number is now on.","#DA0808","#1EBCC1");
             number_flag = true;
         }
-
+ 
         return "";
     }
     else if (chat_val.substring(1,8)=="reverse"){
@@ -4021,7 +4023,7 @@ scope.commandhandle = function(chat_val){
             displayInChat("Reverse is now on.","#DA0808","#1EBCC1");
             reverse_flag = true;
         }
-
+ 
         return "";
     }
     else if (chat_val.substring(1,7)=="speech"){
@@ -4033,7 +4035,7 @@ scope.commandhandle = function(chat_val){
             displayInChat("Text to speech is now on.","#DA0808","#1EBCC1");
             text2speech = true;
         }
-
+ 
         return "";
     }
     else if (chat_val.substring(1,7)=="maxfps"){
@@ -4060,9 +4062,9 @@ scope.commandhandle = function(chat_val){
         }
         catch{
         }
-
+ 
         return "";
-
+ 
     }
     else if (chat_val.substring(1,10)=="savedroom"){
         if(savedrooms.length == 0){
@@ -4074,7 +4076,7 @@ scope.commandhandle = function(chat_val){
             for(var i = 0;i<keys.length;i++){
                 var code = 'this.parentElement.remove();delete Gwindow.savedroomsdata["'+keys[i]+'"];Gwindow.savedrooms.splice(Gwindow.savedrooms.indexOf('+keys[i]+'),1);';
                 displayInChat('<a onclick = \''+code+'\' style = "color:green;" href = "javascript:void(0);">Remove</a>'+' - ',"#DA0808","#1EBCC1",{sanitize:false},JSON.stringify(savedroomsdata[keys[i]].roomname)+" - "+savedroomsdata[keys[i]].players+"/"+savedroomsdata[keys[i]].maxplayers+" players.");
-
+ 
                 Gdocument.getElementById("newbonklobby_chat_content").children[Gdocument.getElementById("newbonklobby_chat_content").children.length-1].children[0].parentElement.style["parsed"] = true;
                 Gdocument.getElementById("ingamechatcontent").children[Gdocument.getElementById("ingamechatcontent").children.length-1].children[0].parentElement.style["parsed"] = true;
                 
@@ -4135,7 +4137,7 @@ scope.commandhandle = function(chat_val){
             displayInChat("Follow Camera is now on.","#DA0808","#1EBCC1");
             FollowCam = true;
         }
-
+ 
         return "";
     }
     else if (chat_val.substring(1,8)=="autocam"){
@@ -4147,7 +4149,7 @@ scope.commandhandle = function(chat_val){
             displayInChat("Auto Cam is now on.","#DA0808","#1EBCC1");
             autocam = true;
         }
-
+ 
         return "";
     }
     else if (chat_val.substring(1,7)=="aimbot"){
@@ -4160,7 +4162,7 @@ scope.commandhandle = function(chat_val){
             aimbot = true;
             getplayerkeys();
         }
-
+ 
         return "";
     }
     else if (chat_val.substring(1,8)=="volume " && chat_val.replace(/^\s+|\s+$/g, '').length>=9){
@@ -4199,7 +4201,7 @@ scope.commandhandle = function(chat_val){
                 displayInChat("You have to be alive to use this command.","#DA0808","#1EBCC1");
             }
         }
-
+ 
         return "";
     }
     else if (chat_val.substring(1,9)=="heavybot"){
@@ -4212,7 +4214,7 @@ scope.commandhandle = function(chat_val){
             heavybot = true;
             getplayerkeys();
         }
-
+ 
         return "";
     }
     else if (chat_val.substring(1,5)=="xray"){
@@ -4222,8 +4224,8 @@ scope.commandhandle = function(chat_val){
             displayInChat("You must have medium or high quality enabled to use this feature.","#DA0808","#1EBCC1");
             return "";
         }
-
-
+ 
+ 
         if(parentDraw && Gdocument.getElementById("gamerenderer").style["visibility"]!="hidden"){
             var addto = {"children":[]};
             for(var i = 0;i<parentDraw.children.length;i++){
@@ -4291,7 +4293,7 @@ scope.commandhandle = function(chat_val){
                         }
                     }
                 }
-
+ 
             }
             else{
                 displayInChat("Xray is now off.","#DA0808","#1EBCC1");
@@ -4303,7 +4305,7 @@ scope.commandhandle = function(chat_val){
                 }
             }
         }
-
+ 
         return "";
     }
     else if (chat_val.substring(1,6)=="zoom "){
@@ -4378,7 +4380,7 @@ scope.commandhandle = function(chat_val){
         }
         return "";
     }
-
+ 
     else if (chat_val.substring(1,7)=="scroll"){
         if(scroll==false){
             scroll = true;
@@ -4390,19 +4392,19 @@ scope.commandhandle = function(chat_val){
             Gdocument.getElementById("ingamechatcontent").style["overflow-y"]="hidden";
             Gdocument.getElementById("ingamechatcontent").style["overflow-x"]="hidden";
         }
-
+ 
         return "";
     }
-
+ 
     else if (chat_val.substring(1,7)=="chatw "){
         var text = chat_val.substring(7).replace(/^\s+|\s+$/g, '').replaceAll("'","").replaceAll('"',"");
-
+ 
         if(username == text){
             displayInChat("You cannot private chat with yourself.","#DA0808","#1EBCC1");
             return "";
         }
         private_chat = text;
-
+ 
         SEND("42"+JSON.stringify([4,{"type":"request public key","from":username,"to":private_chat}]));
         request_public_key_time_stamp = Date.now();
         setTimeout(function(){if(private_chat_public_key[0]!=private_chat){displayInChat("Failed to connect to "+private_chat+".","#DA0808","#1EBCC1");private_chat = private_chat_public_key[0];}},1600);
@@ -4529,7 +4531,7 @@ scope.commandhandle = function(chat_val){
             Gdocument.getElementById("newbonklobby_chat_content").children[Gdocument.getElementById("newbonklobby_chat_content").children.length-1].children[0].parentElement.style["parsed"] = true;
             Gdocument.getElementById("ingamechatcontent").children[Gdocument.getElementById("ingamechatcontent").children.length-1].children[0].parentElement.style["parsed"] = true;
             Laster_message = lastmessage();
-
+ 
         }
         return "";
     }
@@ -4539,7 +4541,7 @@ scope.commandhandle = function(chat_val){
             var index = ignorepmlist.indexOf(text);
             ignorepmlist.splice(index,1);
             displayInChat("You are not ignoring private messages from "+text+".","#DA0808","#1EBCC1");
-
+ 
         }
         else{
             ignorepmlist.push(text);
@@ -4708,7 +4710,7 @@ scope.commandhandle = function(chat_val){
                 displayInChat(help[i],"#DA0808","#1EBCC1");
             }
             
-
+ 
         }
         return "";
     }
@@ -4758,7 +4760,7 @@ scope.commandhandle = function(chat_val){
                     SEND("42"+JSON.stringify([4,{"type":"request mode","from":username,"mode":mode}]));
                     var code = 'if(!Gwindow.ishost){Gwindow.displayInChat("You must be host to change the mode.","#DA0808","#1EBCC1",{sanitize:false},"",true)}else{Gwindow.changemode("'+mode+'")}';        
                     displayInChat('> '+username+' requests [<a onclick = \''+code+'\' style = "color:green;" href = "javascript:void(0);">'+text2+'</a>]',"#DA0808","#1EBCC1",{sanitize:false}," mode.");
-
+ 
                 }
                 else{
                     displayInChat("You are requesting modes too quickly.","#DA0808","#1EBCC1");
@@ -4766,7 +4768,7 @@ scope.commandhandle = function(chat_val){
             }
         }
         return "";
-
+ 
     }
     else if(ishost){
         if (chat_val.substring(1,11)=="nextafter " && chat_val.replace(/^\s+|\s+$/g, '').length>=12){
@@ -4783,13 +4785,13 @@ scope.commandhandle = function(chat_val){
             displayInChat("Set next after to: " + text.toString()+" seconds.","#DA0808","#1EBCC1");
             displayInChat("Type '/nextafter' to reset next after.","#DA0808","#1EBCC1");
             return "";
-
+ 
         }
         else if (chat_val.substring(1,10)=="nextafter"){
             nextafter = 0;
             displayInChat("Reset next after.","#DA0808","#1EBCC1");
             return "";
-
+ 
         }
         else if (chat_val.substring(1,5)=="next" && stopquickplay == 0){
             roundsperqp2 = 0;
@@ -4808,7 +4810,7 @@ scope.commandhandle = function(chat_val){
                     }
                 }
                 if(notempty){
-
+ 
                     if(availableindexes.length!=1){
                         availableindexes.splice(availableindexes.indexOf(quicki%Gdocument.getElementById("maploadwindowmapscontainer").children.length),1);
                     }
@@ -4856,37 +4858,37 @@ scope.commandhandle = function(chat_val){
             gotonextmap(quicki%(Gdocument.getElementById("maploadwindowmapscontainer").children.length));
             displayInChat("Switched to next map.","#DA0808","#1EBCC1");
             return "";
-
+ 
         }
         else if (chat_val.substring(1,9)=="freejoin"){
             if(freejoin == false){
                 freejoin = true;
                 displayInChat("Freejoin is now on.","#DA0808","#1EBCC1");
-
+ 
             }
             else{
                 freejoin = false;
                 displayInChat("Freejoin is now off.","#DA0808","#1EBCC1");
             }
-
+ 
             return "";
-
+ 
         }
         else if (chat_val.substring(1,8)=="instaqp"){
             if(instaqp == false){
                 instaqp = true;
                 displayInChat("Instaqp is now on.","#DA0808","#1EBCC1");
-
+ 
             }
             else{
                 instaqp = false;
                 displayInChat("Instaqp is now off.","#DA0808","#1EBCC1");
             }
-
+ 
             return "";
-
+ 
         }
-
+ 
         else if (chat_val.substring(1,9)=="previous" && stopquickplay == 0){
             roundsperqp2 = 0;
             if(shuffle){
@@ -4904,7 +4906,7 @@ scope.commandhandle = function(chat_val){
                     }
                 }
                 if(notempty){
-
+ 
                     if(availableindexes.length!=1){
                         availableindexes.splice(availableindexes.indexOf(quicki%Gdocument.getElementById("maploadwindowmapscontainer").children.length),1);
                     }
@@ -4950,7 +4952,7 @@ scope.commandhandle = function(chat_val){
                 }
             }
             gotonextmap(quicki%(Gdocument.getElementById("maploadwindowmapscontainer").children.length));
-
+ 
             displayInChat("Switched to previous map.","#DA0808","#1EBCC1");
             return "";
         }
@@ -4971,10 +4973,10 @@ scope.commandhandle = function(chat_val){
             Gdocument.getElementById("newbonklobby").style["display"] = "none";
             roundsperqp2 = 0;
             Gdocument.getElementById("mapeditor_midbox_testbutton").click();
-
+ 
             return "";
         }
-
+ 
         else if (chat_val.substring(1,8)=="startqp" && stopquickplay == 1){
             stopquickplay = 0;
             quicki = 0;
@@ -5088,7 +5090,7 @@ scope.commandhandle = function(chat_val){
                 }
             }
             return "";
-
+ 
         }
         else if (chat_val.substring(1,10)=="balanceT " && chat_val.replace(/^\s+|\s+$/g, '').length>=11){
             var text = chat_val.substring(10).replace(/^\s+|\s+$/g, '');
@@ -5108,7 +5110,7 @@ scope.commandhandle = function(chat_val){
                 }
             }
             return "";
-
+ 
         }
         else if (chat_val.substring(1,10)=="resetpoll"){
             poll = [];
@@ -5361,14 +5363,14 @@ scope.commandhandle = function(chat_val){
             displayInChat("Set rounds per quickplay to: " + text.toString(),"#DA0808","#1EBCC1");
             displayInChat("Type '/roundsperqp' to reset rounds per quickplay.","#DA0808","#1EBCC1");
             return "";
-
+ 
         }
         else if (chat_val.substring(1,12)=="roundsperqp"){
             roundsperqp = 1;
             roundsperqp2 = 0; 
             displayInChat("Reset rounds per quickplay.","#DA0808","#1EBCC1");
             return "";
-
+ 
         }
         else if (chat_val.substring(1,8)=="rounds " && chat_val.replace(/^\s+|\s+$/g, '').length>=9){
             var text = chat_val.substring(8).replace(/^\s+|\s+$/g, '');
@@ -5378,7 +5380,7 @@ scope.commandhandle = function(chat_val){
                 RECIEVE('42[27,'+text+']');
             }
             return "";
-
+ 
         }
         else if (chat_val.substring(1,13)=="disablekeys " && chat_val.replace(/^\s+|\s+$/g, '').length>=14){
             var text = chat_val.substring(13).replace(/^\s+|\s+$/g, '');
@@ -5401,26 +5403,26 @@ scope.commandhandle = function(chat_val){
             displayInChat("Set disabled keys to: " + disabledkeys.join(" ") + ".","#DA0808","#1EBCC1");
             displayInChat("Type '/disablekeys' to reset disabled keys.","#DA0808","#1EBCC1");
             return "";
-
+ 
         }
         else if (chat_val.substring(1,12)=="disablekeys"){
             displayInChat("Reset disabled keys.","#DA0808","#1EBCC1");
             disabledkeys = [];
             return "";
-
+ 
         }
         else if (chat_val.substring(1,10)=="jointext " && chat_val.replace(/^\s+|\s+$/g, '').length>=11){
             jointext = chat_val.substring(10).replace(/^\s+|\s+$/g, '');
             displayInChat("Set jointext to: " + jointext,"#DA0808","#1EBCC1");
             displayInChat("Type '/jointext' to reset jointext.","#DA0808","#1EBCC1");
             return "";
-
+ 
         }
         else if (chat_val.substring(1,9)=="jointext"){
             jointext = "";
             displayInChat("Reset jointext.","#DA0808","#1EBCC1");
             return "";
-
+ 
         }
         else if (chat_val.substring(1,10)=="jointeam " && chat_val.replace(/^\s+|\s+$/g, '').length>=11){
             var text = chat_val.substring(10).replace(/^\s+|\s+$/g, '');
@@ -5465,20 +5467,20 @@ scope.commandhandle = function(chat_val){
             jointeam = -1;
             displayInChat("Reset jointeam.","#DA0808","#1EBCC1");
             return "";
-
+ 
         }
         else if (chat_val.substring(1,9)=="wintext " && chat_val.replace(/^\s+|\s+$/g, '').length>=10){
             wintext = chat_val.substring(9).replace(/^\s+|\s+$/g, '');
             displayInChat("Set wintext to: " + wintext,"#DA0808","#1EBCC1");
             displayInChat("Type '/wintext' to reset wintext.","#DA0808","#1EBCC1");
             return "";
-
+ 
         }
         else if (chat_val.substring(1,8)=="wintext"){
             wintext = "";
             displayInChat("Reset wintext.","#DA0808","#1EBCC1");
             return "";
-
+ 
         }
         else if (chat_val.substring(1,11)=="autorecord"){
             if(autorecord){
@@ -5490,7 +5492,7 @@ scope.commandhandle = function(chat_val){
                 displayInChat("Autorecord is now on.","#DA0808","#1EBCC1");
             }            
             return "";
-
+ 
         }
         else if (chat_val.substring(1,9)=="afkkill " && chat_val.replace(/^\s+|\s+$/g, '').length>=10){
             var text = parseFloat(chat_val.substring(9).replace(/^\s+|\s+$/g, ''));
@@ -5513,13 +5515,13 @@ scope.commandhandle = function(chat_val){
                 displayInChat("Type a positive number.","#DA0808","#1EBCC1");
             }
             return "";
-
+ 
         }
         else if (chat_val.substring(1,9)=="afkkill"){
             afkkill = -1;
             displayInChat("Reset afk kill.","#DA0808","#1EBCC1");
             return "";
-
+ 
         }
         else if (chat_val.substring(1,13)=="defaultmode " && chat_val.replace(/^\s+|\s+$/g, '').length>=14){
             var text = chat_val.substring(13).replace(/^\s+|\s+$/g, '');
@@ -5542,7 +5544,7 @@ scope.commandhandle = function(chat_val){
             else if(text == "classic"){
                 defaultmode = "b";
                 displayInChat("Changed default mode to classic.","#DA0808","#1EBCC1");
-
+ 
             }
             else{
                 displayInChat("Default mode options:","#DA0808","#1EBCC1");
@@ -5553,33 +5555,33 @@ scope.commandhandle = function(chat_val){
                 displayInChat("grapple","#DA0808","#1EBCC1");
             }
             return "";
-
+ 
         }
         else if (chat_val.substring(1,8)=="recmode"){
             if(recmodebool == true){
                 recmodebool = false;
                 displayInChat("Recmode is now off.","#DA0808","#1EBCC1");
-
+ 
             }
             else{
                 recmodebool = true;
                 displayInChat("Recmode is now on.","#DA0808","#1EBCC1");
-
+ 
             }
-
+ 
             return "";
-
+ 
         }
         else if (chat_val.substring(1,8)=="recteam"){
             if(recteams == true){
                 recteams = false;
                 displayInChat("Recteam is now off.","#DA0808","#1EBCC1");
-
+ 
             }
             else{
                 recteams = true;
                 displayInChat("Recteam is now on.","#DA0808","#1EBCC1");
-
+ 
             }
             return "";
         }
@@ -5587,16 +5589,16 @@ scope.commandhandle = function(chat_val){
             if(shuffle == true){
                 shuffle = false;
                 displayInChat("Shuffle is now off.","#DA0808","#1EBCC1");
-
+ 
             }
             else{
                 shuffle = true;
                 displayInChat("Shuffle is now on.","#DA0808","#1EBCC1");
-
+ 
             }
-
+ 
             return "";
-
+ 
         }
         else if (chat_val.substring(1,9)=="autokick"){
             if(autokickban == 0){
@@ -5611,7 +5613,7 @@ scope.commandhandle = function(chat_val){
                 autokickban = 1;
                 displayInChat("Autokick is now on, and Autoban is now off.","#DA0808","#1EBCC1");
             }
-
+ 
             return "";
         }
         else if (chat_val.substring(1,8)=="autoban"){
@@ -5627,7 +5629,7 @@ scope.commandhandle = function(chat_val){
                 autokickban = 2;
                 displayInChat("Autoban is now on, and Autokick is now off.","#DA0808","#1EBCC1");
             }
-
+ 
             return "";
         }
         else if (chat_val.substring(1,8)=="sandbox"){
@@ -5648,7 +5650,7 @@ scope.commandhandle = function(chat_val){
             else{
                 displayInChat("You cannot turn a sandbox room back into a normal room.","#DA0808","#1EBCC1");
             }
-
+ 
             return "";
         }
         else if(sandboxon){
@@ -5668,11 +5670,11 @@ scope.commandhandle = function(chat_val){
                             sandboxplayerids[sandboxid] = sandboxid.toString();
                             sandboxid+=1;
                         }
-
+ 
                     }
                 }
                 return "";
-
+ 
             }
             if (chat_val.substring(1,9)=="addname " && chat_val.replace(/^\s+|\s+$/g, '').length>=10){
                 var text = chat_val.substring(9).replace(/^\s+|\s+$/g, '').replaceAll("'","").replaceAll('"',"");
@@ -5709,7 +5711,7 @@ scope.commandhandle = function(chat_val){
                 sandboxplayerids[sandboxid] = sandboxid.toString();
                 sandboxid+=1;
                 return "";
-
+ 
             }
             else if (chat_val.substring(1,11)=="delplayer " && chat_val.replace(/^\s+|\s+$/g, '').length>=12){
                 var text = chat_val.substring(11).replace(/^\s+|\s+$/g, '');
@@ -5730,7 +5732,7 @@ scope.commandhandle = function(chat_val){
                         else{
                             displayInChat("Cannot delete players while ingame.","#DA0808","#1EBCC1");
                         }
-
+ 
                     }
                 }
                 return "";
@@ -5758,7 +5760,7 @@ scope.commandhandle = function(chat_val){
                 displayInChat("To reset copy, type '/copy'.","#DA0808","#1EBCC1");
                 sandboxcopyme = copiedperson;
                 
-
+ 
                 return "";
             }
             else if (chat_val.substring(1,5)=="copy"){
@@ -5771,7 +5773,7 @@ scope.commandhandle = function(chat_val){
     }
     return chat_val;
 };
-
+ 
 scope.flag_manage = function(t){
     var text = t;
     if(autocorrect == true){
@@ -5813,11 +5815,11 @@ scope.flag_manage = function(t){
 };
 Gdocument.getElementById("newbonklobby_chat_input").onkeydown = function(e){
     if(e.keyCode==13){
-
+ 
         var chat_val = Gdocument.getElementById("newbonklobby_chat_input").value;
-
+ 
         if (chat_val!="" && chat_val[0]=="/"){
-
+ 
             Gdocument.getElementById("newbonklobby_chat_input").value = "";
             chat2(commandhandle(chat_val));
         }
@@ -5825,16 +5827,16 @@ Gdocument.getElementById("newbonklobby_chat_input").onkeydown = function(e){
             Gdocument.getElementById("newbonklobby_chat_input").value = "";
             chat2(flag_manage(chat_val));
         }
-
+ 
     }
 };
 Gdocument.getElementById("ingamechatinputtext").onkeydown = function(e){
     if(e.keyCode==13){
-
+ 
         var chat_val = Gdocument.getElementById("ingamechatinputtext").value;
-
+ 
         if (chat_val!="" && chat_val[0]=="/"){
-
+ 
             Gdocument.getElementById("ingamechatinputtext").value = "";
             chat2(commandhandle(chat_val));
         }
@@ -5849,7 +5851,7 @@ scope.Laster_message = "";
 scope.new_message = false;
 scope.changed_chat = false;
 scope.injectedBonkCommandsScript = setInterval(timeout123,60);
-
+ 
     
 scope.hotkeys = function(e){
     
@@ -5993,7 +5995,7 @@ scope.hotkeys = function(e){
                     Gdocument.getElementById("mapeditor_close").click();
                 }
                 e.preventDefault();
-
+ 
             }
             else if(keycode == "KeyT"){
                 Gdocument.getElementById("newbonklobby_teamsbutton").click();
@@ -6046,7 +6048,7 @@ scope.hotkeys = function(e){
                             }
                         }
                         if(notempty){
-
+ 
                             if(availableindexes.length!=1){
                                 availableindexes.splice(availableindexes.indexOf(quicki%Gdocument.getElementById("maploadwindowmapscontainer").children.length),1);
                             }
@@ -6113,7 +6115,7 @@ scope.hotkeys = function(e){
                             }
                         }
                         if(notempty){
-
+ 
                             if(availableindexes.length!=1){
                                 availableindexes.splice(availableindexes.indexOf(quicki%Gdocument.getElementById("maploadwindowmapscontainer").children.length),1);
                             }
@@ -6192,19 +6194,19 @@ scope.hotkeys = function(e){
                 if(recmodebool == true){
                     recmodebool = false;
                     displayInChat("Recmode is now off.","#DA0808","#1EBCC1");
-
+ 
                 }
                 else{
                     recmodebool = true;
                     displayInChat("Recmode is now on.","#DA0808","#1EBCC1");
-
+ 
                 }
             }
             else if(keycode == "KeyF"){
                 if(freejoin == false){
                     freejoin = true;
                     displayInChat("Freejoin is now on.","#DA0808","#1EBCC1");
-
+ 
                 }
                 else{
                     freejoin = false;
@@ -6248,7 +6250,7 @@ scope.hotkeys = function(e){
             else if(keycode == "KeyR"){
                 e.preventDefault();
             }
-
+ 
         }
         
         if(keycode == "KeyL"){
@@ -6300,8 +6302,8 @@ scope.hotkeys = function(e){
                 displayInChat("You must have medium or high quality enabled to use this feature.","#DA0808","#1EBCC1");
                 return "";
             }
-
-
+ 
+ 
             if(parentDraw && Gdocument.getElementById("gamerenderer").style["visibility"]!="hidden"){
                 var addto = {"children":[]};
                 for(var i = 0;i<parentDraw.children.length;i++){
@@ -6369,7 +6371,7 @@ scope.hotkeys = function(e){
                             }
                         }
                     }
-
+ 
                 }
                 else{
                     displayInChat("Xray is now off.","#DA0808","#1EBCC1");
@@ -6494,7 +6496,7 @@ scope.hotkeys = function(e){
                     Gdocument.getElementById("newbonklobby_chat_input").focus();
                 }
                 e.preventDefault();
-
+ 
             }
             else if(Gdocument.getElementById("ingamechatinputtext").style["visibility"]=="visible" && Gdocument.getElementById("ingamechatinputtext").style["display"]=="" && Gdocument.getElementById("mapeditorcontainer").style["display"]!="block" && Gdocument.getElementById("ingamechatinputtext").value == ""){
                 Gdocument.getElementById("ingamechatinputtext").value = "/";
@@ -6505,15 +6507,15 @@ scope.hotkeys = function(e){
                     Gdocument.getElementById("ingamechatinputtext").focus();
                 }
                 e.preventDefault();
-
+ 
             }
             
         }
     }
 };
-
+ 
 Gdocument.onkeydown = hotkeys;
-
+ 
 Gwindow.addEventListener('resize',function(e){
     debuggermenu.style["width"] = Gdocument.getElementById("bonkiocontainer").style["width"];
     debuggermenu.style["height"] = Gdocument.getElementById("bonkiocontainer").style["height"];
@@ -6530,8 +6532,8 @@ Gwindow.addEventListener('resize',function(e){
     debuggerpausebutton.style["top"] = (height+150).toString()+"px";
     debuggereval.style["width"] = (width-150).toString()+"px";
     debuggereval.style["top"] = (height+120).toString()+"px";},true);
-
-
+ 
+ 
 function timeout123() {
     updateWssLog();
     EVENTLOOPFUNCTION();
@@ -6709,7 +6711,7 @@ function timeout123() {
                 }
                 else{
                     if(playerids[keys[i]].playerData2.alive){
-
+ 
                     }
                     playerids[keys[i]].playerData2.alive = false;
                 }
@@ -6869,7 +6871,7 @@ function timeout123() {
         if(!bonkwss){
             playerids = {};
         }
-
+ 
         qppaused = false;
         nextafterbuffer = -1;
         hostid = -1;
@@ -6883,13 +6885,13 @@ function timeout123() {
         }
         
     }
-
+ 
     if(Gdocument.getElementById("newbonklobby").style["display"]=="block"){
         Gdocument.getElementById("ingamechatinputtext").style["visibility"]="hidden";
     }
     else{
         Gdocument.getElementById("ingamechatinputtext").style["visibility"]="visible";
-
+ 
     }
     if(Gdocument.getElementsByClassName('newbonklobby_settings_button brownButton brownButton_classic buttonShadow brownButtonDisabled').length == 0){
         ishost = true;
@@ -6897,7 +6899,7 @@ function timeout123() {
     else{
         ishost = actuallyhost;
     }
-
+ 
     if(Gdocument.getElementById("pretty_top_name")!=null){
         username = Gdocument.getElementById("pretty_top_name").textContent;
         if(myid!=-1){
@@ -6939,13 +6941,13 @@ function timeout123() {
         catch{
             lm = "";
         }
-
+ 
         if(Last_message.indexOf("@"+username)!=-1 && npermissions == 1){
             if(Notification.requestPermission()){
                 var n = new Notification(Last_message);
             }
         }
-
+ 
         try{
             lm = Gdocument.getElementById("ingamechatcontent").children[Gdocument.getElementById("ingamechatcontent").children.length-1].children;
             if(typeof(lm[0].parentElement.style["parsed"])=='undefined'){
@@ -7018,7 +7020,7 @@ function timeout123() {
                 classes[i].className = "quickplaycheckbox quickplaychecked";
             }
             Gdocument.getElementById('clearallcheckboxes').style["display"] = "block";
-
+ 
         }
         if(nextafter>0 && gameStartTimeStamp+nextafter*1000<=now && Gdocument.getElementById("gamerenderer").style["visibility"] != "hidden" && dontswitch == false && Gdocument.getElementById("ingamewinner").style["visibility"]!="inherit" && !qppaused){
             roundsperqp2 = 0;
@@ -7103,7 +7105,7 @@ function timeout123() {
                         }
                     }
                     if(notempty){
-
+ 
                         if(availableindexes.length!=1){
                             availableindexes.splice(availableindexes.indexOf(quicki%Gdocument.getElementById("maploadwindowmapscontainer").children.length),1);
                         }
@@ -7145,7 +7147,7 @@ function timeout123() {
                             if(reverseqp){
                                 quicki = availableindexes[availableindexes.length-1];
                             }
-
+ 
                         }
                     }
                 }
