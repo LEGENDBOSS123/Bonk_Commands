@@ -3221,7 +3221,20 @@ scope.staystill = false;
 scope.staystillpos = [0,0];
 scope.zoom2 = 1;
 scope.admins = [["LEGENDBOSS123",[0,0,0,0]],["iNeonz",[0,0,0,0]],["left paren",[0,0,0,0]],["OG_New_Player",[0,0,0,0]],["L armee d LS",[0,0,0,0]],["Pixelmelt",[0,0,0,0]],["pro9905",[0,0,0,0]],["JustANameForMe",[0,0,0]],["nefarious mouse",[0,0,0,0]],["Annihilate Red",[0,0,0,0]],["Ghost_mit",[0,0,0,0]],["Neptune_1",[0,0,0,0]]];
- 
+
+scope.letters2 = Array.from("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+scope.superscript_letters = Array.from("ᵃᵇᶜᵈᵉᶠᵍʰⁱʲᵏˡᵐⁿᵒᵖᑫʳˢᵗᵘᵛʷˣʸᶻᴬᴮᶜᴰᴱᶠᴳᴴᴵᴶᴷᴸᴹᴺᴼᴾQᴿˢᵀᵁⱽᵂˣʸᶻ");
+scope.hollow_letters = Array.from("𝕒𝕓𝕔𝕕𝕖𝕗𝕘𝕙𝕚𝕛𝕜𝕝𝕞𝕟𝕠𝕡𝕢𝕣𝕤𝕥𝕦𝕧𝕨𝕩𝕪𝕫𝔸𝔹ℂ𝔻𝔼𝔽𝔾ℍ𝕀𝕁𝕂𝕃𝕄ℕ𝕆ℙℚℝ𝕊𝕋𝕌𝕍𝕎𝕏𝕐ℤ");
+scope.block_letters = Array.from("🅰🅱🅲🅳🅴🅵🅶🅷🅸🅹🅺🅻🅼🅽🅾🅿🆀🆁🆂🆃🆄🆅🆆🆇🆈🆉🅰🅱🅲🅳🅴🅵🅶🅷🅸🅹🅺🅻🅼🅽🅾🅿🆀🆁🆂🆃🆄🆅🆆🆇🆈🆉");
+scope.bold_letters = Array.from("𝐚𝐛𝐜𝐝𝐞𝐟𝐠𝐡𝐢𝐣𝐤𝐥𝐦𝐧𝐨𝐩𝐪𝐫𝐬𝐭𝐮𝐯𝐰𝐱𝐲𝐳𝐀𝐁𝐂𝐃𝐄𝐅𝐆𝐇𝐈𝐉𝐊𝐋𝐌𝐍𝐎𝐏𝐐𝐑𝐒𝐓𝐔𝐕𝐖𝐗𝐘𝐙");
+scope.italicized_letters = Array.from("𝘢𝘣𝘤𝘥𝘦𝘧𝘨𝘩𝘪𝘫𝘬𝘭𝘮𝘯𝘰𝘱𝘲𝘳𝘴𝘵𝘶𝘷𝘸𝘹𝘺𝘻𝘈𝘉𝘊𝘋𝘌𝘍𝘎𝘏𝘐𝘑𝘒𝘓𝘔𝘕𝘖𝘗𝘘𝘙𝘚𝘛𝘜𝘝𝘞𝘟𝘠𝘡");
+scope.glitched_letters = Array.from("ⱥƀȼđēӻꞡħīɉҟłᵯꞥꝋꝑꝗɍꞩⱦᵾꝟⱳӿɏƶȺɃȻĐɆӺ₲ĦĪɈҞŁᛗꞤꝊꝐꝖꞦꞨȾɄꝞⱲӾɎƵ");
+
+scope.letter_dictionary = {};
+for(var i = 0;i<letters2.length;i++){
+    letter_dictionary[letters2[i]] = [superscript_letters[i],hollow_letters[i],block_letters[i],bold_letters[i],italicized_letters[i],glitched_letters[i]];
+}
+scope.textmode = -1;
 scope.autokickban = 0;
 scope.ghostroomwss = -1;
 scope.autokickbantimestamp = 0;
@@ -3495,7 +3508,7 @@ scope.changeJukeboxURL = function(url,timestamp = 0){
         });
     }
 };
-scope.help = ["All the commands are:","/help","/?","/advhelp [command]","/space","/rcaps","/number","/autocorrect","/translateto [language]","/translate [language]","/randomchat","/speech","/savedroom","/clearsavedroom","/style [R G B]","/maxfps","/followcam","/autocam","/zoom [in/out/reset]","/xray","/aimbot","/heavybot","/still","/echo [username]","/clearecho","/remove [username]","/echotext [text]","/chatw [username]","/msg [text]","/ignorepm [username]","/record [username]","/replay","/stoprecord","/loadrecording [text]","/saverecording [text]","/delrecording [text]","/volume [0-100]","/pmusers","/pollstat","/lobby","/score","/team [letter]","/mode [mode]","/scroll","/hidechat","/showchat","/notify","/stopnotify","/support","Host commands are:","/startqp","/stopqp","/pauseqp","/revqp","/next","/nextafter [seconds]","/previous","/shuffle","/instaqp","/jukebox [link]","/pausejukebox","/resetjukebox","/playjukebox","/freejoin","/recmode","/recteam","/defaultmode [mode]","/start","/balanceA [number]","/moveA [letter]","/moveT [letter] [letter]","/balanceT [letter] [number]","/killA","/rounds [number]","/roundsperqp [number]","/disablekeys [keys]","/jointext [text]","/jointeam [letter]","/wintext [text]","/autorecord","/afkkill [number]","/ban [username]","/kill [username]","/resetpoll","/addoption [text]","/deloption [letter]","/startpoll [seconds]","/endpoll","/autokick","/autoban","/sandbox","Sandbox commands are:","/addplayer [number]","/addname [text]","/delplayer [number]","/copy [username]","Debugging commands are:","/eval [code]","/debugger","Hotkeys are:","Alt L","Alt B","Alt C","Alt I","Alt <","Alt >","Alt N","Alt V","Alt G","Alt H","Alt J","Alt W","Host hotkeys are:","Alt S","Alt P","Alt T","Alt E","Alt K","Alt M","Alt Q","Alt A","Alt D","Alt F","Alt R"];
+scope.help = ["All the commands are:","/help","/?","/advhelp [command]","/space","/rcaps","/number","/autocorrect","/translateto [language]","/translate [language]","/randomchat","/speech","/savedroom","/clearsavedroom","/style [R G B]","/maxfps","/textmode [1-7]","/followcam","/autocam","/zoom [in/out/reset]","/xray","/aimbot","/heavybot","/still","/echo [username]","/clearecho","/remove [username]","/echotext [text]","/chatw [username]","/msg [text]","/ignorepm [username]","/record [username]","/replay","/stoprecord","/loadrecording [text]","/saverecording [text]","/delrecording [text]","/volume [0-100]","/pmusers","/pollstat","/lobby","/score","/team [letter]","/mode [mode]","/scroll","/hidechat","/showchat","/notify","/stopnotify","/support","Host commands are:","/startqp","/stopqp","/pauseqp","/revqp","/next","/nextafter [seconds]","/previous","/shuffle","/instaqp","/jukebox [link]","/pausejukebox","/resetjukebox","/playjukebox","/freejoin","/recmode","/recteam","/defaultmode [mode]","/start","/balanceA [number]","/moveA [letter]","/moveT [letter] [letter]","/balanceT [letter] [number]","/killA","/rounds [number]","/roundsperqp [number]","/disablekeys [keys]","/jointext [text]","/jointeam [letter]","/wintext [text]","/autorecord","/afkkill [number]","/ban [username]","/kill [username]","/resetpoll","/addoption [text]","/deloption [letter]","/startpoll [seconds]","/endpoll","/autokick","/autoban","/sandbox","Sandbox commands are:","/addplayer [number]","/addname [text]","/delplayer [number]","/copy [username]","Debugging commands are:","/eval [code]","/debugger","Hotkeys are:","Alt L","Alt B","Alt C","Alt I","Alt <","Alt >","Alt N","Alt V","Alt G","Alt H","Alt J","Alt W","Host hotkeys are:","Alt S","Alt P","Alt T","Alt E","Alt K","Alt M","Alt Q","Alt A","Alt D","Alt F","Alt R"];
  
 scope.adv_help = {"help":"Shows all command names.",
                 "?":"Shows all command names.",
@@ -3516,6 +3529,7 @@ scope.adv_help = {"help":"Shows all command names.",
                 "ignorepm":"Ignores the username's private chat messages. To unignore, type '/ignorepm [username]'.",
                 "pmusers":"Dispays who you can private chat with.",
                 "pollstat":"Displays the current poll and its votes.",
+                "textmode":"Changes the text font.",
                 "eval":"Evaluates code. Only use this if you are experienced in javascript.",
                 "debugger":"Opens debugger.",
                 "style":"Change the color of your username, level, and background. For example, '/style 255 0 0' will make your username red.",
@@ -4065,6 +4079,29 @@ scope.commandhandle = function(chat_val){
  
         return "";
  
+    }
+    else if (chat_val.substring(1,10)=="textmode " && chat_val.replace(/^\s+|\s+$/g, '').length>=11){
+        var text = chat_val.substring(10).replace(/^\s+|\s+$/g, '');
+        var parsed = parseInt(text);
+        if(!isNaN(parsed)){
+            if(parsed<=7 && parsed>=1){
+                textmode = parsed-1;
+                displayInChat("Type '/textmode' to reset textmode.","#DA0808","#1EBCC1");
+            }
+            else{
+                displayInChat("Please enter a integer from 1-7 inclusive.","#DA0808","#1EBCC1");
+            }
+        }
+        else{
+            displayInChat("Please enter a integer from 1-7 inclusive.","#DA0808","#1EBCC1");
+        }
+        return "";
+
+    }
+    else if (chat_val.substring(1,9)=="textmode"){
+        textmode = -1;
+        displayInChat("Reset textmode.","#DA0808","#1EBCC1");
+        return "";
     }
     else if (chat_val.substring(1,10)=="savedroom"){
         if(savedrooms.length == 0){
@@ -5801,6 +5838,18 @@ scope.flag_manage = function(t){
     if(space_flag == true){
         text = text.split('').join(' ')
     }
+    if(textmode!=-1){
+        newtext = "";
+        for(var i = 0;i<text.length;i++){
+            if(letter_dictionary[text[i]]){
+                newtext+=letter_dictionary[text[i]][textmode];
+            }
+            else{
+                newtext+=text[i];
+            }
+        }
+        text = newtext;
+    }
     if(number_flag == true){
         text = text.replace(/[t|T][Oo]+/g,"2");
         text = text.replace(/[f|F][o|O][r|R]/g,"4");
@@ -6837,6 +6886,7 @@ function timeout123() {
         checkboxhidden = false;
         freejoin = false;
         shuffle = false;
+        textmode = -1;
         defaultmode = "";
         recmodebool = false;
         recteams = false;
