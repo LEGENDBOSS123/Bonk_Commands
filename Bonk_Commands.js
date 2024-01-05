@@ -1691,6 +1691,27 @@ Gwindow.requestAnimationFrame = function(...args){
                 break;
             }
         }
+        if(pan_enabled && Gdocument.getElementById("gamerenderer")?.childElementCount>0 && (keys_being_held["ShiftLeft"] || keys_being_held["ShiftRight"])){
+            var temp_zoom = zoom;
+            if(keys_being_held["ArrowUp"]){
+                pan.y+=pan_speed/temp_zoom;
+            }
+            if(keys_being_held["ArrowDown"]){
+                pan.y-=pan_speed/temp_zoom;
+            }
+            if(keys_being_held["ArrowRight"]){
+                pan.x-=pan_speed/temp_zoom;
+            }
+            if(keys_being_held["ArrowLeft"]){
+                pan.x+=pan_speed/temp_zoom;
+            }
+        }
+        var panx = 0;
+        var pany = 0;
+        if(pan){
+            panx = pan.x;
+            pany = pan.y;
+        }
         if(autocam){
             var autocamx = 365*scale;
             var autocamy = 250*scale;
@@ -2073,13 +2094,17 @@ Gwindow.requestAnimationFrame = function(...args){
             }
         }
         if(!FollowCam){
-            if(addto.scale.x>=0.99999 && addto.scale.y>=0.99999){
+            if(addto.scale.x>=0.99999 && addto.scale.y>=0.99999 && !pan_enabled){
                 pixiCircle.visible = false;
             }
             else{
                 pixiCircle.visible = true;
             }
         }
+        parentDraw.x+=panx*addto.scale.x;
+        parentDraw.y+=pany*addto.scale.y;
+        parentDraw.children[0].x-=panx*addto.scale.x;
+        parentDraw.children[0].y-=pany*addto.scale.y;
     }
     if(maxfps){
         return setTimeout.call(this,...args);
@@ -3229,10 +3254,11 @@ scope.block_letters = Array.from("🅰🅱🅲🅳🅴🅵🅶🅷🅸🅹🅺�
 scope.bold_letters = Array.from("𝐚𝐛𝐜𝐝𝐞𝐟𝐠𝐡𝐢𝐣𝐤𝐥𝐦𝐧𝐨𝐩𝐪𝐫𝐬𝐭𝐮𝐯𝐰𝐱𝐲𝐳𝐀𝐁𝐂𝐃𝐄𝐅𝐆𝐇𝐈𝐉𝐊𝐋𝐌𝐍𝐎𝐏𝐐𝐑𝐒𝐓𝐔𝐕𝐖𝐗𝐘𝐙");
 scope.italicized_letters = Array.from("𝘢𝘣𝘤𝘥𝘦𝘧𝘨𝘩𝘪𝘫𝘬𝘭𝘮𝘯𝘰𝘱𝘲𝘳𝘴𝘵𝘶𝘷𝘸𝘹𝘺𝘻𝘈𝘉𝘊𝘋𝘌𝘍𝘎𝘏𝘐𝘑𝘒𝘓𝘔𝘕𝘖𝘗𝘘𝘙𝘚𝘛𝘜𝘝𝘞𝘟𝘠𝘡");
 scope.glitched_letters = Array.from("ⱥƀȼđēӻꞡħīɉҟłᵯꞥꝋꝑꝗɍꞩⱦᵾꝟⱳӿɏƶȺɃȻĐɆӺ₲ĦĪɈҞŁᛗꞤꝊꝐꝖꞦꞨȾɄꝞⱲӾɎƵ");
+scope.cursive_letters = Array.from("𝒶𝒷𝒸𝒹𝑒𝒻𝑔𝒽𝒾𝒿𝓀𝓁𝓂𝓃𝑜𝓅𝓆𝓇𝓈𝓉𝓊𝓋𝓌𝓍𝓎𝓏𝒜𝐵𝒞𝒟𝐸𝐹𝒢𝐻𝐼𝒥𝒦𝐿𝑀𝒩𝒪𝒫𝒬𝑅𝒮𝒯𝒰𝒱𝒲𝒳𝒴𝒵");
 
 scope.letter_dictionary = {};
 for(var i = 0;i<letters2.length;i++){
-    letter_dictionary[letters2[i]] = [superscript_letters[i],hollow_letters[i],block_letters[i],bold_letters[i],italicized_letters[i],glitched_letters[i]];
+    letter_dictionary[letters2[i]] = [superscript_letters[i],hollow_letters[i],block_letters[i],bold_letters[i],italicized_letters[i],glitched_letters[i],cursive_letters[i]];
 }
 scope.textmode = -1;
 scope.autokickban = 0;
@@ -3508,7 +3534,7 @@ scope.changeJukeboxURL = function(url,timestamp = 0){
         });
     }
 };
-scope.help = ["All the commands are:","/help","/?","/advhelp [command]","/space","/rcaps","/number","/autocorrect","/translateto [language]","/translate [language]","/randomchat","/speech","/savedroom","/clearsavedroom","/style [R G B]","/maxfps","/textmode [1-7]","/followcam","/autocam","/zoom [in/out/reset]","/xray","/aimbot","/heavybot","/still","/echo [username]","/clearecho","/remove [username]","/echotext [text]","/chatw [username]","/msg [text]","/ignorepm [username]","/record [username]","/replay","/stoprecord","/loadrecording [text]","/saverecording [text]","/delrecording [text]","/volume [0-100]","/pmusers","/pollstat","/lobby","/score","/team [letter]","/mode [mode]","/scroll","/hidechat","/showchat","/notify","/stopnotify","/support","Host commands are:","/startqp","/stopqp","/pauseqp","/revqp","/next","/nextafter [seconds]","/previous","/shuffle","/instaqp","/jukebox [link]","/pausejukebox","/resetjukebox","/playjukebox","/freejoin","/recmode","/recteam","/defaultmode [mode]","/start","/balanceA [number]","/moveA [letter]","/moveT [letter] [letter]","/balanceT [letter] [number]","/killA","/rounds [number]","/roundsperqp [number]","/disablekeys [keys]","/jointext [text]","/jointeam [letter]","/wintext [text]","/autorecord","/afkkill [number]","/ban [username]","/kill [username]","/resetpoll","/addoption [text]","/deloption [letter]","/startpoll [seconds]","/endpoll","/autokick","/autoban","/sandbox","Sandbox commands are:","/addplayer [number]","/addname [text]","/delplayer [number]","/copy [username]","Debugging commands are:","/eval [code]","/debugger","Hotkeys are:","Alt L","Alt B","Alt C","Alt I","Alt <","Alt >","Alt N","Alt V","Alt G","Alt H","Alt J","Alt W","Host hotkeys are:","Alt S","Alt P","Alt T","Alt E","Alt K","Alt M","Alt Q","Alt A","Alt D","Alt F","Alt R"];
+scope.help = ["All the commands are:","/help","/?","/advhelp [command]","/space","/rcaps","/number","/autocorrect","/translateto [language]","/translate [language]","/randomchat","/speech","/savedroom","/clearsavedroom","/pan","/resetpan","/style [R G B]","/maxfps","/textmode [1-7]","/followcam","/autocam","/zoom [in/out/reset]","/xray","/aimbot","/heavybot","/still","/echo [username]","/clearecho","/remove [username]","/echotext [text]","/chatw [username]","/msg [text]","/ignorepm [username]","/record [username]","/replay","/stoprecord","/loadrecording [text]","/saverecording [text]","/delrecording [text]","/volume [0-100]","/pmusers","/pollstat","/lobby","/score","/team [letter]","/mode [mode]","/scroll","/hidechat","/showchat","/notify","/stopnotify","/support","Host commands are:","/startqp","/stopqp","/pauseqp","/revqp","/next","/nextafter [seconds]","/previous","/shuffle","/instaqp","/jukebox [link]","/pausejukebox","/resetjukebox","/playjukebox","/freejoin","/recmode","/recteam","/defaultmode [mode]","/start","/balanceA [number]","/moveA [letter]","/moveT [letter] [letter]","/balanceT [letter] [number]","/killA","/rounds [number]","/roundsperqp [number]","/disablekeys [keys]","/jointext [text]","/jointeam [letter]","/wintext [text]","/autorecord","/afkkill [number]","/ban [username]","/kill [username]","/resetpoll","/addoption [text]","/deloption [letter]","/startpoll [seconds]","/endpoll","/autokick","/autoban","/sandbox","Sandbox commands are:","/addplayer [number]","/addname [text]","/delplayer [number]","/copy [username]","Debugging commands are:","/eval [code]","/debugger","Hotkeys are:","Alt L","Alt B","Alt C","Alt I","Alt <","Alt >","Alt N","Alt V","Alt G","Alt H","Alt J","Alt W","Host hotkeys are:","Alt S","Alt P","Alt T","Alt E","Alt K","Alt M","Alt Q","Alt A","Alt D","Alt F","Alt R","Alt [","Alt ]"];
  
 scope.adv_help = {"help":"Shows all command names.",
                 "?":"Shows all command names.",
@@ -3539,6 +3565,8 @@ scope.adv_help = {"help":"Shows all command names.",
                 "randomchat":"Spams random chat messages from the past.",
                 "lobby":"Makes lobby visible when you are ingame. Type '/lobby' again to close lobby.",
                 "score":"Displays the current score while ingame. Type '/score' again to hide the score.",
+                "pan":"Toggles pan mode. Use Shift+Arrow Keys to move the camera around.",
+                "resetpan":"Resets pan.",
                 "team":"Joins a specific team. 'r' = red, 'b' = blue, 'g' = green, 'y' = yellow, and 's' = spectate.",
                 "scroll":"Toggles a scrollbar in ingame chat.",
                 "followcam":"Enables follow camera. Your character will be centered on the screen.",
@@ -3632,7 +3660,9 @@ scope.adv_help = {"help":"Shows all command names.",
                 "Alt I":"Opens debugger.",
                 "Alt W":"Saves your position, and tries to reach it constantly. This is useful in parkour if you want to go afk.",
                 "Alt <":"Lowers ingame chat height.",
-                "Alt >":"Highers ingame chat height."
+                "Alt >":"Highers ingame chat height.",
+                "Alt [":"Toggles pan mode. Use Shift+Arrow Keys to move the camera around.",
+                "Alt ]":"Resets pan."
                  };
 scope.displayadvhelp = function(command){
     displayInChat(adv_help[command],"#009398","#DA0808",{sanitize:true},"",true);
@@ -4187,6 +4217,23 @@ scope.commandhandle = function(chat_val){
             autocam = true;
         }
  
+        return "";
+    }
+    else if (chat_val.substring(1,4)=="pan"){
+        if(pan_enabled == true){
+            displayInChat("Pan is now off.","#DA0808","#1EBCC1");
+            pan_enabled = false;
+            pan = {"x":0,"y":0};
+        }
+        else{
+            displayInChat("Pan is now on. Shift + Arrow Keys to pan.","#DA0808","#1EBCC1");
+            pan_enabled = true;
+        }
+        return "";
+    }
+    else if (chat_val.substring(1,9)=="resetpan"){
+        pan = {"x":0,"y":0};
+        displayInChat("Reset pan.","#DA0808","#1EBCC1");
         return "";
     }
     else if (chat_val.substring(1,7)=="aimbot"){
@@ -5900,12 +5947,45 @@ scope.Laster_message = "";
 scope.new_message = false;
 scope.changed_chat = false;
 scope.injectedBonkCommandsScript = setInterval(timeout123,60);
- 
-    
+
+scope.pan_enabled = true;
+scope.pan = {"x":0,"y":0};
+scope.pan_speed = 5;
+scope.keys_being_held = {};
+scope.hotkeys_keyup = function(e){
+    if(keys_being_held[e.code]){
+        keys_being_held[e.code] = false;
+    }
+};
+Gdocument.onkeyup = hotkeys_keyup;
 scope.hotkeys = function(e){
     
     
     var keycode = e.code;
+    if(!keys_being_held[keycode]){
+        keys_being_held[keycode] = true;
+    }
+    if(!e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey){
+        if(pan_enabled && Gdocument.getElementById("gamerenderer")?.childElementCount>0){
+            if(keycode == "ArrowUp"){
+                e.stopPropagation();
+                e.preventDefault();
+            }
+            else if(keycode == "ArrowDown"){
+                e.stopPropagation();
+                e.preventDefault();
+            }
+            else if(keycode == "ArrowLeft"){
+                e.stopPropagation();
+                e.preventDefault();
+            }
+            else if(keycode == "ArrowRight"){
+                e.stopPropagation();
+                e.preventDefault();
+            }
+        }
+    }
+
     if(e.altKey && !e.shiftKey && !e.ctrlKey && !e.metaKey){
         if(keycode == "Period"){
             if(Gdocument.getElementById("ingamechatcontent").style["max-height"]!="0px"){
@@ -6484,6 +6564,23 @@ scope.hotkeys = function(e){
             }
             e.preventDefault();
         }
+        if (keycode == "BracketLeft"){
+            if(pan_enabled == true){
+                displayInChat("Pan is now off.","#DA0808","#1EBCC1");
+                pan = {"x":0,"y":0};
+                pan_enabled = false;
+            }
+            else{
+                displayInChat("Pan is now on. Shift + Arrow Keys to pan.","#DA0808","#1EBCC1");
+                pan_enabled = true;
+            }
+            return "";
+        }
+        if (keycode == "BracketRight"){
+            pan = {"x":0,"y":0};
+            displayInChat("Reset pan.","#DA0808","#1EBCC1");
+            return "";
+        }
         if(keycode == "KeyO"){
                 if(heavybot == true){
                 displayInChat("Heavy bot is now off.","#DA0808","#1EBCC1");
@@ -6838,6 +6935,7 @@ function timeout123() {
     if(Gdocument.getElementById("gamerenderer").style["visibility"]=="hidden"){
        Gdocument.getElementById("ingamewinner_scores").style["visibility"] = "unset";
        Gdocument.getElementById("ingamechatcontent").style["max-height"]=chatheight.toString()+"px";
+       pan = {"x":0,"y":0};
     }
     if(Gdocument.getElementById("maploadwindowmapscontainer").children.length>0 && maponclick == 0){
         maponclick = Gdocument.getElementById("maploadwindowmapscontainer").children[0].onclick;
@@ -6918,6 +7016,7 @@ function timeout123() {
         jukeboxplayer.src = "";
         jukeboxplayervolume = 20;
         allstyles = {};
+        pan = {"x":0, "y":0};
         if(!bonkwss){
             playerids = {};
         }
