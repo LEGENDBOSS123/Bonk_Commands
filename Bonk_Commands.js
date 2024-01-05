@@ -5948,7 +5948,7 @@ scope.new_message = false;
 scope.changed_chat = false;
 scope.injectedBonkCommandsScript = setInterval(timeout123,60);
 
-scope.pan_enabled = true;
+scope.pan_enabled = false;
 scope.pan = {"x":0,"y":0};
 scope.pan_speed = 5;
 scope.keys_being_held = {};
