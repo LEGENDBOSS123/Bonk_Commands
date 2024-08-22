@@ -1,3 +1,4 @@
+
 function BonkCommandsScriptInjector(f){
     if(window.location == window.parent.location){
         if(document.readyState == "complete"){f();}
@@ -134,6 +135,14 @@ scope.IMPORT_KEY = async function(key){
 scope.EXPORT_KEY = async function(key){
     var result = await crypto.subtle.exportKey("spki",key);
     return btoa(ab2str(result));
+};
+scope.loadMap = function (m, encode = true) {
+    var mapdata = m;
+    if (encode) {
+        var mapdata = encodeToDatabase(m);
+    }
+    RECIEVE('42' + JSON.stringify([29, mapdata]));
+    SEND('42' + JSON.stringify([23, { "m": mapdata }]));
 };
 if(typeof(scope.textdecoder)=='undefined'){scope.textdecoder = new Gwindow.TextDecoder;}
 if(typeof(scope.textencoder)=='undefined'){scope.textencoder = new Gwindow.TextEncoder;}
@@ -419,6 +428,8 @@ if(typeof(scope.recording)=='undefined'){scope.recording = false;}
 if(typeof(scope.recordingdata)=='undefined'){scope.recordingdata = [];}
 if(typeof(scope.recorddata)=='undefined'){scope.recorddata = {};}
 if(typeof(scope.recordingid)=='undefined'){scope.recordingid = -1;}
+if (typeof (scope.currentmap) == 'undefined') { scope.currentmap = []; }
+
 if(typeof(scope.wordlist)=='undefined'){
     scope.wordlist = [];
     fetch("https://api.github.com/repos/first20hours/google-10000-english/contents/20k.txt").then(function(data){
@@ -1097,11 +1108,20 @@ scope.encodeToDatabase = function (W2A) {
         M3n[1].writeDouble(M3n[5].sf);
         M3n[1].writeDouble(M3n[5].slen);
         }
-        M3n[1].writeShort(M3n[5].ba);
-        M3n[1].writeShort(M3n[5].bb);
-        M3n[1].writeBoolean(M3n[5].d.cc);
-        M3n[1].writeDouble(M3n[5].d.bf);
-        M3n[1].writeBoolean(M3n[5].d.dl);
+        if(M3n[5].type == "g"){
+            M3n[1].writeShort(5);
+            M3n[1].writeUTF(M3n[5].n);
+            M3n[1].writeShort(M3n[5].ja);
+            M3n[1].writeShort(M3n[5].jb);
+            M3n[1].writeDouble(M3n[5].r);
+        }
+        if(M3n[5].type != "g"){
+            M3n[1].writeShort(M3n[5].ba);
+            M3n[1].writeShort(M3n[5].bb);
+            M3n[1].writeBoolean(M3n[5].d.cc);
+            M3n[1].writeDouble(M3n[5].d.bf);
+            M3n[1].writeBoolean(M3n[5].d.dl);
+        }
     }
     M3n[32] = M3n[1].toBase64();
     M3n[77] = LZString.compressToEncodedURIComponent(M3n[32]);
@@ -1359,11 +1379,23 @@ scope.decodeFromDatabase = function (map) {
         F5W[44].sf = binaryReader.readDouble();
         F5W[44].slen = binaryReader.readDouble();
         }
-        map.physics.joints[F5W[19]].ba = binaryReader.readShort();
-        map.physics.joints[F5W[19]].bb = binaryReader.readShort();
-        map.physics.joints[F5W[19]].d.cc = binaryReader.readBoolean();
-        map.physics.joints[F5W[19]].d.bf = binaryReader.readDouble();
-        map.physics.joints[F5W[19]].d.dl = binaryReader.readBoolean();
+        if(F5W[31] == 5){
+            map.physics.joints[F5W[19]] = {type:"g",n:"",ja:-1,jb:-1,r:1};
+            F5W[91] = map.physics.joints[F5W[19]];
+            F5W[91].n = binaryReader.readUTF();
+            F5W[91].ja = binaryReader.readShort();
+            F5W[91].jb = binaryReader.readShort();
+            F5W[91].r = binaryReader.readDouble();
+
+        }
+        if(F5W[31]!=5){
+            map.physics.joints[F5W[19]].ba = binaryReader.readShort();
+            map.physics.joints[F5W[19]].bb = binaryReader.readShort();
+            map.physics.joints[F5W[19]].d.cc = binaryReader.readBoolean();
+            map.physics.joints[F5W[19]].d.bf = binaryReader.readDouble();
+            map.physics.joints[F5W[19]].d.dl = binaryReader.readBoolean();
+        }
+        
     }
     return map;
     };
@@ -2243,6 +2275,11 @@ Gwindow.WebSocket.prototype.send = function(args) {
                     return;
                 }
             }
+            if (args.startsWith('42[23,')) {
+                var jsonargs = JSON.parse(args.substring(2));
+                var map = decodeFromDatabase(jsonargs[1]["m"]);
+                currentmap.push(map);
+            }
             if(args.startsWith('42[23,') && recteams){
                 var jsonargs = JSON.parse(args.substring(2));
                 var map = decodeFromDatabase(jsonargs[1]["m"]);
@@ -2519,6 +2556,12 @@ Gwindow.WebSocket.prototype.send = function(args) {
         var originalRecieve = this.onmessage;
         this.onmessage = function(args){
             if(!bonkwssextra.includes(this)){
+                if (typeof (args.data) == "string" && args.data.startsWith("42[")) {
+                    args = { "data": args.data };
+                    var args2 = JSON.parse(args.data.substring(2));
+                    args2[0] = parseInt(args2[0]);
+                    args.data = "42"+JSON.stringify(args2);
+                }
             wssrecievelog.push(args.data);
             wsssendrecievelog.push([1,args.data]);
             if(typeof(args.data)=="string"){
@@ -2538,6 +2581,8 @@ Gwindow.WebSocket.prototype.send = function(args) {
             }
             if(args.data.startsWith('42[21,')){
                 recievedinitdata = true;
+                var jsonargs = JSON.parse(args.data.substring(2));
+                currentmap.push(jsonargs[1]["map"]);
             }
             if(args.data.startsWith('42[48,')){
                 recievedinitdata = true;
@@ -2592,10 +2637,14 @@ Gwindow.WebSocket.prototype.send = function(args) {
                 var jsonargs = JSON.parse(args.data.substring(2));
                 hostid = jsonargs[1]["newHost"];
             }
+            if (args.data.startsWith('42[29,')) {
+                var jsonargs = JSON.parse(args.data.substring(2));
+                currentmap.push(decodeFromDatabase(jsonargs[1]));
+            }
             if(args.data.startsWith('42[20,')){
                 var jsonargs = JSON.parse(args.data.substring(2));
                 if(translating[0]){
-                    translate(jsonargs[2],"auto",translating[1]).then(function(r){displayInChat(playerids[jsonargs[1]].userName+": "+r,"#DA0808","#1EBCC1")});
+                    translate(jsonargs[2],"auto",translating[1]).then(function(r){if(r==jsonargs[2]){return;} displayInChat(playerids[jsonargs[1]].userName+": "+r,"#DA0808","#1EBCC1")});
                 }
                 if(echo_list.includes(playerids[jsonargs[1]].userName)){
                     chat(flag_manage(echotext.replaceAll("username",playerids[jsonargs[1]].userName).replaceAll("message",jsonargs[2])));
@@ -2691,6 +2740,7 @@ Gwindow.WebSocket.prototype.send = function(args) {
             }
             if(args.data.startsWith('42[48,')){
                 var jsonargs = JSON.parse(args.data.substring(2));
+                currentmap.push(decodeFromDatabase(jsonargs[1]["gs"]["map"]));
                 mode = jsonargs[1]["gs"]["mo"];
                 FFA = !jsonargs[1]["gs"]["tea"];
             }
@@ -2708,6 +2758,7 @@ Gwindow.WebSocket.prototype.send = function(args) {
                 killedids = [];
                 Gdocument.getElementById("newbonklobby").style["z-index"] = "unset";
                 Gdocument.getElementById("mapeditorcontainer").style["z-index"] = "unset";
+                currentmap.push(decodeFromDatabase(jsonargs[3]["map"]));
             }
             if(args.data.startsWith('42[33,')){
                 var jsonargs = JSON.parse(args.data.substring(2));
@@ -3245,7 +3296,7 @@ scope.newzoom2 = 1;
 scope.staystill = false;
 scope.staystillpos = [0,0];
 scope.zoom2 = 1;
-scope.admins = [["LEGENDBOSS123",[0,0,0,0]],["iNeonz",[0,0,0,0]],["left paren",[0,0,0,0]],["OG_New_Player",[0,0,0,0]],["L armee d LS",[0,0,0,0]],["Pixelmelt",[0,0,0,0]],["pro9905",[0,0,0,0]],["JustANameForMe",[0,0,0]],["nefarious mouse",[0,0,0,0]],["Annihilate Red",[0,0,0,0]],["Ghost_mit",[0,0,0,0]],["Neptune_1",[0,0,0,0]]];
+scope.admins = [["LEGENDBOSS123",[0,0,0,0]],["iNeonz",[0,0,0,0]],["left paren",[0,0,0,0]],["OG_New_Player",[0,0,0,0]],["An Admin",[0,0,0,0]],["L armee d LS",[0,0,0,0]],["Pixelmelt",[0,0,0,0]],["pro9905",[0,0,0,0]],["JustANameForMe",[0,0,0]],["nefarious mouse",[0,0,0,0]],["Annihilate Red",[0,0,0,0]],["Ghost_mit",[0,0,0,0]],["Neptune_1",[0,0,0,0]]];
 
 scope.letters2 = Array.from("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
 scope.superscript_letters = Array.from("ᵃᵇᶜᵈᵉᶠᵍʰⁱʲᵏˡᵐⁿᵒᵖᑫʳˢᵗᵘᵛʷˣʸᶻᴬᴮᶜᴰᴱᶠᴳᴴᴵᴶᴷᴸᴹᴺᴼᴾQᴿˢᵀᵁⱽᵂˣʸᶻ");
@@ -3261,6 +3312,21 @@ for(var i = 0;i<letters2.length;i++){
     letter_dictionary[letters2[i]] = [superscript_letters[i],hollow_letters[i],block_letters[i],bold_letters[i],italicized_letters[i],glitched_letters[i],cursive_letters[i]];
 }
 scope.textmode = -1;
+scope.changeColor = function(x,operation1, operation2, operation3){
+    for(var f of x.physics.fixtures){
+        var r = Math.floor(f.f/256/256);
+        var g = Math.floor(f.f/256)%256;
+        var b = f.f%256;
+        r = operation1(r, 0);
+        g = operation2(g, 1);
+        b = operation3(b, 2);
+        // r = Math.max(0, Math.min(255, r));
+        // g = Math.max(0, Math.min(255, g));
+        // b = Math.max(0, Math.min(255, b));
+        f.f = Math.floor(r) * 256 * 256 + Math.floor(g) * 256 + Math.floor(b);
+    }
+    return x;
+}
 scope.autokickban = 0;
 scope.ghostroomwss = -1;
 scope.autokickbantimestamp = 0;
@@ -3534,7 +3600,7 @@ scope.changeJukeboxURL = function(url,timestamp = 0){
         });
     }
 };
-scope.help = ["All the commands are:","/help","/?","/advhelp [command]","/space","/rcaps","/number","/autocorrect","/translateto [language]","/translate [language]","/randomchat","/speech","/savedroom","/clearsavedroom","/pan","/resetpan","/style [R G B]","/maxfps","/textmode [1-7]","/followcam","/autocam","/zoom [in/out/reset]","/xray","/aimbot","/heavybot","/still","/echo [username]","/clearecho","/remove [username]","/echotext [text]","/chatw [username]","/msg [text]","/ignorepm [username]","/record [username]","/replay","/stoprecord","/loadrecording [text]","/saverecording [text]","/delrecording [text]","/volume [0-100]","/pmusers","/pollstat","/lobby","/score","/team [letter]","/mode [mode]","/scroll","/hidechat","/showchat","/notify","/stopnotify","/support","Host commands are:","/startqp","/stopqp","/pauseqp","/revqp","/next","/nextafter [seconds]","/previous","/shuffle","/instaqp","/jukebox [link]","/pausejukebox","/resetjukebox","/playjukebox","/freejoin","/recmode","/recteam","/defaultmode [mode]","/start","/balanceA [number]","/moveA [letter]","/moveT [letter] [letter]","/balanceT [letter] [number]","/killA","/rounds [number]","/roundsperqp [number]","/disablekeys [keys]","/jointext [text]","/jointeam [letter]","/wintext [text]","/autorecord","/afkkill [number]","/ban [username]","/kill [username]","/resetpoll","/addoption [text]","/deloption [letter]","/startpoll [seconds]","/endpoll","/autokick","/autoban","/sandbox","Sandbox commands are:","/addplayer [number]","/addname [text]","/delplayer [number]","/copy [username]","Debugging commands are:","/eval [code]","/debugger","Hotkeys are:","Alt L","Alt B","Alt C","Alt I","Alt <","Alt >","Alt N","Alt V","Alt G","Alt H","Alt J","Alt W","Host hotkeys are:","Alt S","Alt P","Alt T","Alt E","Alt K","Alt M","Alt Q","Alt A","Alt D","Alt F","Alt R","Alt [","Alt ]"];
+scope.help = ["All the commands are:","/help","/?","/advhelp [command]","/space","/rcaps","/number","/autocorrect","/translateto [language]","/translate [language]","/randomchat","/speech","/savedroom","/clearsavedroom","/pan","/resetpan","/style [R G B]","/maxfps","/textmode [1-7]","/followcam","/autocam","/zoom [in/out/reset]","/xray","/aimbot","/heavybot","/still","/echo [username]","/clearecho","/remove [username]","/echotext [text]","/chatw [username]","/msg [text]","/ignorepm [username]","/record [username]","/replay","/stoprecord","/loadrecording [text]","/saverecording [text]","/delrecording [text]","/volume [0-100]","/pmusers","/pollstat","/lobby","/score","/team [letter]","/mode [mode]","/scroll","/hidechat","/showchat","/notify","/stopnotify","/support","Host commands are:","/startqp","/stopqp","/pauseqp","/revqp","/next","/nextafter [seconds]","/previous","/shuffle","/instaqp","/jukebox [link]","/pausejukebox","/resetjukebox","/playjukebox","/freejoin","/recmode","/recteam","/defaultmode [mode]","/start","/balanceA [number]","/colorshift [number]","/brighten [number]","/moveA [letter]","/moveT [letter] [letter]","/balanceT [letter] [number]","/killA","/rounds [number]","/roundsperqp [number]","/disablekeys [keys]","/jointext [text]","/jointeam [letter]","/wintext [text]","/autorecord","/afkkill [number]","/ban [username]","/kill [username]","/resetpoll","/addoption [text]","/deloption [letter]","/startpoll [seconds]","/endpoll","/autokick","/autoban","/sandbox","Sandbox commands are:","/addplayer [number]","/addname [text]","/delplayer [number]","/copy [username]","Debugging commands are:","/eval [code]","/debugger","Hotkeys are:","Alt L","Alt B","Alt C","Alt I","Alt <","Alt >","Alt N","Alt V","Alt G","Alt H","Alt J","Alt W","Host hotkeys are:","Alt S","Alt P","Alt T","Alt E","Alt K","Alt M","Alt Q","Alt A","Alt D","Alt F","Alt R","Alt [","Alt ]"];
  
 scope.adv_help = {"help":"Shows all command names.",
                 "?":"Shows all command names.",
@@ -3597,6 +3663,8 @@ scope.adv_help = {"help":"Shows all command names.",
                 "start":"Starts game instantly.",
                 "instaqp":"Rounds will instantly start without a countdown.",
                 "balanceA":"Balances everyone with balance number.",
+                "colorshift": "Shifts the color of the map.",
+                "brighten": "Brightens the map by the number.",
                 "moveA":"Sets everyones team. 'r' = red, 'b' = blue, 'g' = green, 'y' = yellow, and 's' = spectate.",
                 "balanceT":"Sets everyones balance to the number. The team is 'r' = red, 'b' = blue, 'g' = green, 'y' = yellow, and 's' = spectate.",
                 "killA":"Kills everyone.",
@@ -5174,7 +5242,29 @@ scope.commandhandle = function(chat_val){
                 }
             }
             return "";
- 
+        }
+        else if (chat_val.substring(1, 10) == "brighten " && chat_val.replace(/^\s+|\s+$/g, '').length >= 11) {
+            var text = chat_val.substring(10).replace(/^\s+|\s+$/g, '');
+            if (!isNaN(parseFloat(text))) {
+                var intText = parseFloat(text);
+                var f = function(x){
+                    return x * intText;
+                }
+                loadMap(changeColor(currentmap[currentmap.length-1], f,f,f));
+            }
+            return "";
+        }
+        else if (chat_val.substring(1, 12) == "colorshift " && chat_val.replace(/^\s+|\s+$/g, '').length >= 13) {
+            var text = chat_val.substring(12).replace(/^\s+|\s+$/g, '');
+            if (!isNaN(parseFloat(text))) {
+                var intText = parseFloat(text);
+                var seed = [Math.random()-0.5, Math.random()-0.5, Math.random()-0.5, Math.random()-0.5];
+                var f = function(x, ind){
+                    return x * 1 + seed[ind] * intText;
+                }
+                loadMap(changeColor(currentmap[currentmap.length-1], f,f,f));
+            }
+            return "";
         }
         else if (chat_val.substring(1,10)=="balanceT " && chat_val.replace(/^\s+|\s+$/g, '').length>=11){
             var text = chat_val.substring(10).replace(/^\s+|\s+$/g, '');
@@ -7042,7 +7132,7 @@ function timeout123() {
         Gdocument.getElementById("ingamechatinputtext").style["visibility"]="visible";
  
     }
-    if(Gdocument.getElementsByClassName('newbonklobby_settings_button brownButton brownButton_classic buttonShadow brownButtonDisabled').length == 0){
+    if((myid == hostid && myid!=-1) || Gdocument.getElementsByClassName('newbonklobby_settings_button brownButton brownButton_classic buttonShadow brownButtonDisabled').length == 0){
         ishost = true;
     }
     else{
