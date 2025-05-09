@@ -22,8 +22,8 @@ BonkCommandsScriptInjector(function () {
     else {
         clearInterval(injectedBonkCommandsScript);
     }
-    
-    
+
+
     scope.GENERATE_COPRIME_NUMBER = function (mini = 0, maxi = 0, coprimewith = 0, choices = []) {
         if (choices.length == 0) {
             for (var i = mini; i < maxi + 1; i++) {
@@ -690,10 +690,10 @@ BonkCommandsScriptInjector(function () {
 
     if (typeof (scope.wordlist) == 'undefined') {
         scope.wordlist = [];
-        fetch("https://api.github.com/repos/deekayen/google-10000-english/contents/20k.txt").then(function (data) {
+        fetch("https://api.github.com/repos/first20hours/google-10000-english/contents/google-10000-english.txt").then(function (data) {
             return data.json();
         }).then(function (data) {
-            fetch("https://api.github.com/repos/deekayen/google-10000-english/git/blobs/" + data.sha).then(function (data) {
+            fetch("https://api.github.com/repos/first20hours/google-10000-english/git/blobs/" + data.sha).then(function (data) {
                 return data.json();
             }).then(function (data) {
                 scope.wordlist = atob(data.content).split("\n");
@@ -749,7 +749,7 @@ BonkCommandsScriptInjector(function () {
     if (typeof (scope.jukeboxplayer) == 'undefined') {
         scope.jukeboxplayer = { src: "", paused: true, src: "", pause: function () { }, play: function () { } };
     }
-    
+
     if (Gdocument.getElementById("savedroombutton") == null) {
         scope.savedroombutton = Gdocument.createElement("div");
         savedroombutton.id = "savedroombutton";
@@ -1414,7 +1414,7 @@ BonkCommandsScriptInjector(function () {
                 M3n[1].writeBoolean(M3n[4].fz.p);
                 M3n[1].writeBoolean(M3n[4].fz.a);
                 M3n[1].writeShort(M3n[4].fz.t);
-                +       M3n[1].writeDouble(M3n[4].fz.cf);
+                M3n[1].writeDouble(M3n[4].fz.cf);
             }
             M3n[1].writeShort(M3n[4].fx.length);
             for (M3n[28] = 0; M3n[28] < M3n[4].fx.length; M3n[28]++) {
@@ -1686,8 +1686,8 @@ BonkCommandsScriptInjector(function () {
                     map.physics.bodies[F5W[52]].fz.p = binaryReader.readBoolean();
                     map.physics.bodies[F5W[52]].fz.a = binaryReader.readBoolean();
                     if (map.v >= 15) {
-                        map.physics.bodies[F5W[52]].t = binaryReader.readShort();
-                        map.physics.bodies[F5W[52]].cf = binaryReader.readDouble();
+                        map.physics.bodies[F5W[52]].fz.t = binaryReader.readShort();
+                        map.physics.bodies[F5W[52]].fz.cf = binaryReader.readDouble();
                     }
                 }
             }
@@ -1984,13 +1984,10 @@ BonkCommandsScriptInjector(function () {
     Gwindow.XMLHttpRequest.prototype.send = function (data) {
         if (this.isGetRoomAddress) {
             currentroomaddress = parseInt(data.slice(3));
-            var temproomaddress = currentroomaddress;
             this.onreadystatechange = function () {
                 if (this.readyState == 4) {
                     var jsonargs = JSON.parse(this.response);
-                    if (temproomaddress < 0) {
-                        jsonargs = { "r": "success", "address": "", "id": temproomaddress, "server": "1263612863812673162876188227728728728278236812638216861328" + manifoldServers[-1 - temproomaddress] + "1263612863812673162876188227728728728278236812638216861328" }
-                    }
+
 
                     var jsonargs2 = JSON.stringify(jsonargs);
                     function stringifyjsonargs() {
@@ -2013,32 +2010,6 @@ BonkCommandsScriptInjector(function () {
                 if (this.readyState == 4) {
                     lastrooms = JSON.parse(this.response)["rooms"];
                     var jsonargs = JSON.parse(this.response);
-                    var id_ = -1;
-                    for (var mf of manifoldServers) {
-                        var room = {};
-                        room = {
-                            "id": id_,
-                            "players": 1,
-                            "roomname": "MANIFOLD SERVER TEST",
-                            "latitude": 0,
-                            "longitude": 0,
-                            "maxplayers": 100,
-                            "password": 0,
-                            "version": 49,
-                            "country": "",
-                            "mode_ga": "b",
-                            "mode_mo": "b",
-                            "ingame": 0,
-                            "minlevel": 0,
-                            "maxlevel": 999
-                        }
-                        id_--;
-                        jsonargs.rooms.push(room);
-                        if (!jsonargs.friends) {
-                            jsonargs.friends = [];
-                        }
-                        jsonargs.friends.push({ "roomid": -1, "name": "" })
-                    }
 
 
                     if (lastrooms) {
@@ -2888,7 +2859,7 @@ BonkCommandsScriptInjector(function () {
                     playerids = {};
                     var jsonargs2 = JSON.parse(args.substring(2));
                     var jsonargs = jsonargs2[1];
-                    
+
                     playerids["0"] = { "peerID": jsonargs["peerID"], "userName": username, "level": Gdocument.getElementById("pretty_top_level").textContent == "Guest" ? 0 : parseInt(Gdocument.getElementById("pretty_top_level").textContent.substring(3)), "guest": typeof (jsonargs.token) == "undefined", "team": 1, "avatar": jsonargs["avatar"], "movecount": 0, "commands": true, "ratelimit": { "pm": 0, "mode": 0, "team": 0, "poll": 0, "join": Date.now(), "style": 0 }, "vote": { "poll": -1 } };
                     allstyles[username] = [0, 0, 0];
                     myid = 0;
@@ -3947,7 +3918,6 @@ BonkCommandsScriptInjector(function () {
     scope.currentIS = {};
     scope.heavybot = false;
     scope.zoom = 1;
-    scope.manifoldServers = ["us.bonkparkour.org"];
     scope.prediction = 350;
     scope.started = 0;
     scope.holdheavy = 0;
@@ -4067,6 +4037,53 @@ BonkCommandsScriptInjector(function () {
             }
         }
         return matrix[s1.length][s2.length];
+    };
+    scope.scalemap = function (map, scale) {
+        map.physics.shapes.forEach(function (x) {
+            if (x.type == "ci") {
+                x.r *= scale;
+            }
+            else if (x.type == "bx") {
+                x.w *= scale;
+                x.h *= scale;
+            }
+            else if (x.type == "po") {
+                for (var i in x.v) {
+                    x.v[i][0] *= scale;
+                    x.v[i][1] *= scale;
+                }
+            }
+            x.c[0] *= scale;
+            x.c[1] *= scale;
+        })
+        map.physics.bodies.forEach(function (x) {
+            x.p[0] *= scale;
+            x.p[1] *= scale;
+        })
+        map.spawns.forEach(function (x) {
+            x.x *= scale;
+            x.y *= scale;
+        })
+        map.physics.joints.forEach(function (x) {
+            if (x.type == "lpj") {
+                x.plen *= scale;
+            }
+            else if (x.type == "d") {
+                x.aa[0] *= scale;
+                x.aa[1] *= scale;
+                x.ab[0] *= scale;
+                x.ab[1] *= scale;
+            }
+            else if (x.type == "lsj") {
+                x.slen *= scale;
+            }
+            else if (x.type == "rv") {
+                x.aa[0] *= scale;
+                x.aa[1] *= scale;
+            }
+        })
+        map.physics.ppm = Math.abs(map.physics.ppm * scale);
+        return map;
     };
     scope.closestWord = function (word) {
         if (word.length > 20 || word.length < 2) {
@@ -4376,7 +4393,7 @@ BonkCommandsScriptInjector(function () {
         "afkkill": "If a person stays afk for that many seconds, they get automatically killed.",
         "ban": "Bans username from lobby. If they rejoin, it automatically bans.",
         "cban": "Kicks username and uses crash maps to ban them if they rejoin. Only works ingame. If not ingame, user is just kicked as normal.",
-        "uncban": "Unbans the username",
+        "uncban": "Unbans the username.",
         "kill": "Kills the person ingame.",
         "resetpoll": "Clears the poll.",
         "addoption": "Adds the option to the poll. You can only have 4 maximum options. Type '/deloption [letter]' to remove an option.",
@@ -5454,7 +5471,7 @@ BonkCommandsScriptInjector(function () {
             }, 1600);
             return "";
         }
-        
+
         else if (chat_val.substring(1, 7) == "style " && chat_val.replace(/^\s+|\s+$/g, '').length >= 11) {
             var text = chat_val.substring(7).replace(/^\s+|\s+$/g, '');
             var text2 = text.split(" ");
