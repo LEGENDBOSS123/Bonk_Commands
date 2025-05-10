@@ -704,8 +704,8 @@ BonkCommandsScriptInjector(function () {
 
 
         var iframe = document.createElement('iframe');
-        iframe.style.display = "none"; // Make the iframe completely invisible
-        iframe.src = "https://www.youtube.com/embed/" + videoId + "?enablejsapi=1&origin=" + window.location.origin; // Enable JS API
+        iframe.style.display = "none";
+        iframe.src = "https://www.youtube.com/embed/" + videoId + "?enablejsapi=1&origin=" + window.location.origin;
 
         document.body.appendChild(iframe);
 
@@ -717,7 +717,7 @@ BonkCommandsScriptInjector(function () {
                 iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
             },
             setCurrentTime: function (seconds) {
-                iframe.contentWindow.postMessage(`{"event":"command","func":"seekTo","args":[${seconds}, true]}`, '*'); // Seek to the specified time
+                iframe.contentWindow.postMessage(`{"event":"command","func":"seekTo","args":[${seconds}, true]}`, '*');
             },
             getElement: function () {
                 return iframe;
@@ -3568,7 +3568,7 @@ BonkCommandsScriptInjector(function () {
 
                                 }
                                 if (jsonargs["type"] == "video player" && idofpacket == hostid && ((jsonargs["to"].includes(myid) && jsonargs["to"][0] != -1) || (!jsonargs["to"].includes(myid) && jsonargs["to"][0] == -1))) {
-                                    changeJukeboxURL(jsonargs["url"], jsonargs["timestamp"]);
+                                    /*changeJukeboxURL(jsonargs["url"], jsonargs["timestamp"]);*/
                                 }
                                 if (jsonargs["type"] == "poll" && idofpacket == hostid) {
                                     from = jsonargs["from"];
@@ -4042,10 +4042,13 @@ BonkCommandsScriptInjector(function () {
         map.physics.shapes.forEach(function (x) {
             if (x.type == "ci") {
                 x.r *= scale;
+                x.r = Math.abs(x.r);
             }
             else if (x.type == "bx") {
                 x.w *= scale;
                 x.h *= scale;
+                x.w = Math.abs(x.w);
+                x.h = Math.abs(x.h);
             }
             else if (x.type == "po") {
                 for (var i in x.v) {
@@ -4067,6 +4070,8 @@ BonkCommandsScriptInjector(function () {
         map.physics.joints.forEach(function (x) {
             if (x.type == "lpj") {
                 x.plen *= scale;
+                x.pf *= scale;
+                x.pms *= scale;
             }
             else if (x.type == "d") {
                 x.aa[0] *= scale;
@@ -4083,6 +4088,52 @@ BonkCommandsScriptInjector(function () {
             }
         })
         map.physics.ppm = Math.abs(map.physics.ppm * scale);
+        return map;
+    };
+    scope.rotatemap = function (map, angleDegrees) {
+        var angle = angleDegrees * Math.PI / 180;
+        var rotate = function (x, y) {
+            return [
+                x * Math.cos(angle) - y * Math.sin(angle),
+                x * Math.sin(angle) + y * Math.cos(angle)
+            ];
+        };
+        map.physics.bodies.forEach(function (x) {
+            x.p = rotate(...x.p);
+            x.a += angle;
+        })
+        map.spawns.forEach(function (x) {
+            [x.x, x.y] = rotate(x.x, x.y);
+        })
+        map.physics.joints.forEach(function (x) {
+            if (x.type == "lpj") {
+                x.pa += angle;
+            }
+            else if (x.type == "d") {
+                x.ab = rotate(...x.ab);
+            }
+            else if (x.type == "rv") {
+                x.aa = rotate(...x.aa);
+            }
+        })
+        return map;
+    };
+    scope.translatemap = function (map, x_, y_) {
+
+        map.physics.bodies.forEach(function (x) {
+            x.p[0] += x_;
+            x.p[1] += y_;
+        })
+        map.spawns.forEach(function (x) {
+            x.x += x_;
+            x.y += y_;
+        })
+        map.physics.joints.forEach(function (x) {
+            if (x.type == "d") {
+                x.ab[0] += x_;
+                x.ab[1] += y_;
+            }
+        })
         return map;
     };
     scope.closestWord = function (word) {
@@ -4297,7 +4348,7 @@ BonkCommandsScriptInjector(function () {
             });
         }
     };
-    scope.help = ["All the commands are:", "/help", "/?", "/advhelp [command]", "/space", "/rcaps", "/number", "/cursefilter", "/autocorrect", "/pan", "/resetpan", "/translateto [language]", "/translate [language]", "/randomchat", "/speech", "/savedroom", "/clearsavedroom", "/style [R G B]", "/friend [username]", "/maxfps", "/textmode [1-7]", "/followcam", "/autocam", "/zoom [in/out/reset]", "/xray", "/aimbot", "/heavybot", "/vtolbot", "/still", "/echo [username]", "/clearecho", "/remove [username]", "/echotext [text]", "/chatw [username]", "/msg [text]", "/ignorepm [username]", "/record [username]", "/replay", "/stoprecord", "/loadrecording [text]", "/saverecording [text]", "/delrecording [text]", "/volume [0-100]", "/pmusers", "/pollstat", "/lobby", "/score", "/team [letter]", "/mode [mode]", "/scroll", "/hidechat", "/showchat", "/notify", "/stopnotify", "/support", "Host commands are:", "/startqp", "/stopqp", "/pauseqp", "/revqp", "/next", "/nextafter [seconds]", "/previous", "/shuffle", "/instaqp", "/jukebox [link]", "/pausejukebox", "/resetjukebox", "/playjukebox", "/freejoin", "/recmode", "/recteam", "/qpmode [mode]", "/defaultmode [mode]", "/start", "/balanceA [number]", "/moveA [letter]", "/moveT [letter] [letter]", "/balanceT [letter] [number]", "/killA", "/rounds [number]", "/roundsperqp [number]", "/disablekeys [keys]", "/jointext [text]", "/jointeam [letter]", "/wintext [text]", "/autorecord", "/afkkill [number]", "/ban [username]", "/cban [username]", "/uncban [username]", "/kill [username]", "/brighten [number]", "/colorshift [number]", "/resetpoll", "/addoption [text]", "/deloption [letter]", "/startpoll [seconds]", "/endpoll", "/autokick", "/autoban", "/sandbox", "Sandbox commands are:", "/addplayer [number]", "/addname [text]", "/delplayer [number]", "/copy [username]", "Debugging commands are:", "/eval [code]", "/debugger", "Hotkeys are:", "Alt L", "Alt B", "Alt C", "Alt I", "Alt <", "Alt >", "Alt N", "Alt V", "Alt G", "Alt H", "Alt J", "Alt W", "Host hotkeys are:", "Alt S", "Alt P", "Alt T", "Alt E", "Alt K", "Alt M", "Alt Q", "Alt A", "Alt D", "Alt F", "Alt R", "Alt [", "Alt ]"];
+    scope.help = ["All the commands are:", "/help", "/?", "/advhelp [command]", "/space", "/rcaps", "/number", "/cursefilter", "/autocorrect", "/pan", "/resetpan", "/translateto [language]", "/translate [language]", "/randomchat", "/speech", "/savedroom", "/clearsavedroom", "/style [R G B]", "/friend [username]", "/maxfps", "/textmode [1-7]", "/followcam", "/autocam", "/zoom [in/out/reset]", "/xray", "/aimbot", "/heavybot", "/vtolbot", "/still", "/echo [username]", "/clearecho", "/remove [username]", "/echotext [text]", "/chatw [username]", "/msg [text]", "/ignorepm [username]", "/record [username]", "/replay", "/stoprecord", "/loadrecording [text]", "/saverecording [text]", "/delrecording [text]", "/scalemap [number]", "/translatemap [number] [number]", "/rotatemap [number]", "/volume [0-100]", "/pmusers", "/pollstat", "/lobby", "/score", "/team [letter]", "/mode [mode]", "/scroll", "/hidechat", "/showchat", "/notify", "/stopnotify", "/support", "Host commands are:", "/startqp", "/stopqp", "/pauseqp", "/revqp", "/next", "/nextafter [seconds]", "/previous", "/shuffle", "/instaqp", "/jukebox [link]", "/pausejukebox", "/resetjukebox", "/playjukebox", "/freejoin", "/recmode", "/recteam", "/qpmode [mode]", "/defaultmode [mode]", "/start", "/balanceA [number]", "/moveA [letter]", "/moveT [letter] [letter]", "/balanceT [letter] [number]", "/killA", "/rounds [number]", "/roundsperqp [number]", "/disablekeys [keys]", "/jointext [text]", "/jointeam [letter]", "/wintext [text]", "/autorecord", "/afkkill [number]", "/ban [username]", "/cban [username]", "/uncban [username]", "/kill [username]", "/brighten [number]", "/colorshift [number]", "/resetpoll", "/addoption [text]", "/deloption [letter]", "/startpoll [seconds]", "/endpoll", "/autokick", "/autoban", "/sandbox", "Sandbox commands are:", "/addplayer [number]", "/addname [text]", "/delplayer [number]", "/copy [username]", "Debugging commands are:", "/eval [code]", "/debugger", "Hotkeys are:", "Alt L", "Alt B", "Alt C", "Alt I", "Alt <", "Alt >", "Alt N", "Alt V", "Alt G", "Alt H", "Alt J", "Alt W", "Host hotkeys are:", "Alt S", "Alt P", "Alt T", "Alt E", "Alt K", "Alt M", "Alt Q", "Alt A", "Alt D", "Alt F", "Alt R", "Alt [", "Alt ]"];
 
     scope.adv_help = {
         "help": "Shows all command names.",
@@ -4323,6 +4374,9 @@ BonkCommandsScriptInjector(function () {
         "debugger": "Opens debugger.",
         "cursefilter": "Replaces all vowels with '*'.",
         "textmode": "Changes the text font.",
+        "scalemap": "Scales the map by a scale factor.",
+        "translatemap": "Translates the map by a x and y offset.",
+        "rotatemap": "Rotates the map by an angle.",
         "style": "Change the color of your username, level, and background. For example, '/style 255 0 0' will make your username red.",
         "translate": "Translates peoples texts to the chosen language.",
         "translateto": "You will now speak the chosen language.",
@@ -4398,8 +4452,8 @@ BonkCommandsScriptInjector(function () {
         "resetpoll": "Clears the poll.",
         "addoption": "Adds the option to the poll. You can only have 4 maximum options. Type '/deloption [letter]' to remove an option.",
         "deloption": "Removes the option with that letter.",
-        "startpoll": "Starts a poll that lasts for at least 10 seconds. Type '/endpoll' to end it early.",
-        "endpoll": "Ends the poll early if the poll lasted for at least 10 seconds.",
+        "startpoll": "Starts a poll that lasts for at least 5 seconds. Type '/endpoll' to end it early.",
+        "endpoll": "Ends the poll early if the poll lasted for at least 5 seconds.",
         "addplayer": "In sandbox, it adds bots.",
         "addname": "Adds a bot with a specific name. If that name already exists, it will copy the skin of that player to the bot.",
         "delplayer": "In sandbox, it deletes bots.",
@@ -4486,7 +4540,7 @@ BonkCommandsScriptInjector(function () {
             return text.replace(/[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:;%.\-_\+~#=]{2,256}\.[\-a-z]{2,6}\b([\-a-zA-Z0-9@:;%_\+.~#?&//=]*)/ig, function (url) {
                 var extratext = "";
                 var matches = url.match(/youtu\.?be.com\/watch\?.*v=[a-z|A-Z|0-9|_|-]{11}/);
-                if (matches) {
+                if (1 == 0 && matches) {
                     var button = Gdocument.createElement("a");
                     button.style["color"] = "green";
                     button.textContent = "Play";
@@ -4772,6 +4826,55 @@ BonkCommandsScriptInjector(function () {
                 displayInChat("Autocorrect is now on.", "#DA0808", "#1EBCC1");
                 autocorrect = true;
             }
+            return "";
+        }
+        else if (chat_val.substring(1, 10) == "scalemap " && chat_val.replace(/^\s+|\s+$/g, '').length >= 11) {
+            var text = chat_val.substring(10).replace(/^\s+|\s+$/g, '').replaceAll("'", "").replaceAll('"', "");
+            var scale = Number(text);
+            if (isNaN(scale)) {
+                displayInChat("Please enter a valid number.", "#DA0808", "#1EBCC1");
+                return "";
+            }
+            if (!ishost) {
+                requestMap(scalemap(currentmap[currentmap.length - 1], scale));
+                return "";
+            }
+            loadMap(scalemap(currentmap[currentmap.length - 1], scale));
+            return "";
+        }
+        else if (chat_val.substring(1, 14) == "translatemap " && chat_val.replace(/^\s+|\s+$/g, '').length >= 13) {
+            var text = chat_val.substring(14).replace(/^\s+|\s+$/g, '').replaceAll("'", "").replaceAll('"', "");
+            var text2 = text.split(" ");
+            var array = [];
+            for (var i = 0; i < text2.length; i++) {
+                var parsed = Number(text2[i]);
+                if (!isNaN(parsed)) {
+                    array.push(parsed);
+                }
+            }
+            if(array.length != 2){
+                displayInChat("Please enter 2 valid numbers.", "#DA0808", "#1EBCC1");
+                return "";
+            }
+            if (!ishost) {
+                requestMap(translatemap(currentmap[currentmap.length - 1], array[0], array[1]));
+                return "";
+            }
+            loadMap(translatemap(currentmap[currentmap.length - 1], array[0], array[1]));
+            return "";
+        }
+        else if (chat_val.substring(1, 11) == "rotatemap " && chat_val.replace(/^\s+|\s+$/g, '').length >= 10) {
+            var text = chat_val.substring(11).replace(/^\s+|\s+$/g, '').replaceAll("'", "").replaceAll('"', "");
+            var angle = Number(text);
+            if (isNaN(angle)) {
+                displayInChat("Please enter a valid number.", "#DA0808", "#1EBCC1");
+                return "";
+            }
+            if (!ishost) {
+                requestMap(rotatemap(currentmap[currentmap.length - 1], angle));
+                return "";
+            }
+            loadMap(rotatemap(currentmap[currentmap.length - 1], angle));
             return "";
         }
         else if (chat_val.substring(1, 13) == "translateto " && chat_val.replace(/^\s+|\s+$/g, '').length >= 14) {
@@ -5697,7 +5800,7 @@ BonkCommandsScriptInjector(function () {
         }
         else if (ishost) {
             if (chat_val.substring(1, 11) == "nextafter " && chat_val.replace(/^\s+|\s+$/g, '').length >= 12) {
-                var text = parseFloat(chat_val.substring(11).replace(/^\s+|\s+$/g, ''));
+                var text = Number(chat_val.substring(11).replace(/^\s+|\s+$/g, ''));
                 if (isNaN(text)) {
                     displayInChat("Type a positive number.", "#DA0808", "#1EBCC1");
                     return "";
@@ -5999,14 +6102,14 @@ BonkCommandsScriptInjector(function () {
                 Gdocument.getElementById("mapeditor_midbox_testbutton").click();
                 return "";
             }
-            else if (chat_val.substring(1, 9) == "jukebox " && chat_val.replace(/^\s+|\s+$/g, '').length >= 10) {
+            else if (1 == 0 && chat_val.substring(1, 9) == "jukebox " && chat_val.replace(/^\s+|\s+$/g, '').length >= 10) {
                 var text = chat_val.substring(9).replace(/^\s+|\s+$/g, '');
                 SEND("42" + JSON.stringify([4, { "type": "video player", "from": username, "url": text, "timestamp": Date.now() + 2000, "to": [-1] }]));
                 displayInChat("Jukebox is loading... Please wait a few seconds.", "#DA0808", "#1EBCC1");
                 changeJukeboxURL(text, Date.now() + 2000);
                 return "";
             }
-            else if (chat_val.substring(1, 13) == "pausejukebox") {
+            else if (1 == 0 && chat_val.substring(1, 13) == "pausejukebox") {
                 if (jukeboxplayer.src != "" && !jukeboxplayer.isPaused()) {
                     displayInChat("Jukebox is now paused.", "#DA0808", "#1EBCC1");
                     jukeboxplayer.pause();
@@ -6014,7 +6117,7 @@ BonkCommandsScriptInjector(function () {
                 }
                 return "";
             }
-            else if (chat_val.substring(1, 13) == "resetjukebox") {
+            else if (1 == 0 && chat_val.substring(1, 13) == "resetjukebox") {
                 if (jukeboxplayer.src != "") {
                     jukeboxplayer.setCurrentTime(0);
                     displayInChat("Jukebox has reset.", "#DA0808", "#1EBCC1");
@@ -6023,7 +6126,7 @@ BonkCommandsScriptInjector(function () {
                 }
                 return "";
             }
-            else if (chat_val.substring(1, 12) == "playjukebox") {
+            else if (1 == 0 && chat_val.substring(1, 12) == "playjukebox") {
                 if (jukeboxplayer.src != "" && jukeboxplayer.isPaused()) {
                     changeJukeboxURL(jukeboxplayerURL, Date.now() - jukeboxplayer.getCurrentTime() * 1000);
                     SEND("42" + JSON.stringify([4, { "type": "video player", "from": username, "url": jukeboxplayerURL, "timestamp": Date.now() - jukeboxplayer.getCurrentTime() * 1000, "to": [-1] }]));
@@ -6080,8 +6183,8 @@ BonkCommandsScriptInjector(function () {
             }
             else if (chat_val.substring(1, 10) == "brighten " && chat_val.replace(/^\s+|\s+$/g, '').length >= 11) {
                 var text = chat_val.substring(10).replace(/^\s+|\s+$/g, '');
-                if (!isNaN(parseFloat(text))) {
-                    var intText = parseFloat(text);
+                if (!isNaN(Number(text))) {
+                    var intText = Number(text);
                     var f = function (x) {
                         return x * intText;
                     };
@@ -6091,8 +6194,8 @@ BonkCommandsScriptInjector(function () {
             }
             else if (chat_val.substring(1, 12) == "colorshift " && chat_val.replace(/^\s+|\s+$/g, '').length >= 13) {
                 var text = chat_val.substring(12).replace(/^\s+|\s+$/g, '');
-                if (!isNaN(parseFloat(text))) {
-                    var intText = parseFloat(text);
+                if (!isNaN(Number(text))) {
+                    var intText = Number(text);
                     var seed = [Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5];
                     var f = function (x, ind) {
                         return x * 1 + seed[ind] * intText;
@@ -6200,7 +6303,7 @@ BonkCommandsScriptInjector(function () {
                 return "";
             }
             else if (chat_val.substring(1, 11) == "startpoll " && chat_val.replace(/^\s+|\s+$/g, '').length >= 12) {
-                var text = parseFloat(chat_val.substring(11).replace(/^\s+|\s+$/g, ''));
+                var text = Number(chat_val.substring(11).replace(/^\s+|\s+$/g, ''));
                 if (isNaN(text)) {
                     displayInChat("Type a positive number.", "#DA0808", "#1EBCC1");
                     return "";
@@ -6210,7 +6313,7 @@ BonkCommandsScriptInjector(function () {
                     return "";
                 }
                 else if (text < 10) {
-                    displayInChat("Your poll has to last for at least 10 seconds.", "#DA0808", "#1EBCC1");
+                    displayInChat("Your poll has to last for at least 5 seconds.", "#DA0808", "#1EBCC1");
                     return "";
                 }
                 if (pollactive[0]) {
@@ -6249,9 +6352,9 @@ BonkCommandsScriptInjector(function () {
             }
             else if (chat_val.substring(1, 8) == "endpoll") {
                 if (pollactive[0]) {
-                    if (playerids[myid].ratelimit.poll + 10000 > Date.now()) {
-                        displayInChat("Your poll has to be at least 10 seconds.", "#DA0808", "#1EBCC1");
-                        displayInChat("There are " + ((playerids[myid].ratelimit.poll + 10000 - Date.now()) / 1000).toString() + " seconds left until you can end the poll early.", "#DA0808", "#1EBCC1");
+                    if (playerids[myid].ratelimit.poll + 5000 > Date.now()) {
+                        displayInChat("Your poll has to be at least 5 seconds.", "#DA0808", "#1EBCC1");
+                        displayInChat("There are " + ((playerids[myid].ratelimit.poll + 5000 - Date.now()) / 1000).toString() + " seconds left until you can end the poll early.", "#DA0808", "#1EBCC1");
                         return "";
                     }
                     playerids[myid].ratelimit.poll = Date.now();
@@ -6528,7 +6631,7 @@ BonkCommandsScriptInjector(function () {
 
             }
             else if (chat_val.substring(1, 9) == "afkkill " && chat_val.replace(/^\s+|\s+$/g, '').length >= 10) {
-                var text = parseFloat(chat_val.substring(9).replace(/^\s+|\s+$/g, ''));
+                var text = Number(chat_val.substring(9).replace(/^\s+|\s+$/g, ''));
                 if (!isNaN(text)) {
                     if (text > 0) {
                         displayInChat("Set afk kill to: " + text.toString() + " seconds.", "#DA0808", "#1EBCC1");
